@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String?
+  image         String?
+  coins         Int           @default(0)
+  totalCorrect  Int           @default(0)
+  totalAnswered Int           @default(0)
+  createdAt     DateTime      @default(now())
+  accounts      Account[]
+  sessions      Session[]
+  quizAttempts  QuizAttempt[]
+  ownedQuizlets UserQuizlet[]
+  quizzesCreated Quiz[]       @relation("QuizAuthor")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Quiz {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  category    String
+  difficulty  Int
+  isOfficial  Boolean       @default(false)
+  authorId    String
+  author      User          @relation("QuizAuthor", fields: [authorId], references: [id])
+  questions   Question[]
+  attempts    QuizAttempt[]
+  createdAt   DateTime      @default(now())
+}
+
+model Question {
+  id           String @id @default(cuid())
+  quizId       String
+  quiz         Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  text         String
+  options      Json
+  correctIndex Int
+  points       Int    @default(1)
+  order        Int    @default(0)
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id])
+  score       Int
+  total       Int
+  coinsEarned Int
+  completedAt DateTime @default(now())
+}
+
+model Quizlet {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  rarity      String
+  pack        String
+  icon        String
+  colorFrom   String
+  colorTo     String
+  description String
+  isHidden    Boolean       @default(false)
+  sellValue   Int           @default(10)
+  owners      UserQuizlet[]
+}
+
+model UserQuizlet {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  quizletId  String
+  quizlet    Quizlet  @relation(fields: [quizletId], references: [id])
+  obtainedAt DateTime @default(now())
+
+  @@unique([userId, quizletId])
+}
+
+model Pack {
+  id           String  @id @default(cuid())
+  name         String
+  description  String
+  cost         Int
+  slug         String  @unique
+  icon         String
+  colorFrom    String
+  colorTo      String
+  isFestival   Boolean @default(false)
+  festivalDate String?
+  isActive     Boolean @default(true)
+}
