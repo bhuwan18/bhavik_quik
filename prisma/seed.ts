@@ -1,9 +1,12 @@
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { QUIZLETS_DATA } from "../lib/quizlets-data";
 import { PACKS_DATA } from "../lib/packs-data";
 import { SELL_VALUES } from "../lib/utils";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 const SYSTEM_EMAIL = "system@quizlet2026.app";
 
