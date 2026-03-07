@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #f0f0ff;
-  --card: #13131f;
-  --border: #2a2a3f;
-  --accent: #6366f1;
+  --background: #070511;
+  --surface: #110d2a;
+  --border: #2d1f5e;
+  --accent: #8b5cf6;
+  --accent2: #ec4899;
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
+  color: #f0f0ff;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -26,15 +26,25 @@ body {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.4); }
-  50%       { box-shadow: 0 0 40px 10px rgba(251, 191, 36, 0.7); }
+  0%, 100% { box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.5); }
+  50%       { box-shadow: 0 0 50px 15px rgba(251, 191, 36, 0.8); }
 }
 
 @keyframes rainbow-glow {
-  0%   { box-shadow: 0 0 30px 10px rgba(244,63,94,0.5); }
-  33%  { box-shadow: 0 0 30px 10px rgba(59,130,246,0.5); }
-  66%  { box-shadow: 0 0 30px 10px rgba(168,85,247,0.5); }
-  100% { box-shadow: 0 0 30px 10px rgba(244,63,94,0.5); }
+  0%   { box-shadow: 0 0 30px 10px rgba(244,63,94,0.6); }
+  33%  { box-shadow: 0 0 30px 10px rgba(59,130,246,0.6); }
+  66%  { box-shadow: 0 0 30px 10px rgba(168,85,247,0.6); }
+  100% { box-shadow: 0 0 30px 10px rgba(244,63,94,0.6); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 .legendary-card {
@@ -45,12 +55,33 @@ body {
   animation: rainbow-spin 2s linear infinite, rainbow-glow 3s ease-in-out infinite;
 }
 
-/* Scrollbar */
+.float-anim {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Vibrant scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--background); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #8b5cf6, #ec4899);
+  border-radius: 3px;
+}
 
-/* Pack opening animation container */
+/* Shimmer text effect */
+.shimmer-text {
+  background: linear-gradient(90deg, #8b5cf6, #ec4899, #f97316, #8b5cf6);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Glowing card hover effect */
+.glow-card:hover {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3), 0 0 60px rgba(236, 72, 153, 0.15);
+}
+
+/* Pack opening animation */
 .pack-reveal {
   perspective: 1000px;
 }

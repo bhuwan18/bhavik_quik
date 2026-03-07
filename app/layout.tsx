@@ -13,8 +13,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geist.className} antialiased bg-[#0a0a0f] text-white min-h-screen`}>
+      <body className={`${geist.className} antialiased min-h-screen`} style={{ background: "var(--background)", color: "#f0f0ff" }}>
         <SessionProvider>{children}</SessionProvider>
+
       </body>
     </html>
   );

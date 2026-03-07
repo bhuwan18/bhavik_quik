@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma generate)",
+      "Bash(powershell -Command \"Stop-Process -Id 26460 -Force -ErrorAction SilentlyContinue; Start-Sleep 1; Get-NetTCPConnection -State Listen | Where-Object LocalPort -in 3000,3001,3002 | Select-Object LocalPort,OwningProcess\")",
+      "Bash(powershell -Command \"Stop-Process -Id 35672 -Force -ErrorAction SilentlyContinue; Start-Sleep 1; Get-NetTCPConnection -State Listen | Where-Object LocalPort -in 3000,3001,3002 | Select-Object LocalPort,OwningProcess\")"
+    ]
+  }
+}

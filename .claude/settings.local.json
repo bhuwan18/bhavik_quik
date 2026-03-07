@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev)",
+      "Bash(powershell -Command \"Stop-Process -Id 32800 -Force\")",
+      "Bash(powershell -Command \"Start-Sleep -Seconds 2; Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | Select-Object LocalPort,State,OwningProcess\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object {$_LocalPort -in @\\(3000,3001,3002,3003\\)} | Select-Object LocalPort,OwningProcess\")"
+    ]
+  }
+}
