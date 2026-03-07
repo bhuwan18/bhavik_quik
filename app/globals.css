@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0f;
+  --foreground: #f0f0ff;
+  --card: #13131f;
+  --border: #2a2a3f;
+  --accent: #6366f1;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Rainbow animated border for Unique / Impossible */
+@keyframes rainbow-spin {
+  0%   { border-color: #f43f5e; }
+  16%  { border-color: #f97316; }
+  33%  { border-color: #eab308; }
+  50%  { border-color: #22c55e; }
+  66%  { border-color: #3b82f6; }
+  83%  { border-color: #a855f7; }
+  100% { border-color: #f43f5e; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.4); }
+  50%       { box-shadow: 0 0 40px 10px rgba(251, 191, 36, 0.7); }
+}
+
+@keyframes rainbow-glow {
+  0%   { box-shadow: 0 0 30px 10px rgba(244,63,94,0.5); }
+  33%  { box-shadow: 0 0 30px 10px rgba(59,130,246,0.5); }
+  66%  { box-shadow: 0 0 30px 10px rgba(168,85,247,0.5); }
+  100% { box-shadow: 0 0 30px 10px rgba(244,63,94,0.5); }
+}
+
+.legendary-card {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.rainbow-card {
+  animation: rainbow-spin 2s linear infinite, rainbow-glow 3s ease-in-out infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Pack opening animation container */
+.pack-reveal {
+  perspective: 1000px;
+}
+
+.pack-card-flip {
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+.pack-card-flip.flipped {
+  transform: rotateY(180deg);
+}
