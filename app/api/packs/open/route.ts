@@ -8,7 +8,22 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { packSlug } = await req.json();
+  // Verify user not locked and validate input
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isLocked: true, coins: true },
+  });
+  if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
+  if (dbUser.isLocked) return NextResponse.json({ error: "Account is locked" }, { status: 403 });
+
+  let packSlug: string;
+  try {
+    const body = await req.json();
+    packSlug = body.packSlug;
+    if (typeof packSlug !== "string" || packSlug.length > 100) throw new Error("Invalid packSlug");
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   const pack = await prisma.pack.findUnique({ where: { slug: packSlug } });
   if (!pack) return NextResponse.json({ error: "Pack not found" }, { status: 404 });

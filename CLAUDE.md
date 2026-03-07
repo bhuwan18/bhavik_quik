@@ -1,4 +1,4 @@
-# CLAUDE.md — AI Assistant Guide for Quizlet 2026
+# CLAUDE.md — AI Assistant Guide for BittsQuiz 2026
 
 This file provides guidance for AI assistants working in this repository.
 
@@ -169,7 +169,7 @@ Categories: football, cricket, harry-potter, technology, avengers, artists, musi
 - **Speed Blitz**: 20 questions in 30 seconds, all categories
 
 ### Year Auto-Increment
-The app name is always `Quizlet {new Date().getFullYear()}`.
+The app name is always `BittsQuiz {new Date().getFullYear()}`.
 Never hardcode a year — always use `new Date().getFullYear()`.
 
 ---

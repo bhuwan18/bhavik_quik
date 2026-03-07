@@ -17,8 +17,6 @@ export default function LoginPage() {
     if (session) router.replace("/dashboard");
   }, [session, router]);
 
-  const year = new Date().getFullYear();
-
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -52,7 +50,7 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="text-7xl mb-4 float-anim inline-block">🎯</div>
           <h1 className="text-5xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-            Quizlet {year}
+            BittsQuiz
           </h1>
           <p className="mt-3 text-gray-400 text-lg font-medium">
             Quiz. Collect. Conquer.

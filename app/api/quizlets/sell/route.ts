@@ -6,7 +6,21 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { quizletId } = await req.json();
+  // Verify user not locked
+  const dbUserCheck = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isLocked: true },
+  });
+  if (dbUserCheck?.isLocked) return NextResponse.json({ error: "Account is locked" }, { status: 403 });
+
+  let quizletId: string;
+  try {
+    const body = await req.json();
+    quizletId = body.quizletId;
+    if (typeof quizletId !== "string" || quizletId.length > 100) throw new Error("Invalid quizletId");
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   const ownership = await prisma.userQuizlet.findUnique({
     where: { userId_quizletId: { userId: session.user.id, quizletId } },

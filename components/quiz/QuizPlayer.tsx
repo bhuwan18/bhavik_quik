@@ -10,9 +10,12 @@ type Question = {
   correctIndex: number;
 };
 
+const COINS_BY_DIFFICULTY: Record<number, number> = { 1: 3, 2: 5, 3: 8, 4: 12, 5: 20 };
+
 type Quiz = {
   id: string;
   title: string;
+  difficulty: number;
   questions: Question[];
 };
 
@@ -27,6 +30,7 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
   const question = quiz.questions[current];
   const total = quiz.questions.length;
   const progress = ((current) / total) * 100;
+  const coinsPerCorrect = COINS_BY_DIFFICULTY[quiz.difficulty] ?? 5;
 
   const handleSelect = (idx: number) => {
     if (selected !== null) return;
@@ -97,7 +101,10 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
       <div className="mb-6">
         <div className="flex justify-between text-sm text-gray-400 mb-2">
           <span>Question {current + 1} of {total}</span>
-          <span>{Math.round(progress)}%</span>
+          <span className="flex items-center gap-2">
+            <span className="text-yellow-400 font-medium">🪙 {coinsPerCorrect}/correct</span>
+            <span>{Math.round(progress)}%</span>
+          </span>
         </div>
         <div className="w-full bg-white/10 rounded-full h-2">
           <div

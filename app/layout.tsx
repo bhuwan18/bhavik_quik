@@ -6,7 +6,7 @@ import { SessionProvider } from "next-auth/react";
 const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: `Quizlet ${new Date().getFullYear()}`,
+  title: "BittsQuiz",
   description: "The ultimate quiz & collectible experience",
 };
 

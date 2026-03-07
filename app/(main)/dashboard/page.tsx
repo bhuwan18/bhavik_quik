@@ -9,7 +9,17 @@ export default async function DashboardPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { coins: true, totalCorrect: true, totalAnswered: true, createdAt: true, name: true },
+    select: {
+      coins: true,
+      totalCorrect: true,
+      totalAnswered: true,
+      createdAt: true,
+      name: true,
+      isPro: true,
+      proExpiresAt: true,
+      dailyCoinsEarned: true,
+      dailyCoinsReset: true,
+    },
   });
 
   const totalQuizlets = await prisma.quizlet.count();
@@ -26,7 +36,17 @@ export default async function DashboardPage() {
     : 0;
 
   const hasAll = ownedQuizlets >= totalQuizlets && totalQuizlets > 0;
-  const year = new Date().getFullYear();
+
+  // Daily coin status
+  const isProActive = user?.isPro && (!user.proExpiresAt || user.proExpiresAt > new Date());
+  const dailyLimit = isProActive ? 500 : 100;
+  const now = new Date();
+  const resetDate = user?.dailyCoinsReset ? new Date(user.dailyCoinsReset) : new Date(0);
+  const isNewDay =
+    now.getUTCFullYear() !== resetDate.getUTCFullYear() ||
+    now.getUTCMonth() !== resetDate.getUTCMonth() ||
+    now.getUTCDate() !== resetDate.getUTCDate();
+  const dailyEarned = isNewDay ? 0 : (user?.dailyCoinsEarned ?? 0);
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -34,7 +54,7 @@ export default async function DashboardPage() {
         <h1 className="text-3xl font-bold text-white">
           Welcome back, {session.user.name?.split(" ")[0]} 👋
         </h1>
-        <p className="text-gray-400 mt-1">Quizlet {year} — Keep playing to collect them all</p>
+        <p className="text-gray-400 mt-1">BittsQuiz — Keep playing to collect them all</p>
       </div>
 
       {/* Completion Certificate Banner */}
@@ -42,7 +62,7 @@ export default async function DashboardPage() {
         <div className="mb-8 p-6 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/40 rounded-2xl flex items-center justify-between">
           <div>
             <p className="text-yellow-400 font-bold text-xl">🏆 You&apos;ve collected every Quizlet!</p>
-            <p className="text-gray-300 mt-1">You have earned the Quizlet {year} Master Certificate.</p>
+            <p className="text-gray-300 mt-1">You have earned the BittsQuiz Master Certificate.</p>
           </div>
           <Link
             href="/certificate"
@@ -52,6 +72,25 @@ export default async function DashboardPage() {
           </Link>
         </div>
       )}
+
+      {/* Daily Coin Limit */}
+      <div className="mb-6 bg-white/5 border border-white/10 rounded-2xl p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-300">
+            Daily Coin Limit {isProActive ? <span className="text-yellow-400 text-xs ml-1">(Pro)</span> : ""}
+          </span>
+          <span className="text-sm text-gray-400">{dailyEarned} / {dailyLimit} coins today</span>
+        </div>
+        <div className="w-full bg-white/10 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all ${isProActive ? "bg-gradient-to-r from-yellow-500 to-orange-400" : "bg-gradient-to-r from-indigo-500 to-purple-500"}`}
+            style={{ width: `${Math.min(100, Math.round((dailyEarned / dailyLimit) * 100))}%` }}
+          />
+        </div>
+        {dailyEarned >= dailyLimit && (
+          <p className="text-xs text-orange-400 mt-1">Daily limit reached — resets tomorrow. {!isProActive && <Link href="/upgrade" className="underline">Upgrade to Pro</Link>} for 5× more coins/day.</p>
+        )}
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
