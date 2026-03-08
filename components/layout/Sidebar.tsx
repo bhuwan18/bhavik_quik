@@ -25,6 +25,7 @@ const ADMIN_NAV_ITEMS = [
   { href: "/admin/users", icon: "👥", label: "User Manager" },
   { href: "/admin/payments", icon: "💳", label: "Payments" },
   { href: "/admin/quizzes", icon: "📋", label: "Edit Quizzes" },
+  { href: "/admin/feedback", icon: "💬", label: "Feedback" },
 ];
 
 export default function Sidebar() {
@@ -47,7 +48,22 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-purple-800/30">
         <Link href="/dashboard" className="flex items-center gap-3 group">
-          <span className="text-3xl group-hover:scale-110 transition-transform">🎯</span>
+          <svg width="36" height="36" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 group-hover:scale-110 transition-transform">
+            <defs>
+              <linearGradient id="slg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#5b21b6"/>
+                <stop offset="50%" stopColor="#7c3aed"/>
+                <stop offset="100%" stopColor="#be185d"/>
+              </linearGradient>
+              <linearGradient id="sbolt" x1="0" y1="0" x2="0" y2="32" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#fef3c7"/>
+                <stop offset="100%" stopColor="#f59e0b"/>
+              </linearGradient>
+            </defs>
+            <rect width="32" height="32" rx="8" fill="url(#slg)"/>
+            <path d="M20 3 L11 18 H17 L12 29 L21 14 H15 Z" fill="url(#sbolt)"/>
+            <polygon points="27,5 28,7.5 30.5,7.5 28.5,9 29.5,11.5 27,10 24.5,11.5 25.5,9 23.5,7.5 26,7.5" fill="#fde68a" opacity="0.85"/>
+          </svg>
           <span className="text-xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
             BittsQuiz
           </span>

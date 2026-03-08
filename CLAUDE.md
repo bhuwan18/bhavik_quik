@@ -27,7 +27,7 @@ This file provides guidance for AI assistants working in this repository.
 | Animations | Framer Motion |
 | Icons | Lucide React + Emoji |
 | Theming | next-themes (dark/light toggle, class-based) |
-| Email | Nodemailer v7 (SMTP — feedback + new user alerts) |
+| Email | Nodemailer v7 (SMTP — new user alerts only; feedback is DB-stored) |
 | Analytics | Vercel Analytics + Speed Insights |
 
 ---
@@ -104,14 +104,14 @@ app/
 ├── globals.css                   CSS variables for dark/light theme + Tailwind overrides
 ├── (main)/                       Auth-guarded area (sidebar layout + AudioProvider)
 │   ├── layout.tsx                Auth guard + Sidebar (desktop) + MobileNav + OnlinePing + AudioPlayer
-│   ├── dashboard/page.tsx        Stats, coins, collection progress, quick play
+│   ├── dashboard/page.tsx        Play-first hero + category quick-play + stats (server component)
 │   ├── discover/page.tsx         Browse quizzes — shows ✓ Completed badge on perfect-score quizzes
 │   ├── quiz/[id]/page.tsx        Quiz player (music auto-pauses here)
 │   ├── marketplace/page.tsx      Buy packs with coins
 │   ├── quizlets/page.tsx         View/sell owned Quizlet characters (+ Hidden section)
 │   ├── quiz-maker/page.tsx       Create and publish custom quizzes
 │   ├── leaderboard/page.tsx      Top players — green online dot if active within 5 min
-│   ├── feedback/page.tsx         User feedback form → emails admin via SMTP
+│   ├── feedback/page.tsx         User feedback form → saves to DB (no email)
 │   ├── info/page.tsx             All quizlets directory with rarity guide
 │   ├── game/page.tsx             Game mode selection hub
 │   ├── buy-coins/page.tsx        UPI payment flow for coins
@@ -119,10 +119,11 @@ app/
 │   └── admin/
 │       ├── quizzes/page.tsx      List all quizzes with Edit links
 │       ├── quizzes/[id]/edit/    Edit quiz title/description/category/difficulty/questions
-│       └── payments/page.tsx     Approve/reject pending UPI payment requests
+│       ├── payments/page.tsx     Approve/reject pending UPI payment requests
+│       └── feedback/page.tsx     View all user feedback — filter by type, mark read/unread
 └── api/
     ├── auth/[...nextauth]/       NextAuth handler
-    ├── feedback/                 POST — sends feedback email to admin via SMTP
+    ├── feedback/                 POST — saves feedback to DB (Feedback model)
     ├── quizzes/                  GET quizzes list, POST create quiz
     ├── quizzes/[id]/             GET single quiz; PATCH (admin) update quiz + questions
     ├── attempt/                  POST quiz attempt, awards coins
@@ -133,15 +134,18 @@ app/
     ├── user/stats/               GET dashboard stats
     ├── user/ping/                POST update lastSeenAt — called every 2 min by OnlinePing
     ├── user/submit-payment/      POST submit UTR number for UPI payment
-    └── admin/payments/
-        ├── route.ts              GET list payment requests
-        └── [id]/route.ts         PATCH approve/reject payment → credit coins/pro
+    ├── admin/payments/
+    │   ├── route.ts              GET list payment requests
+    │   └── [id]/route.ts         PATCH approve/reject payment → credit coins/pro
+    └── admin/feedback/
+        └── route.ts              GET all feedback; PATCH mark isRead
 
 components/
-├── layout/Sidebar.tsx            Navigation sidebar (desktop only) — theme toggle + admin nav
+├── layout/Sidebar.tsx            Navigation sidebar (desktop only) — theme toggle + admin nav (incl. Feedback)
 ├── layout/MobileNav.tsx          Bottom tab bar (mobile only, md:hidden) — 5 key nav items
 ├── layout/OnlinePing.tsx         Client component — silently POSTs /api/user/ping every 2 min
 ├── ThemeProvider.tsx             next-themes wrapper (class-based, default: dark)
+├── IntroOverlay.tsx              First-visit onboarding overlay (5 steps, localStorage key bq_intro_seen_v1)
 ├── AudioPlayer.tsx               Floating music player (bottom-right) — volume + on/off
 ├── quiz/QuizPlayer.tsx           Interactive quiz — answers shuffled randomly each session
 ├── quiz/QuizMakerForm.tsx        Quiz creation form
@@ -167,7 +171,7 @@ lib/
 └── utils.ts                      cn(), CATEGORIES, RARITY_COLORS, SELL_VALUES
 
 prisma/
-├── schema.prisma                 Full DB schema (includes PaymentRequest model + lastSeenAt on User)
+├── schema.prisma                 Full DB schema (includes PaymentRequest, Feedback models + lastSeenAt on User)
 └── seed.ts                       50 official quizzes + all quizlets + packs
 ```
 
@@ -230,9 +234,16 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 6. On approve: coins credited or Pro granted via `prisma.user.update`
 
 ### Feedback System
-- `/feedback` page with type selector (General, Bug Report, Feature Request, etc.)
-- Submissions POST to `/api/feedback` → sends HTML email to `ADMIN_NOTIFY_EMAIL` via SMTP
-- Email is silent-fail if SMTP not configured (logs warning, doesn't crash)
+- `/feedback` page with type selector (General, Bug Report, Feature Request, Content Issue, Other)
+- Submissions POST to `/api/feedback` → saved to `Feedback` DB table (no email)
+- Admin views all feedback at `/admin/feedback` — filter by type, mark read/unread, shows user info
+- `Feedback` model: `id`, `userId`, `type`, `message`, `isRead` (default false), `createdAt`
+
+### New User Onboarding
+- `components/IntroOverlay.tsx` — shown once on first login (localStorage key `bq_intro_seen_v1`)
+- 5-step walkthrough: Welcome → Earn Coins → Collect Quizlets → Compete → Let's Play
+- Has Skip button; final step links directly to `/discover`
+- Rendered in `app/(main)/dashboard/page.tsx`
 
 ### Online Status (Leaderboard)
 - `User.lastSeenAt DateTime?` field updated every 2 minutes by `OnlinePing` client component
@@ -282,8 +293,9 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `lib/roll.ts` | Pack opening RNG — edit drop rates here |
 | `lib/festivals.ts` | Add/modify festival dates here |
 | `lib/utils.ts` | RARITY_COLORS, SELL_VALUES, CATEGORIES |
-| `lib/email.ts` | sendEmail() helper — used by feedback API + auth events |
+| `lib/email.ts` | sendEmail() helper — used by auth createUser event (new user alerts); NOT used by feedback |
 | `lib/audio-context.tsx` | Background music context + state |
+| `app/icon.svg` | App favicon — SVG lightning bolt on purple-to-pink gradient (auto-served by Next.js) |
 | `app/globals.css` | Theme CSS variables + font config + light mode Tailwind overrides |
 | `components/ThemeProvider.tsx` | next-themes wrapper |
 | `components/layout/MobileNav.tsx` | Mobile bottom nav — edit items here |
@@ -331,7 +343,7 @@ npm run db:seed      # re-seed data (idempotent)
 - **Prisma**: use `prisma.user.update` with `increment` for coin updates (not read-modify-write); after schema changes run both `db:push` AND `prisma generate`
 - **Auth**: all `(main)` routes auto-guard via `app/(main)/layout.tsx`; admin routes additionally check `isAdmin` flag
 - **Theming**: structural backgrounds → CSS variables; Tailwind utility overrides already in `globals.css`
-- **Email**: `lib/email.ts` is the single email helper — always use `sendEmail()`, never instantiate nodemailer directly; SMTP is optional (silent-fail if unconfigured)
+- **Email**: `lib/email.ts` is only used for new-user signup alerts now; feedback no longer uses email — do not re-add email to the feedback flow
 - **Mobile**: pages should use `p-4 md:p-8` responsive padding; sidebar is desktop-only
 - **Fonts**: body = Plus Jakarta Sans (`--font-jakarta`), headings = Space Grotesk (`--font-grotesk`) — do not change font imports in `app/layout.tsx`
 - **Confirm before**: deleting files, dropping DB tables, force-pushing

@@ -107,7 +107,7 @@ export default function FeedbackPage() {
 
       <div className="mt-6 bg-white/5 border border-white/10 rounded-xl p-4 text-center">
         <p className="text-sm text-gray-500">
-          You can also report bugs or suggest features by emailing Bhavik. All feedback is anonymous to other users.
+          All feedback is reviewed by Bhavik. It is not visible to other users.
         </p>
       </div>
     </div>

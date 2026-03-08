@@ -11,7 +11,7 @@ const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk", 
 
 export const metadata: Metadata = {
   title: "BittsQuiz",
-  description: "The ultimate quiz & collectible experience",
+  description: "Answer quizzes, earn coins, and collect rare Quizlet characters. The ultimate quiz & collectible experience!",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

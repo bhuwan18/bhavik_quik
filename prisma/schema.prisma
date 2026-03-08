@@ -29,6 +29,7 @@ model User {
   ownedQuizlets    UserQuizlet[]
   quizzesCreated   Quiz[]            @relation("QuizAuthor")
   paymentRequests  PaymentRequest[]
+  feedbacks        Feedback[]
 }
 
 model Account {
@@ -139,6 +140,16 @@ model PaymentRequest {
   adminNote String?  // optional note from admin on rejection
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   @default("General")
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model Pack {
