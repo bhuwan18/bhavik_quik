@@ -37,7 +37,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
           id: quiz.id,
           title: quiz.title,
           difficulty: quiz.difficulty,
-          questions: quiz.questions.map((q) => ({
+          questions: quiz.questions.map((q: any) => ({
             id: q.id,
             text: q.text,
             options: q.options as string[],

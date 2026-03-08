@@ -13,10 +13,10 @@ export default async function InfoPage() {
     ? (await prisma.userQuizlet.findMany({
         where: { userId: session.user.id },
         select: { quizletId: true },
-      })).map((r) => r.quizletId)
+      })).map((r: any) => r.quizletId)
     : [];
 
-  const packGroups = visibleQuizlets.reduce<Record<string, typeof visibleQuizlets>>((acc, q) => {
+  const packGroups = visibleQuizlets.reduce<Record<string, typeof visibleQuizlets>>((acc: any, q: any) => {
     if (!acc[q.pack]) acc[q.pack] = [];
     acc[q.pack].push(q);
     return acc;
@@ -59,7 +59,7 @@ export default async function InfoPage() {
             {packSlug.replace("-pack", "").replace(/-/g, " ")} Pack
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {quizlets.map((quizlet) => {
+            {(quizlets as any).map((quizlet: any) => {
               const rarityInfo = RARITY_COLORS[quizlet.rarity] ?? RARITY_COLORS.common;
               const owned = ownedIds.includes(quizlet.id);
               return (

@@ -18,7 +18,7 @@ export default async function AdminQuizEditPage({ params }: { params: Promise<{ 
   const data = raw as NonNullable<typeof raw>;
   const quiz = {
     ...data,
-    questions: data.questions.map((q) => ({
+    questions: data.questions.map((q: any) => ({
       id: q.id,
       text: q.text,
       options: Array.isArray(q.options) ? (q.options as string[]) : [],
