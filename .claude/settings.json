@@ -16,7 +16,13 @@
       "Bash(ls d:/VS_WS/bhavik_quik/app/\\\\\\(main\\\\\\)/upgrade/)",
       "Bash(ls d:/VS_WS/bhavik_quik/app/\\\\\\(main\\\\\\)/)",
       "Bash(head -3 d:/VS_WS/bhavik_quik/app/\\\\\\(main\\\\\\)/buy-coins/page.tsx)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/admin/quizzes)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/admin/quizzes)",
+      "Bash(npm install nodemailer @types/nodemailer)",
+      "Bash(npm install nodemailer @types/nodemailer --legacy-peer-deps)",
+      "Bash(npm run db:push)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(cmd /c \"taskkill /F /IM node.exe 2>&1\")",
+      "Bash(cmd /c \"taskkill /F /IM node.exe\")"
     ]
   }
 }

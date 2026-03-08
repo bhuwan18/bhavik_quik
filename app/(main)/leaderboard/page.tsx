@@ -18,6 +18,7 @@ export default async function LeaderboardPage() {
       coins: true,
       totalCorrect: true,
       totalAnswered: true,
+      lastSeenAt: true,
       createdAt: true,
       _count: { select: { ownedQuizlets: true, quizAttempts: true } },
     },
@@ -26,9 +27,11 @@ export default async function LeaderboardPage() {
   });
 
   const MEDALS = ["🥇", "🥈", "🥉"];
+  const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const isOnline = (lastSeen: Date | null) => !!lastSeen && lastSeen > fiveMinsAgo;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">🏆 Leaderboard</h1>
@@ -46,16 +49,22 @@ export default async function LeaderboardPage() {
               "from-yellow-500/30 to-orange-500/20 border-yellow-500/60",
               "from-orange-700/20 to-orange-800/10 border-orange-700/40",
             ];
+            const online = isOnline(user.lastSeenAt);
             return (
               <div key={user.id} className={`flex flex-col items-center gap-2 ${i === 1 ? "order-first" : ""}`}>
                 <span className="text-3xl">{MEDALS[actualRank - 1]}</span>
-                {user.image ? (
-                  <Image src={user.image} alt={user.name ?? ""} width={48} height={48} className="rounded-full ring-2 ring-white/20" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white text-lg">
-                    {user.name?.[0] ?? "?"}
-                  </div>
-                )}
+                <div className="relative">
+                  {user.image ? (
+                    <Image src={user.image} alt={user.name ?? ""} width={48} height={48} className="rounded-full ring-2 ring-white/20" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white text-lg">
+                      {user.name?.[0] ?? "?"}
+                    </div>
+                  )}
+                  {online && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-[var(--background)] shadow-sm shadow-green-400/60" />
+                  )}
+                </div>
                 <p className="text-white font-semibold text-sm text-center">{user.name ?? "Anonymous"}</p>
                 <p className="text-yellow-400 font-bold text-sm">🪙 {user.coins.toLocaleString()}</p>
                 <div className={`w-full ${heights[i]} bg-gradient-to-t ${gradients[i]} border rounded-t-2xl flex items-center justify-center`}>
@@ -86,6 +95,7 @@ export default async function LeaderboardPage() {
               ? Math.round((user.totalCorrect / user.totalAnswered) * 100)
               : 0;
             const isCurrentUser = user.id === session?.user?.id;
+            const online = isOnline(user.lastSeenAt);
 
             return (
               <div
@@ -97,13 +107,21 @@ export default async function LeaderboardPage() {
                   {idx < 3 ? MEDALS[idx] : <span className="text-gray-600">{idx + 1}</span>}
                 </div>
                 <div className="flex items-center gap-2 min-w-0">
-                  {user.image ? (
-                    <Image src={user.image} alt={user.name ?? ""} width={28} height={28} className="rounded-full flex-shrink-0" />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                      {user.name?.[0] ?? "?"}
-                    </div>
-                  )}
+                  <div className="relative flex-shrink-0">
+                    {user.image ? (
+                      <Image src={user.image} alt={user.name ?? ""} width={28} height={28} className="rounded-full" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white">
+                        {user.name?.[0] ?? "?"}
+                      </div>
+                    )}
+                    {online && (
+                      <span
+                        className="absolute bottom-0 right-0 w-2 h-2 bg-green-400 rounded-full border border-[var(--background)] shadow-sm shadow-green-400/60"
+                        title="Active now"
+                      />
+                    )}
+                  </div>
                   <span className={`text-sm font-medium truncate ${isCurrentUser ? "text-purple-300" : "text-white"}`}>
                     {user.name ?? "Anonymous"}
                     {isCurrentUser && <span className="text-xs text-purple-400 ml-1">(you)</span>}
@@ -143,9 +161,15 @@ export default async function LeaderboardPage() {
         )}
       </div>
 
-      {isAdmin && (
-        <p className="mt-4 text-xs text-purple-400/60 text-right">Admin view — emails and details visible</p>
-      )}
+      <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <span className="w-2 h-2 bg-green-400 rounded-full inline-block shadow-sm shadow-green-400/60" />
+          Online in the last 5 minutes
+        </div>
+        {isAdmin && (
+          <p className="text-xs text-purple-400/60">Admin view — emails and details visible</p>
+        )}
+      </div>
     </div>
   );
 }

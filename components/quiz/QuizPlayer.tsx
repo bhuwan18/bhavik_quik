@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 type Question = {
@@ -19,34 +19,56 @@ type Quiz = {
   questions: Question[];
 };
 
+/** Simple seeded shuffle — stable per session, random across sessions */
+function shuffleOrder(length: number, seed: number): number[] {
+  const arr = Array.from({ length }, (_, i) => i);
+  let s = (seed * 9301 + 49297) % 233280;
+  for (let i = arr.length - 1; i > 0; i--) {
+    s = (s * 9301 + 49297) % 233280;
+    const j = Math.floor((s / 233280) * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
   const router = useRouter();
   const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<number | null>(null); // visual index
   const [answers, setAnswers] = useState<{ questionId: string; selectedIndex: number }[]>([]);
   const [result, setResult] = useState<{ score: number; total: number; coinsEarned: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Generate shuffled display orders for every question once at mount
+  const shuffledOrders = useMemo(() => {
+    const seed = Date.now();
+    return quiz.questions.map((q, qi) => shuffleOrder(q.options.length, seed + qi * 137));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const question = quiz.questions[current];
+  const order = shuffledOrders[current]; // order[visualIdx] = originalIdx
   const total = quiz.questions.length;
-  const progress = ((current) / total) * 100;
+  const progress = (current / total) * 100;
   const coinsPerCorrect = COINS_BY_DIFFICULTY[quiz.difficulty] ?? 5;
 
-  const handleSelect = (idx: number) => {
+  // Which visual index shows the correct answer?
+  const correctVisualIdx = order.indexOf(question.correctIndex);
+
+  const handleSelect = (visualIdx: number) => {
     if (selected !== null) return;
-    setSelected(idx);
+    setSelected(visualIdx);
   };
 
   const handleNext = async () => {
     if (selected === null) return;
-    const newAnswers = [...answers, { questionId: question.id, selectedIndex: selected }];
+    const originalIdx = order[selected]; // map visual index → original DB index
+    const newAnswers = [...answers, { questionId: question.id, selectedIndex: originalIdx }];
     setAnswers(newAnswers);
 
     if (current + 1 < total) {
       setCurrent(current + 1);
       setSelected(null);
     } else {
-      // Submit
       setSubmitting(true);
       try {
         const res = await fetch("/api/attempt", {
@@ -66,10 +88,16 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
 
   if (result) {
     const pct = Math.round((result.score / result.total) * 100);
-    const emoji = pct >= 80 ? "🎉" : pct >= 60 ? "👍" : pct >= 40 ? "😐" : "😬";
+    const isPerfect = result.score === result.total;
+    const emoji = isPerfect ? "🏆" : pct >= 80 ? "🎉" : pct >= 60 ? "👍" : pct >= 40 ? "😐" : "😬";
     return (
       <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
         <div className="text-6xl mb-4">{emoji}</div>
+        {isPerfect && (
+          <div className="inline-flex items-center gap-2 bg-green-500/20 border border-green-500/40 text-green-400 px-4 py-1.5 rounded-full text-sm font-bold mb-3">
+            ✓ Perfect Score — Quiz Completed!
+          </div>
+        )}
         <h2 className="text-2xl font-bold text-white mb-2">Quiz Complete!</h2>
         <p className="text-gray-400 mb-6">
           You scored <span className="text-white font-bold">{result.score}/{result.total}</span> ({pct}%)
@@ -77,7 +105,7 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
         <div className="inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-4 py-2 rounded-xl mb-8 text-lg font-bold">
           🪙 +{result.coinsEarned} coins earned
         </div>
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-3 justify-center flex-wrap">
           <button
             onClick={() => router.push("/discover")}
             className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors"
@@ -115,18 +143,19 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
       </div>
 
       {/* Question card */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-6">
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8 mb-6">
         <p className="text-xl font-semibold text-white leading-relaxed">{question.text}</p>
       </div>
 
-      {/* Options */}
+      {/* Options — rendered in shuffled visual order */}
       <div className="space-y-3 mb-6">
-        {question.options.map((option, idx) => {
+        {order.map((originalIdx, visualIdx) => {
+          const option = question.options[originalIdx];
           let style = "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-indigo-500/50";
           if (selected !== null) {
-            if (idx === question.correctIndex) {
+            if (visualIdx === correctVisualIdx) {
               style = "bg-green-500/20 border-green-500 text-green-300";
-            } else if (idx === selected && idx !== question.correctIndex) {
+            } else if (visualIdx === selected && visualIdx !== correctVisualIdx) {
               style = "bg-red-500/20 border-red-500 text-red-300";
             } else {
               style = "bg-white/3 border-white/5 text-gray-500 opacity-60";
@@ -134,12 +163,12 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
           }
           return (
             <button
-              key={idx}
-              onClick={() => handleSelect(idx)}
+              key={visualIdx}
+              onClick={() => handleSelect(visualIdx)}
               disabled={selected !== null}
               className={`w-full text-left px-5 py-4 border rounded-xl transition-all duration-200 font-medium ${style}`}
             >
-              <span className="text-gray-500 mr-3">{String.fromCharCode(65 + idx)}.</span>
+              <span className="text-gray-500 mr-3">{String.fromCharCode(65 + visualIdx)}.</span>
               {option}
             </button>
           );

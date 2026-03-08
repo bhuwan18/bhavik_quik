@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./db";
+import { sendEmail, ADMIN_EMAIL } from "./email";
 
 declare module "next-auth" {
   interface Session {
@@ -90,5 +91,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   pages: {
     signIn: "/login",
+  },
+  events: {
+    async createUser({ user }) {
+      // Notify admin when a brand-new user registers
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: `[BittsQuiz] New player joined: ${user.name ?? user.email}`,
+        html: `
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+            <h2 style="color:#7c3aed">New Player Joined — BittsQuiz</h2>
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:8px;color:#666;width:100px">Name</td><td style="padding:8px;font-weight:600">${user.name ?? "—"}</td></tr>
+              <tr><td style="padding:8px;color:#666">Email</td><td style="padding:8px">${user.email ?? "—"}</td></tr>
+              <tr><td style="padding:8px;color:#666">Joined</td><td style="padding:8px">${new Date().toLocaleString()}</td></tr>
+            </table>
+            <p style="color:#999;font-size:12px;margin-top:16px">BittsQuiz ${new Date().getFullYear()}</p>
+          </div>
+        `,
+      }).catch((err) => console.error("[auth] Failed to send new user email:", err));
+    },
   },
 });

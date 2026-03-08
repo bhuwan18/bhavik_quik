@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import ThemeProvider from "@/components/ThemeProvider";
 
-const geist = Geist({ subsets: ["latin"] });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["400", "500", "600", "700", "800"] });
+const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk", weight: ["400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
   title: "BittsQuiz",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={geist.className + " antialiased min-h-screen"}>
+      <body className={`${jakarta.variable} ${grotesk.variable} font-sans antialiased min-h-screen`}>
         <ThemeProvider>
           <SessionProvider>{children}</SessionProvider>
         </ThemeProvider>

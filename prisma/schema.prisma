@@ -21,6 +21,7 @@ model User {
   proExpiresAt     DateTime?
   dailyCoinsEarned Int           @default(0)
   dailyCoinsReset  DateTime      @default(now())
+  lastSeenAt       DateTime?
   createdAt        DateTime      @default(now())
   accounts         Account[]
   sessions         Session[]

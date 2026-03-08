@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/utils";
@@ -8,6 +9,7 @@ export default async function DiscoverPage({
   searchParams: Promise<{ category?: string; search?: string }>;
 }) {
   const { category, search } = await searchParams;
+  const session = await auth();
 
   const quizzes = await prisma.quiz.findMany({
     where: {
@@ -22,6 +24,18 @@ export default async function DiscoverPage({
     take: 60,
   });
 
+  // Fetch quizzes the current user has completed with a perfect score
+  let completedQuizIds = new Set<string>();
+  if (session?.user?.id) {
+    const perfectAttempts = await prisma.quizAttempt.findMany({
+      where: { userId: session.user.id },
+      select: { quizId: true, score: true, total: true },
+    });
+    completedQuizIds = new Set(
+      perfectAttempts.filter((a) => a.score === a.total).map((a) => a.quizId)
+    );
+  }
+
   const difficultyLabel = (d: number) => {
     const labels = ["", "Beginner", "Easy", "Medium", "Hard", "Expert"];
     return labels[d] ?? "Medium";
@@ -34,7 +48,7 @@ export default async function DiscoverPage({
   const activeCat = CATEGORIES.find((c) => c.slug === category);
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">Discover Quizzes</h1>
         <p className="text-gray-400 mt-1">Browse official and community quizzes</p>
@@ -88,26 +102,38 @@ export default async function DiscoverPage({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {quizzes.map((quiz) => {
           const cat = CATEGORIES.find((c) => c.slug === quiz.category);
+          const isCompleted = completedQuizIds.has(quiz.id);
           return (
             <Link
               key={quiz.id}
               href={`/quiz/${quiz.id}`}
-              className="bg-white/5 hover:bg-white/8 border border-white/10 hover:border-indigo-500/50 rounded-2xl p-5 transition-all hover:shadow-lg hover:shadow-indigo-500/10 group"
+              className={`relative bg-white/5 hover:bg-white/8 border rounded-2xl p-5 transition-all hover:shadow-lg group ${
+                isCompleted
+                  ? "border-green-500/40 hover:border-green-500/60 hover:shadow-green-500/10"
+                  : "border-white/10 hover:border-indigo-500/50 hover:shadow-indigo-500/10"
+              }`}
             >
+              {isCompleted && (
+                <div className="absolute top-3 right-3 flex items-center gap-1 bg-green-500/20 border border-green-500/40 text-green-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                  ✓ Completed
+                </div>
+              )}
               <div className="flex items-start justify-between mb-3">
                 <span className="text-2xl">{cat?.icon ?? "📝"}</span>
-                <div className="flex items-center gap-2">
-                  {quiz.isOfficial && (
-                    <span className="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full">
-                      Official
+                {!isCompleted && (
+                  <div className="flex items-center gap-2">
+                    {quiz.isOfficial && (
+                      <span className="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full">
+                        Official
+                      </span>
+                    )}
+                    <span className={`text-xs font-medium ${difficultyColor(quiz.difficulty)}`}>
+                      {difficultyLabel(quiz.difficulty)}
                     </span>
-                  )}
-                  <span className={`text-xs font-medium ${difficultyColor(quiz.difficulty)}`}>
-                    {difficultyLabel(quiz.difficulty)}
-                  </span>
-                </div>
+                  </div>
+                )}
               </div>
-              <h3 className="font-semibold text-white group-hover:text-indigo-300 transition-colors mb-1">
+              <h3 className={`font-semibold transition-colors mb-1 ${isCompleted ? "text-green-300 group-hover:text-green-200" : "text-white group-hover:text-indigo-300"}`}>
                 {quiz.title}
               </h3>
               {quiz.description && (
