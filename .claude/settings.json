@@ -22,7 +22,8 @@
       "Bash(npm run db:push)",
       "Bash(taskkill /F /IM node.exe)",
       "Bash(cmd /c \"taskkill /F /IM node.exe 2>&1\")",
-      "Bash(cmd /c \"taskkill /F /IM node.exe\")"
+      "Bash(cmd /c \"taskkill /F /IM node.exe\")",
+      "Bash(npm install @vercel/analytics @vercel/speed-insights --legacy-peer-deps)"
     ]
   }
 }
