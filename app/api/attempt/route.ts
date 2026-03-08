@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
   // Score the attempt
   let score = 0;
   for (const answer of answers) {
-    const question = quiz.questions.find((q) => q.id === answer.questionId);
+    const question = quiz.questions.find((q: any) => q.id === answer.questionId);
     if (question && question.correctIndex === answer.selectedIndex) {
       score++;
     }

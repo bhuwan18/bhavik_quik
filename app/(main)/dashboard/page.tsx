@@ -148,7 +148,7 @@ export default async function DashboardPage() {
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Recent Activity</h2>
           <div className="space-y-3">
-            {recentAttempts.map((attempt) => {
+            {recentAttempts.map((attempt: any) => {
               const pct = Math.round((attempt.score / attempt.total) * 100);
               const cat = CATEGORIES.find((c) => c.slug === attempt.quiz.category);
               return (

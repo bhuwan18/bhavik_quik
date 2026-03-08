@@ -38,7 +38,7 @@ export default async function LeaderboardPage() {
       {/* Top 3 podium */}
       {users.length >= 3 && (
         <div className="grid grid-cols-3 gap-4 mb-8">
-          {[users[1], users[0], users[2]].map((user, i) => {
+          {[users[1], users[0], users[2]].map((user: any, i) => {
             const actualRank = i === 0 ? 2 : i === 1 ? 1 : 3;
             const heights = ["h-28", "h-36", "h-24"];
             const gradients = [
@@ -81,7 +81,7 @@ export default async function LeaderboardPage() {
             {isAdmin && <div className="text-xs text-gray-500 font-semibold text-right">Details</div>}
           </div>
 
-          {users.map((user, idx) => {
+          {users.map((user: any, idx: number) => {
             const accuracy = user.totalAnswered > 0
               ? Math.round((user.totalCorrect / user.totalAnswered) * 100)
               : 0;
