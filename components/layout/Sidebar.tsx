@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
@@ -22,18 +23,26 @@ const ADMIN_NAV_ITEMS = [
   { href: "/quiz-maker", icon: "✏️", label: "Quiz Maker" },
   { href: "/admin/users", icon: "👥", label: "User Manager" },
   { href: "/admin/payments", icon: "💳", label: "Payments" },
+  { href: "/admin/quizzes", icon: "📋", label: "Edit Quizzes" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { theme, setTheme } = useTheme();
   const user = session?.user as { isAdmin?: boolean; isPro?: boolean } | undefined;
   const isAdmin = !!user?.isAdmin;
   const isPro = !!user?.isPro;
+  const isLight = theme === "light";
 
   return (
-    <aside className="w-64 min-h-screen flex flex-col shrink-0 border-r border-purple-900/30"
-      style={{ background: "linear-gradient(180deg, #1a0a3e 0%, #110830 50%, #0d0622 100%)" }}>
+    <aside
+      className="w-64 min-h-screen flex flex-col shrink-0 border-r"
+      style={{
+        background: "linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-mid) 50%, var(--sidebar-to) 100%)",
+        borderColor: "var(--sidebar-border, rgba(88,28,135,0.3))",
+      }}
+    >
       {/* Logo */}
       <div className="p-6 border-b border-purple-800/30">
         <Link href="/dashboard" className="flex items-center gap-3 group">
@@ -93,6 +102,17 @@ export default function Sidebar() {
           </>
         )}
       </nav>
+
+      {/* Theme toggle */}
+      <div className="px-4 py-2 border-t border-purple-800/20">
+        <button
+          onClick={() => setTheme(isLight ? "dark" : "light")}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-all"
+        >
+          <span className="text-xl">{isLight ? "🌙" : "☀️"}</span>
+          {isLight ? "Dark Mode" : "Light Mode"}
+        </button>
+      </div>
 
       {/* User section */}
       {session?.user && (

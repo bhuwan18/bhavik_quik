@@ -16,7 +16,7 @@ export default async function CertificatePage() {
   const date = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-8">
+    <div className="min-h-screen flex items-center justify-center p-8" style={{ background: "var(--background)" }}>
       <div className="max-w-2xl w-full">
         {/* Certificate */}
         <div className="border-4 border-yellow-500/60 rounded-3xl p-10 bg-gradient-to-br from-yellow-950/30 to-orange-950/20 shadow-2xl shadow-yellow-500/20 text-center relative overflow-hidden">

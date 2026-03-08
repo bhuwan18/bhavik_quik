@@ -109,7 +109,7 @@ export default function QuizMakerForm() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#0d0a22] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
               >
                 {CATEGORIES.map(({ slug, label, icon }) => (
                   <option key={slug} value={slug}>{icon} {label}</option>
@@ -121,7 +121,7 @@ export default function QuizMakerForm() {
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(Number(e.target.value))}
-                className="w-full bg-[#0d0a22] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
               >
                 <option value={1}>1 — Beginner</option>
                 <option value={2}>2 — Easy</option>

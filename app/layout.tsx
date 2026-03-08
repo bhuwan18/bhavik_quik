@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
+import ThemeProvider from "@/components/ThemeProvider";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -12,10 +13,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${geist.className} antialiased min-h-screen`} style={{ background: "var(--background)", color: "#f0f0ff" }}>
-        <SessionProvider>{children}</SessionProvider>
-
+    <html lang="en" suppressHydrationWarning>
+      <body className={geist.className + " antialiased min-h-screen"}>
+        <ThemeProvider>
+          <SessionProvider>{children}</SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

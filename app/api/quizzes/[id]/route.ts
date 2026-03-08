@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import type { Session } from "next-auth";
+
+function adminOnly(session: Session | null): boolean {
+  return !!(session?.user?.id && (session.user as { isAdmin?: boolean }).isAdmin);
+}
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -11,7 +17,59 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       _count: { select: { attempts: true } },
     },
   });
-
   if (!quiz) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(quiz);
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!adminOnly(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { id } = await params;
+
+  let body: {
+    title?: string;
+    description?: string;
+    category?: string;
+    difficulty?: number;
+    questions?: Array<{ text: string; options: string[]; correctIndex: number; order: number }>;
+  };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const quiz = await prisma.quiz.findUnique({ where: { id } });
+  if (!quiz) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await prisma.quiz.update({
+    where: { id },
+    data: {
+      ...(body.title !== undefined       ? { title: body.title.slice(0, 200) } : {}),
+      ...(body.description !== undefined ? { description: body.description.slice(0, 1000) } : {}),
+      ...(body.category !== undefined    ? { category: body.category } : {}),
+      ...(body.difficulty !== undefined  ? { difficulty: Math.max(1, Math.min(5, body.difficulty)) } : {}),
+    },
+  });
+
+  if (Array.isArray(body.questions) && body.questions.length > 0) {
+    await prisma.question.deleteMany({ where: { quizId: id } });
+    await prisma.question.createMany({
+      data: body.questions.map((q, i) => ({
+        quizId: id,
+        text: q.text.slice(0, 500),
+        options: q.options,
+        correctIndex: q.correctIndex,
+        order: q.order ?? i,
+        points: 1,
+      })),
+    });
+  }
+
+  const updated = await prisma.quiz.findUnique({
+    where: { id },
+    include: { questions: { orderBy: { order: "asc" } } },
+  });
+  return NextResponse.json(updated);
 }

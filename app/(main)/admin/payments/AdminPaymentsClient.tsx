@@ -120,7 +120,7 @@ export default function AdminPaymentsClient() {
       {/* Reject modal */}
       {rejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 w-full max-w-md" style={{ background: "var(--surface)" }}>
             <h3 className="text-lg font-bold text-white mb-3">Reject Payment</h3>
             <p className="text-sm text-gray-400 mb-4">Optionally add a note for the user (not shown to user currently, stored for records).</p>
             <textarea

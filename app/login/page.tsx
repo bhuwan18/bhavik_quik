@@ -36,7 +36,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg, #070511 0%, #1a0838 50%, #070511 100%)" }}>
+      style={{ background: "var(--main-bg)" }}>
       {/* Animated background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-600/25 rounded-full blur-3xl animate-pulse" />
