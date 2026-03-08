@@ -23,7 +23,8 @@
       "Bash(taskkill /F /IM node.exe)",
       "Bash(cmd /c \"taskkill /F /IM node.exe 2>&1\")",
       "Bash(cmd /c \"taskkill /F /IM node.exe\")",
-      "Bash(npm install @vercel/analytics @vercel/speed-insights --legacy-peer-deps)"
+      "Bash(npm install @vercel/analytics @vercel/speed-insights --legacy-peer-deps)",
+      "Bash(npm install nodemailer@^7.0.7 @types/nodemailer --legacy-peer-deps)"
     ]
   }
 }
