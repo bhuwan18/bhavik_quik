@@ -86,7 +86,7 @@ export default async function DiscoverPage({
 
       {/* Quiz Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {quizzes.map((quiz) => {
+        {quizzes.map((quiz: any) => {
           const cat = CATEGORIES.find((c) => c.slug === quiz.category);
           return (
             <Link

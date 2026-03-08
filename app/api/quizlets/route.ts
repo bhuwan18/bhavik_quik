@@ -12,5 +12,5 @@ export async function GET() {
     orderBy: { obtainedAt: "desc" },
   });
 
-  return NextResponse.json(owned.map((r) => ({ ...r.quizlet, obtainedAt: r.obtainedAt })));
+  return NextResponse.json(owned.map((r: any) => ({ ...r.quizlet, obtainedAt: r.obtainedAt })));
 }
