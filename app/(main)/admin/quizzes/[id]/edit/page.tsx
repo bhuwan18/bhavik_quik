@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import type { Question } from "@prisma/client";
 import QuizEditClient from "./QuizEditClient";
 
 export default async function AdminQuizEditPage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,9 +15,10 @@ export default async function AdminQuizEditPage({ params }: { params: Promise<{ 
   });
   if (!raw) redirect("/admin/quizzes");
 
+  const data = raw as NonNullable<typeof raw>;
   const quiz = {
-    ...raw!,
-    questions: raw!.questions.map((q: Question) => ({
+    ...data,
+    questions: data.questions.map((q) => ({
       id: q.id,
       text: q.text,
       options: Array.isArray(q.options) ? (q.options as string[]) : [],
