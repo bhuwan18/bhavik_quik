@@ -96,7 +96,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async createUser({ user }) {
       // Notify admin when a brand-new user registers
       await sendEmail({
-        to: ADMIN_EMAIL,
+        to: ADMIN_EMAIL(),
         subject: `[BittsQuiz] New player joined: ${user.name ?? user.email}`,
         html: `
           <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
@@ -109,7 +109,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             <p style="color:#999;font-size:12px;margin-top:16px">BittsQuiz ${new Date().getFullYear()}</p>
           </div>
         `,
-      }).catch((err) => console.error("[auth] Failed to send new user email:", err));
+      }).catch((err: unknown) => console.error("[auth] Failed to send new user email:", err instanceof Error ? err.message : err));
     },
   },
 });

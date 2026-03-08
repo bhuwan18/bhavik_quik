@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const PRIMARY_NAV = [
@@ -24,6 +27,13 @@ const MORE_NAV = [
 export default function MobileNav() {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { data: session } = useSession();
+  const { theme, setTheme } = useTheme();
+  const isLight = theme === "light";
+
+  const user = session?.user as { isAdmin?: boolean; isPro?: boolean } | undefined;
+  const isAdmin = !!user?.isAdmin;
+  const isPro = !!user?.isPro;
 
   const isMoreActive = MORE_NAV.some(
     ({ href }) => pathname === href || pathname.startsWith(href + "/")
@@ -34,7 +44,7 @@ export default function MobileNav() {
       {/* Backdrop */}
       {drawerOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
           onClick={() => setDrawerOpen(false)}
         />
       )}
@@ -46,42 +56,99 @@ export default function MobileNav() {
           drawerOpen ? "translate-y-0" : "translate-y-full"
         )}
         style={{
-          bottom: "56px", // sits just above the nav bar
+          bottom: "56px",
           background: "linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-mid) 100%)",
           borderTop: "1px solid rgba(88,28,135,0.35)",
           borderRadius: "20px 20px 0 0",
-          paddingBottom: "8px",
+          maxHeight: "80vh",
+          overflowY: "auto",
         }}
       >
-        <div className="flex items-center justify-between px-5 py-3 border-b border-purple-800/20">
-          <p className="text-xs font-bold text-purple-400/80 uppercase tracking-widest">More</p>
-          <button
-            onClick={() => setDrawerOpen(false)}
-            className="text-gray-500 hover:text-white transition-colors text-lg leading-none"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="grid grid-cols-3 gap-1 p-3">
-          {MORE_NAV.map(({ href, icon, label }) => {
-            const active = pathname === href || pathname.startsWith(href + "/");
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setDrawerOpen(false)}
-                className={cn(
-                  "flex flex-col items-center gap-1 py-3 px-2 rounded-xl text-xs font-medium transition-colors",
-                  active
-                    ? "bg-purple-500/20 text-purple-400"
-                    : "text-gray-400 hover:bg-white/5 hover:text-white"
-                )}
+        {/* User profile row */}
+        {session?.user && (
+          <div className="px-4 pt-4 pb-3 border-b border-purple-800/20">
+            <div className="flex items-center gap-3">
+              {session.user.image ? (
+                <Image
+                  src={session.user.image}
+                  alt="Avatar"
+                  width={40}
+                  height={40}
+                  className={cn(
+                    "rounded-full ring-2",
+                    isPro ? "ring-yellow-400" : "ring-purple-500/50"
+                  )}
+                />
+              ) : (
+                <div className={cn(
+                  "w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-sm font-bold text-white ring-2",
+                  isPro ? "ring-yellow-400" : "ring-purple-500/50"
+                )}>
+                  {session.user.name?.[0] ?? "?"}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-semibold text-white truncate">{session.user.name}</p>
+                  {isAdmin && (
+                    <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-1.5 py-0.5 rounded-full font-semibold shrink-0">
+                      ADMIN
+                    </span>
+                  )}
+                  {!isAdmin && isPro && (
+                    <span className="text-xs bg-gradient-to-r from-yellow-500 to-orange-400 text-black px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                      PRO
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
+              </div>
+            </div>
+
+            {/* Theme toggle + Sign out */}
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => setTheme(isLight ? "dark" : "light")}
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-white/5 text-gray-300 hover:bg-white/10 transition-colors border border-white/10"
               >
-                <span className="text-2xl leading-none">{icon}</span>
-                <span className="text-center leading-tight">{label}</span>
-              </Link>
-            );
-          })}
+                <span>{isLight ? "🌙" : "☀️"}</span>
+                <span>{isLight ? "Dark Mode" : "Light Mode"}</span>
+              </button>
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors border border-red-500/20"
+              >
+                <span>↩</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Nav grid */}
+        <div className="p-3">
+          <p className="text-xs font-bold text-purple-400/60 uppercase tracking-widest px-1 mb-2">Pages</p>
+          <div className="grid grid-cols-3 gap-1">
+            {MORE_NAV.map(({ href, icon, label }) => {
+              const active = pathname === href || pathname.startsWith(href + "/");
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setDrawerOpen(false)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 py-3 px-2 rounded-xl text-xs font-medium transition-colors",
+                    active
+                      ? "bg-purple-500/20 text-purple-400"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  )}
+                >
+                  <span className="text-2xl leading-none">{icon}</span>
+                  <span className="text-center leading-tight">{label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -100,6 +167,7 @@ export default function MobileNav() {
               <Link
                 key={href}
                 href={href}
+                onClick={() => setDrawerOpen(false)}
                 className={cn(
                   "flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors",
                   active ? "text-purple-400" : "text-gray-500"
