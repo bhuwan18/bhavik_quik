@@ -16,8 +16,9 @@ This file provides guidance for AI assistants working in this repository.
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 14 (App Router) + TypeScript |
+| Framework | Next.js 16 (App Router) + TypeScript |
 | Styling | Tailwind CSS v4 + CSS custom properties for theming |
+| Fonts | Plus Jakarta Sans (body) + Space Grotesk (headings) via next/font/google |
 | UI Components | Custom components (shadcn unavailable, built manually) |
 | Auth | NextAuth.js v5 (Google OAuth + admin username/password) |
 | ORM | Prisma v7 |
@@ -26,6 +27,8 @@ This file provides guidance for AI assistants working in this repository.
 | Animations | Framer Motion |
 | Icons | Lucide React + Emoji |
 | Theming | next-themes (dark/light toggle, class-based) |
+| Email | Nodemailer v7 (SMTP — feedback + new user alerts) |
+| Analytics | Vercel Analytics + Speed Insights |
 
 ---
 
@@ -77,6 +80,15 @@ UPI_NAME="BittsQuiz"
 
 # Background music URL (publicly accessible MP3 stream)
 NEXT_PUBLIC_MUSIC_URL="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+
+# Email / SMTP (for feedback form + new user registration alerts)
+# Gmail: use App Password from Google Account → Security → App Passwords
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_SECURE="false"
+SMTP_USER="your-gmail@gmail.com"
+SMTP_PASS="your-app-password"
+ADMIN_NOTIFY_EMAIL="your-gmail@gmail.com"   # defaults to SMTP_USER if unset
 ```
 
 ---
@@ -85,19 +97,21 @@ NEXT_PUBLIC_MUSIC_URL="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1
 
 ```
 app/
-├── layout.tsx                    Root layout — ThemeProvider + SessionProvider
+├── layout.tsx                    Root layout — ThemeProvider + SessionProvider + Vercel Analytics
 ├── page.tsx                      Redirects: logged in → /dashboard, else → /login
 ├── login/page.tsx                Google sign-in screen
 ├── certificate/page.tsx          Completion certificate (only if all quizlets owned)
 ├── globals.css                   CSS variables for dark/light theme + Tailwind overrides
 ├── (main)/                       Auth-guarded area (sidebar layout + AudioProvider)
-│   ├── layout.tsx                Auth guard + Sidebar + AudioPlayer
+│   ├── layout.tsx                Auth guard + Sidebar (desktop) + MobileNav + OnlinePing + AudioPlayer
 │   ├── dashboard/page.tsx        Stats, coins, collection progress, quick play
-│   ├── discover/page.tsx         Browse official + community quizzes by category
+│   ├── discover/page.tsx         Browse quizzes — shows ✓ Completed badge on perfect-score quizzes
 │   ├── quiz/[id]/page.tsx        Quiz player (music auto-pauses here)
 │   ├── marketplace/page.tsx      Buy packs with coins
-│   ├── quizlets/page.tsx         View/sell owned Quizlet characters
+│   ├── quizlets/page.tsx         View/sell owned Quizlet characters (+ Hidden section)
 │   ├── quiz-maker/page.tsx       Create and publish custom quizzes
+│   ├── leaderboard/page.tsx      Top players — green online dot if active within 5 min
+│   ├── feedback/page.tsx         User feedback form → emails admin via SMTP
 │   ├── info/page.tsx             All quizlets directory with rarity guide
 │   ├── game/page.tsx             Game mode selection hub
 │   ├── buy-coins/page.tsx        UPI payment flow for coins
@@ -108,6 +122,7 @@ app/
 │       └── payments/page.tsx     Approve/reject pending UPI payment requests
 └── api/
     ├── auth/[...nextauth]/       NextAuth handler
+    ├── feedback/                 POST — sends feedback email to admin via SMTP
     ├── quizzes/                  GET quizzes list, POST create quiz
     ├── quizzes/[id]/             GET single quiz; PATCH (admin) update quiz + questions
     ├── attempt/                  POST quiz attempt, awards coins
@@ -116,21 +131,24 @@ app/
     ├── quizlets/                 GET owned quizlets
     ├── quizlets/sell/            POST sell a quizlet for coins
     ├── user/stats/               GET dashboard stats
+    ├── user/ping/                POST update lastSeenAt — called every 2 min by OnlinePing
     ├── user/submit-payment/      POST submit UTR number for UPI payment
     └── admin/payments/
         ├── route.ts              GET list payment requests
         └── [id]/route.ts         PATCH approve/reject payment → credit coins/pro
 
 components/
-├── layout/Sidebar.tsx            Navigation sidebar — includes theme toggle (☀️/🌙) + admin nav
+├── layout/Sidebar.tsx            Navigation sidebar (desktop only) — theme toggle + admin nav
+├── layout/MobileNav.tsx          Bottom tab bar (mobile only, md:hidden) — 5 key nav items
+├── layout/OnlinePing.tsx         Client component — silently POSTs /api/user/ping every 2 min
 ├── ThemeProvider.tsx             next-themes wrapper (class-based, default: dark)
 ├── AudioPlayer.tsx               Floating music player (bottom-right) — volume + on/off
-├── quiz/QuizPlayer.tsx           Interactive quiz player component
+├── quiz/QuizPlayer.tsx           Interactive quiz — answers shuffled randomly each session
 ├── quiz/QuizMakerForm.tsx        Quiz creation form
 ├── marketplace/
 │   ├── MarketplaceClient.tsx     Pack browsing + purchase
 │   └── PackOpeningModal.tsx      Animated pack reveal (tap cards)
-├── quizlets/QuizletsClient.tsx   Collection grid + sell + filters
+├── quizlets/QuizletsClient.tsx   Collection grid + sell + filters + Hidden section
 └── game/
     ├── GameModesClient.tsx       Mode selection
     ├── HackDevGame.tsx           60-second tech quiz sprint
@@ -138,8 +156,9 @@ components/
     └── SpeedBlitzGame.tsx        20 questions in 30 seconds
 
 lib/
-├── auth.ts                       NextAuth config (Google + admin credentials)
+├── auth.ts                       NextAuth config — Google + admin credentials + createUser email event
 ├── db.ts                         Prisma client singleton
+├── email.ts                      Nodemailer helper — sendEmail() + ADMIN_EMAIL constant
 ├── audio-context.tsx             React context for background music state + controls
 ├── quizlets-data.ts              All character definitions
 ├── packs-data.ts                 All pack definitions
@@ -148,7 +167,7 @@ lib/
 └── utils.ts                      cn(), CATEGORIES, RARITY_COLORS, SELL_VALUES
 
 prisma/
-├── schema.prisma                 Full DB schema (includes PaymentRequest model)
+├── schema.prisma                 Full DB schema (includes PaymentRequest model + lastSeenAt on User)
 └── seed.ts                       50 official quizzes + all quizlets + packs
 ```
 
@@ -161,7 +180,7 @@ prisma/
 - 55 total: spread across 7 packs + 3 global uniques
 - Each has: name, rarity, pack, icon (emoji), color gradient, description
 - Rarities: `common` | `uncommon` | `rare` | `epic` | `legendary` | `secret` | `unique` | `impossible`
-- Secret/Unique/Impossible have `isHidden: true` — not shown in Info tab or pack descriptions
+- Secret/Unique/Impossible have `isHidden: true` — shown in a separate "Hidden" section in the Quizlets tab, not in Info tab or pack descriptions
 
 ### Rarity Visual System
 Defined in `lib/utils.ts → RARITY_COLORS`:
@@ -194,6 +213,9 @@ the festival pack slug. No DB change needed — pure date comparison at request 
 10 categories × 5 quizzes (difficulty 1–5) = **50 official quizzes** seeded via `prisma/seed.ts`.
 Categories: football, cricket, harry-potter, technology, avengers, artists, musicians, math, science, physics.
 
+### Quiz Answer Shuffling
+QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates shuffle (`shuffleOrder` in `components/quiz/QuizPlayer.tsx`). The correct answer mapping is preserved — do not change this logic.
+
 ### Game Modes
 - **HackDev**: Single player, tech questions, 60-second timer
 - **DinoRex**: Elimination mode (practice vs AI bots; real multiplayer via Socket.io pending)
@@ -206,6 +228,29 @@ Categories: football, cricket, harry-potter, technology, avengers, artists, musi
 4. `POST /api/user/submit-payment` → creates `PaymentRequest` (status: pending)
 5. Admin sees it at `/admin/payments` → clicks Approve or Reject
 6. On approve: coins credited or Pro granted via `prisma.user.update`
+
+### Feedback System
+- `/feedback` page with type selector (General, Bug Report, Feature Request, etc.)
+- Submissions POST to `/api/feedback` → sends HTML email to `ADMIN_NOTIFY_EMAIL` via SMTP
+- Email is silent-fail if SMTP not configured (logs warning, doesn't crash)
+
+### Online Status (Leaderboard)
+- `User.lastSeenAt DateTime?` field updated every 2 minutes by `OnlinePing` client component
+- Leaderboard shows green dot on avatar if `lastSeenAt > now - 5 minutes`
+- `POST /api/user/ping` handles the update
+
+### New User Email Notification
+- NextAuth `events.createUser` fires when a brand-new Google account signs up
+- Sends admin notification email via `lib/email.ts → sendEmail()`
+
+### Quiz Completion Tracking
+- Discover page fetches user's `QuizAttempt` records where `score === total` (perfect score)
+- Those quiz cards show a green **✓ Completed** badge and green border
+
+### Mobile Navigation
+- Desktop: full `Sidebar` (hidden on mobile via `hidden md:flex`)
+- Mobile: `MobileNav` bottom tab bar with 5 items (Home, Discover, Shop, Quizlets, Feedback)
+- Main content has `pb-20 md:pb-0` to clear the mobile nav bar
 
 ### Dark/Light Theme
 - Managed by `next-themes` with `attribute="class"` — adds `dark` or `light` to `<html>`
@@ -237,9 +282,12 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `lib/roll.ts` | Pack opening RNG — edit drop rates here |
 | `lib/festivals.ts` | Add/modify festival dates here |
 | `lib/utils.ts` | RARITY_COLORS, SELL_VALUES, CATEGORIES |
+| `lib/email.ts` | sendEmail() helper — used by feedback API + auth events |
 | `lib/audio-context.tsx` | Background music context + state |
-| `app/globals.css` | Theme CSS variables + light mode Tailwind overrides |
+| `app/globals.css` | Theme CSS variables + font config + light mode Tailwind overrides |
 | `components/ThemeProvider.tsx` | next-themes wrapper |
+| `components/layout/MobileNav.tsx` | Mobile bottom nav — edit items here |
+| `components/layout/OnlinePing.tsx` | Pings /api/user/ping every 2 min |
 | `prisma/schema.prisma` | DB schema — run `npm run db:push` after changes |
 | `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed |
 
@@ -262,8 +310,9 @@ git push -u origin <branch-name>
 
 ### After Schema Changes
 ```bash
-npm run db:push    # push schema changes to DB
-npm run db:seed    # re-seed data (idempotent)
+npm run db:push      # push schema changes to DB
+npx prisma generate  # regenerate client types
+npm run db:seed      # re-seed data (idempotent)
 ```
 
 ### After Adding New Quizlets/Packs
@@ -279,7 +328,10 @@ npm run db:seed    # re-seed data (idempotent)
 - **No hardcoded dark colors** — use `bg-white/5`, `bg-white/10`, or `var(--surface)` / `var(--background)` CSS variables
 - **No over-engineering** — minimal changes, no unnecessary abstractions
 - **Security**: no SQL injection, no exposed secrets, validate at API boundaries
-- **Prisma**: use `prisma.user.update` with `increment` for coin updates (not read-modify-write)
+- **Prisma**: use `prisma.user.update` with `increment` for coin updates (not read-modify-write); after schema changes run both `db:push` AND `prisma generate`
 - **Auth**: all `(main)` routes auto-guard via `app/(main)/layout.tsx`; admin routes additionally check `isAdmin` flag
 - **Theming**: structural backgrounds → CSS variables; Tailwind utility overrides already in `globals.css`
+- **Email**: `lib/email.ts` is the single email helper — always use `sendEmail()`, never instantiate nodemailer directly; SMTP is optional (silent-fail if unconfigured)
+- **Mobile**: pages should use `p-4 md:p-8` responsive padding; sidebar is desktop-only
+- **Fonts**: body = Plus Jakarta Sans (`--font-jakarta`), headings = Space Grotesk (`--font-grotesk`) — do not change font imports in `app/layout.tsx`
 - **Confirm before**: deleting files, dropping DB tables, force-pushing

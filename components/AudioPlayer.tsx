@@ -25,7 +25,7 @@ export default function AudioPlayer() {
   const isQuizPage = /^\/quiz\/[^/]+$/.test(pathname);
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
+    <div className="fixed bottom-20 md:bottom-5 right-5 z-50 flex flex-col items-end gap-2">
       {/* Expanded controls */}
       {expanded && (
         <div
