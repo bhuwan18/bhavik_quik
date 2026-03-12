@@ -39,6 +39,8 @@ export async function GET(req: NextRequest) {
         isLocked: true,
         isPro: true,
         proExpiresAt: true,
+        isMax: true,
+        maxExpiresAt: true,
         dailyCoinsEarned: true,
         dailyCoinsReset: true,
         totalCorrect: true,

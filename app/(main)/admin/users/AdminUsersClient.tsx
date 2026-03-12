@@ -11,6 +11,8 @@ type UserRow = {
   isLocked: boolean;
   isPro: boolean;
   proExpiresAt: string | null;
+  isMax: boolean;
+  maxExpiresAt: string | null;
   dailyCoinsEarned: number;
   dailyCoinsReset: string;
   totalCorrect: number;
@@ -19,14 +21,16 @@ type UserRow = {
   _count: { quizAttempts: number; ownedQuizlets: number };
 };
 
-type Action = "lock" | "unlock" | "reset_daily" | "grant_pro" | "revoke_pro";
+type Action = "lock" | "unlock" | "reset_daily" | "grant_pro" | "revoke_pro" | "grant_max" | "revoke_max";
 
-const DAILY_LIMIT_REGULAR = 100;
-const DAILY_LIMIT_PRO = 500;
+const DAILY_LIMIT_REGULAR = 500;
+const DAILY_LIMIT_PRO = 1000;
+const DAILY_LIMIT_MAX = 1500;
 
 function DailyBar({ user }: { user: UserRow }) {
-  const isProActive = user.isPro && (!user.proExpiresAt || new Date(user.proExpiresAt) > new Date());
-  const limit = isProActive ? DAILY_LIMIT_PRO : DAILY_LIMIT_REGULAR;
+  const isMaxActive = user.isMax && (!user.maxExpiresAt || new Date(user.maxExpiresAt) > new Date());
+  const isProActive = !isMaxActive && user.isPro && (!user.proExpiresAt || new Date(user.proExpiresAt) > new Date());
+  const limit = isMaxActive ? DAILY_LIMIT_MAX : isProActive ? DAILY_LIMIT_PRO : DAILY_LIMIT_REGULAR;
   const now = new Date();
   const resetDate = new Date(user.dailyCoinsReset);
   const isNewDay =
@@ -36,17 +40,19 @@ function DailyBar({ user }: { user: UserRow }) {
   const earned = isNewDay ? 0 : user.dailyCoinsEarned;
   const pct = Math.min(100, Math.round((earned / limit) * 100));
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-20 bg-white/10 rounded-full h-1.5">
+    <div className="flex items-center gap-1.5 min-w-0">
+      <div className="w-16 bg-white/10 rounded-full h-1.5 shrink-0">
         <div
           className={`h-1.5 rounded-full ${pct >= 100 ? "bg-red-400" : "bg-indigo-400"}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-xs text-gray-500">{earned}/{limit}</span>
+      <span className="text-xs text-gray-500 whitespace-nowrap">{earned}/{limit}</span>
     </div>
   );
 }
+
+type Confirm = { userId: string; userName: string; action: Action; label: string };
 
 export default function AdminUsersClient() {
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -57,6 +63,7 @@ export default function AdminUsersClient() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
+  const [confirm, setConfirm] = useState<Confirm | null>(null);
 
   const limit = 20;
 
@@ -71,10 +78,7 @@ export default function AdminUsersClient() {
       const params = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (search) params.set("search", search);
       const res = await fetch(`/api/admin/users?${params}`);
-      if (!res.ok) {
-        showToast("Failed to load users", false);
-        return;
-      }
+      if (!res.ok) { showToast("Failed to load users", false); return; }
       const data = await res.json();
       setUsers(data.users ?? []);
       setTotal(data.total ?? 0);
@@ -86,6 +90,7 @@ export default function AdminUsersClient() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const doAction = async (userId: string, action: Action, label: string) => {
+    setConfirm(null);
     setActionLoading(`${userId}-${action}`);
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
@@ -104,6 +109,10 @@ export default function AdminUsersClient() {
     }
   };
 
+  const requestAction = (userId: string, userName: string, action: Action, label: string) => {
+    setConfirm({ userId, userName, action, label });
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput.trim());
@@ -112,25 +121,56 @@ export default function AdminUsersClient() {
 
   const totalPages = Math.ceil(total / limit);
 
+  const ACTION_DESCRIPTIONS: Record<Action, string> = {
+    lock: "lock this account (user will not be able to play)",
+    unlock: "unlock this account",
+    reset_daily: "reset the daily coin limit counter",
+    grant_pro: "grant Pro tier for 30 days",
+    revoke_pro: "revoke Pro tier immediately",
+    grant_max: "grant Max tier for 30 days",
+    revoke_max: "revoke Max tier immediately",
+  };
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">User Manager</h1>
-          <p className="text-gray-400 text-sm">
-            Lock/unlock accounts, reset daily coin limits, and manage Pro access.
-          </p>
-        </div>
-        <div className="text-right text-xs text-gray-500">
-          <div>{total} total users</div>
-          <div className="mt-0.5">Page {page} of {Math.max(1, totalPages)}</div>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white mb-1">User Manager</h1>
+        <p className="text-gray-400 text-sm">
+          Manage accounts · {total} total users
+        </p>
       </div>
+
+      {/* Confirmation modal */}
+      {confirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-[var(--surface)] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 className="text-white font-semibold text-base mb-1">Confirm action</h3>
+            <p className="text-gray-400 text-sm mb-1">
+              You are about to <span className="text-white">{ACTION_DESCRIPTIONS[confirm.action]}</span> for:
+            </p>
+            <p className="text-purple-300 font-medium text-sm mb-5 truncate">{confirm.userName}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => doAction(confirm.userId, confirm.action, confirm.label)}
+                className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setConfirm(null)}
+                className="flex-1 py-2 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-xl transition-all ${
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-xl ${
           toast.ok
             ? "bg-green-500/20 border border-green-500/40 text-green-300"
             : "bg-red-500/20 border border-red-500/40 text-red-300"
@@ -139,18 +179,18 @@ export default function AdminUsersClient() {
         </div>
       )}
 
-      {/* Search bar */}
-      <form onSubmit={handleSearch} className="flex gap-3 mb-6">
+      {/* Search */}
+      <form onSubmit={handleSearch} className="flex gap-2 mb-5">
         <input
           type="text"
           placeholder="Search by name or email..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value.slice(0, 100))}
-          className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 text-sm"
+          className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 text-sm"
         />
         <button
           type="submit"
-          className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl transition-colors"
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl transition-colors"
         >
           Search
         </button>
@@ -158,170 +198,187 @@ export default function AdminUsersClient() {
           <button
             type="button"
             onClick={() => { setSearchInput(""); setSearch(""); setPage(1); }}
-            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-xl transition-colors"
+            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-xl transition-colors"
           >
             Clear
           </button>
         )}
       </form>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 mb-4 text-xs text-gray-500">
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> Locked</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" /> Pro</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-400 inline-block" /> Admin</span>
-      </div>
-
-      {/* User table */}
+      {/* Table */}
       {loading ? (
         <div className="text-center py-16 text-gray-500">Loading users...</div>
       ) : users.length === 0 ? (
         <div className="text-center py-16 text-gray-500">No users found.</div>
       ) : (
-        <div className="space-y-2">
-          {users.map((user) => {
-            const isProActive = user.isPro && (!user.proExpiresAt || new Date(user.proExpiresAt) > new Date());
-            return (
-              <div
-                key={user.id}
-                className={`border rounded-2xl p-5 transition-colors ${
-                  user.isLocked
-                    ? "bg-red-500/5 border-red-500/20"
-                    : "bg-white/5 border-white/10 hover:border-white/20"
-                }`}
-              >
-                <div className="flex flex-wrap items-start gap-4">
-                  {/* Left: user info */}
-                  <div className="flex-1 min-w-0">
-                    {/* Name + badges */}
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className={`font-semibold text-sm ${user.isLocked ? "text-gray-400 line-through" : "text-white"}`}>
-                        {user.name ?? "—"}
-                      </span>
-                      {user.isAdmin && (
-                        <span className="text-xs bg-purple-500/20 border border-purple-500/40 text-purple-300 px-2 py-0.5 rounded-full font-bold">ADMIN</span>
-                      )}
-                      {isProActive && (
-                        <span className="text-xs bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 px-2 py-0.5 rounded-full font-bold">PRO</span>
-                      )}
-                      {user.isLocked && (
-                        <span className="text-xs bg-red-500/20 border border-red-500/40 text-red-300 px-2 py-0.5 rounded-full font-bold">LOCKED</span>
-                      )}
-                    </div>
+        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr className="bg-white/5 border-b border-white/10 text-xs text-gray-500 font-semibold">
+                  <th className="px-4 py-3 text-left">User</th>
+                  <th className="px-4 py-3 text-right hidden sm:table-cell">Coins</th>
+                  <th className="px-4 py-3 text-right hidden md:table-cell">Correct</th>
+                  <th className="px-4 py-3 text-left hidden lg:table-cell">Daily</th>
+                  <th className="px-4 py-3 text-center">Tier</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => {
+                  const isMaxActive = user.isMax && (!user.maxExpiresAt || new Date(user.maxExpiresAt) > new Date());
+                  const isProActive = !isMaxActive && user.isPro && (!user.proExpiresAt || new Date(user.proExpiresAt) > new Date());
+                  const tierExpiry = isMaxActive && user.maxExpiresAt
+                    ? `Max → ${new Date(user.maxExpiresAt).toLocaleDateString()}`
+                    : isProActive && user.proExpiresAt
+                    ? `Pro → ${new Date(user.proExpiresAt).toLocaleDateString()}`
+                    : null;
 
-                    {/* Email */}
-                    <p className="text-xs text-gray-500 mb-2">{user.email}</p>
+                  return (
+                    <tr
+                      key={user.id}
+                      className={`border-b border-white/5 last:border-0 text-sm ${
+                        user.isLocked ? "bg-red-500/5" : "hover:bg-white/[0.03]"
+                      }`}
+                    >
+                      {/* User */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`font-medium ${user.isLocked ? "text-gray-500 line-through" : "text-white"}`}>
+                            {user.name ?? "—"}
+                          </span>
+                          {user.isAdmin && <span className="text-xs bg-purple-500/20 border border-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded-full">ADMIN</span>}
+                          {user.isLocked && <span className="text-xs bg-red-500/20 border border-red-500/30 text-red-300 px-1.5 py-0.5 rounded-full">LOCKED</span>}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">{user.email}</div>
+                        <div className="text-xs text-gray-600 mt-0.5">
+                          Joined {new Date(user.createdAt).toLocaleDateString()} · 🎴 {user._count.ownedQuizlets} · 📝 {user._count.quizAttempts}
+                        </div>
+                      </td>
 
-                    {/* Stats row */}
-                    <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500">
-                      <span>🪙 {user.coins.toLocaleString()} coins</span>
-                      <span>✅ {user.totalCorrect}/{user.totalAnswered} correct</span>
-                      <span>🎴 {user._count.ownedQuizlets} quizlets</span>
-                      <span>📝 {user._count.quizAttempts} attempts</span>
-                      <span>📆 {new Date(user.createdAt).toLocaleDateString()}</span>
-                      {isProActive && user.proExpiresAt && (
-                        <span className="text-yellow-500/70">Pro until {new Date(user.proExpiresAt).toLocaleDateString()}</span>
-                      )}
-                    </div>
+                      {/* Coins */}
+                      <td className="px-4 py-3 text-right text-yellow-400 font-mono hidden sm:table-cell">
+                        {user.coins.toLocaleString()}
+                      </td>
 
-                    {/* Daily coins bar */}
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-xs text-gray-600">Daily coins:</span>
-                      <DailyBar user={user} />
-                    </div>
-                  </div>
+                      {/* Correct */}
+                      <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">
+                        {user.totalCorrect}/{user.totalAnswered}
+                      </td>
 
-                  {/* Right: action buttons — hidden for admin accounts */}
-                  {!user.isAdmin && (
-                    <div className="flex flex-col gap-2 shrink-0">
-                      {/* Lock / Unlock */}
-                      <button
-                        onClick={() => doAction(
-                          user.id,
-                          user.isLocked ? "unlock" : "lock",
-                          user.isLocked ? "Account unlocked" : "Account locked"
+                      {/* Daily bar */}
+                      <td className="px-4 py-3 hidden lg:table-cell">
+                        <DailyBar user={user} />
+                      </td>
+
+                      {/* Tier */}
+                      <td className="px-4 py-3 text-center">
+                        {isMaxActive ? (
+                          <div>
+                            <span className="text-xs bg-pink-500/20 border border-pink-500/30 text-pink-300 px-2 py-0.5 rounded-full font-bold">MAX</span>
+                            {tierExpiry && <div className="text-xs text-gray-600 mt-1 whitespace-nowrap">{tierExpiry.split("→")[1]?.trim()}</div>}
+                          </div>
+                        ) : isProActive ? (
+                          <div>
+                            <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 px-2 py-0.5 rounded-full font-bold">PRO</span>
+                            {tierExpiry && <div className="text-xs text-gray-600 mt-1 whitespace-nowrap">{tierExpiry.split("→")[1]?.trim()}</div>}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-600">—</span>
                         )}
-                        disabled={!!actionLoading}
-                        className={cn(
-                          "text-xs px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-40 min-w-[110px] text-center",
-                          user.isLocked
-                            ? "bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30"
-                            : "bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30"
-                        )}
-                      >
-                        {actionLoading === `${user.id}-${user.isLocked ? "unlock" : "lock"}`
-                          ? "Working..."
-                          : user.isLocked ? "🔓 Unlock" : "🔒 Lock"}
-                      </button>
+                      </td>
 
-                      {/* Reset daily coins */}
-                      <button
-                        onClick={() => doAction(user.id, "reset_daily", "Daily limit reset")}
-                        disabled={!!actionLoading}
-                        className="text-xs px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 rounded-lg font-semibold transition-colors disabled:opacity-40 min-w-[110px] text-center"
-                      >
-                        {actionLoading === `${user.id}-reset_daily` ? "Working..." : "🔄 Reset Daily"}
-                      </button>
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        {user.isAdmin ? (
+                          <span className="text-xs text-purple-400/40 italic">no actions</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5 justify-end">
+                            <button
+                              onClick={() => requestAction(user.id, user.name ?? user.email, user.isLocked ? "unlock" : "lock", user.isLocked ? "Unlocked" : "Locked")}
+                              disabled={!!actionLoading}
+                              title={user.isLocked ? "Unlock account" : "Lock account"}
+                              className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold transition-colors disabled:opacity-40 ${
+                                user.isLocked
+                                  ? "bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30"
+                                  : "bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30"
+                              }`}
+                            >
+                              {actionLoading === `${user.id}-${user.isLocked ? "unlock" : "lock"}` ? "…" : user.isLocked ? "🔓" : "🔒"}
+                            </button>
 
-                      {/* Grant / Revoke Pro */}
-                      <button
-                        onClick={() => doAction(
-                          user.id,
-                          isProActive ? "revoke_pro" : "grant_pro",
-                          isProActive ? "Pro revoked" : "Pro granted (30 days)"
-                        )}
-                        disabled={!!actionLoading}
-                        className={cn(
-                          "text-xs px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-40 min-w-[110px] text-center",
-                          isProActive
-                            ? "bg-gray-500/20 hover:bg-gray-500/30 text-gray-300 border border-gray-500/30"
-                            : "bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30"
-                        )}
-                      >
-                        {actionLoading === `${user.id}-${isProActive ? "revoke_pro" : "grant_pro"}`
-                          ? "Working..."
-                          : isProActive ? "✖ Revoke Pro" : "⭐ Grant Pro"}
-                      </button>
-                    </div>
-                  )}
+                            <button
+                              onClick={() => requestAction(user.id, user.name ?? user.email, "reset_daily", "Daily reset")}
+                              disabled={!!actionLoading}
+                              title="Reset daily coin limit"
+                              className="text-xs px-2.5 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 rounded-lg font-semibold transition-colors disabled:opacity-40"
+                            >
+                              {actionLoading === `${user.id}-reset_daily` ? "…" : "🔄"}
+                            </button>
 
-                  {user.isAdmin && (
-                    <div className="shrink-0 text-xs text-purple-400/50 italic self-center">
-                      Admin account — no actions
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                            <button
+                              onClick={() => requestAction(user.id, user.name ?? user.email, isProActive ? "revoke_pro" : "grant_pro", isProActive ? "Pro revoked" : "Pro granted")}
+                              disabled={!!actionLoading}
+                              title={isProActive ? "Revoke Pro" : "Grant Pro (30 days)"}
+                              className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold transition-colors disabled:opacity-40 ${
+                                isProActive
+                                  ? "bg-gray-500/20 hover:bg-gray-500/30 text-gray-300 border border-gray-500/30"
+                                  : "bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30"
+                              }`}
+                            >
+                              {actionLoading === `${user.id}-${isProActive ? "revoke_pro" : "grant_pro"}` ? "…" : isProActive ? "✖⭐" : "⭐"}
+                            </button>
+
+                            <button
+                              onClick={() => requestAction(user.id, user.name ?? user.email, isMaxActive ? "revoke_max" : "grant_max", isMaxActive ? "Max revoked" : "Max granted")}
+                              disabled={!!actionLoading}
+                              title={isMaxActive ? "Revoke Max" : "Grant Max (30 days)"}
+                              className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold transition-colors disabled:opacity-40 ${
+                                isMaxActive
+                                  ? "bg-gray-500/20 hover:bg-gray-500/30 text-gray-300 border border-gray-500/30"
+                                  : "bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-500/30"
+                              }`}
+                            >
+                              {actionLoading === `${user.id}-${isMaxActive ? "revoke_max" : "grant_max"}` ? "…" : isMaxActive ? "✖👑" : "👑"}
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-3 mt-8">
+        <div className="flex justify-center items-center gap-3 mt-6">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1 || loading}
-            className="px-5 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm disabled:opacity-40 transition-colors"
+            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm disabled:opacity-40 transition-colors"
           >
-            ← Previous
+            ← Prev
           </button>
           <span className="text-sm text-gray-400">Page {page} of {totalPages}</span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages || loading}
-            className="px-5 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm disabled:opacity-40 transition-colors"
+            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm disabled:opacity-40 transition-colors"
           >
             Next →
           </button>
         </div>
       )}
+
+      {/* Legend */}
+      <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-600">
+        <span>🔒 Lock · 🔄 Reset daily · ⭐ Pro · 👑 Max</span>
+        <span>✖⭐ = revoke Pro · ✖👑 = revoke Max</span>
+      </div>
     </div>
   );
-}
-
-// Helper (inline since we can't import from utils in this client component easily)
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
 }

@@ -144,6 +144,7 @@ export async function POST(req: NextRequest) {
     where: { id: session.user.id },
     data: {
       coins: { increment: coinsEarned },
+      totalCoinsEarned: { increment: coinsEarned },
       totalCorrect: { increment: score },
       totalAnswered: { increment: total },
       dailyCoinsEarned: isNewDay ? coinsEarned : { increment: coinsEarned },

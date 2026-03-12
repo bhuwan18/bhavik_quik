@@ -13,6 +13,7 @@ model User {
   name             String?
   image            String?
   coins            Int           @default(0)
+  totalCoinsEarned Int           @default(0)
   totalCorrect     Int           @default(0)
   totalAnswered    Int           @default(0)
   isAdmin          Boolean       @default(false)

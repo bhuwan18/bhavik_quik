@@ -7,7 +7,7 @@ function adminOnly(session: Session | null): boolean {
   return !!(session?.user?.id && (session.user as { isAdmin?: boolean }).isAdmin);
 }
 
-const ALLOWED_ACTIONS = ["lock", "unlock", "reset_daily", "grant_pro", "revoke_pro"] as const;
+const ALLOWED_ACTIONS = ["lock", "unlock", "reset_daily", "grant_pro", "revoke_pro", "grant_max", "revoke_max"] as const;
 type Action = (typeof ALLOWED_ACTIONS)[number];
 
 export async function PATCH(
@@ -65,12 +65,20 @@ export async function PATCH(
     case "revoke_pro":
       updateData = { isPro: false, proExpiresAt: null };
       break;
+    case "grant_max": {
+      const maxExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      updateData = { isMax: true, maxExpiresAt };
+      break;
+    }
+    case "revoke_max":
+      updateData = { isMax: false, maxExpiresAt: null };
+      break;
   }
 
   const updated = await prisma.user.update({
     where: { id },
     data: updateData,
-    select: { id: true, isLocked: true, isPro: true, proExpiresAt: true, dailyCoinsEarned: true },
+    select: { id: true, isLocked: true, isPro: true, proExpiresAt: true, isMax: true, maxExpiresAt: true, dailyCoinsEarned: true },
   });
 
   return NextResponse.json({ success: true, user: updated });

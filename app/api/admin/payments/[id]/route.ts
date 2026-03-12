@@ -51,7 +51,7 @@ export async function PATCH(
     await prisma.$transaction([
       prisma.user.update({
         where: { id: payment.userId },
-        data: { coins: { increment: payment.coins } },
+        data: { coins: { increment: payment.coins }, totalCoinsEarned: { increment: payment.coins ?? 0 } },
       }),
       prisma.paymentRequest.update({
         where: { id },
