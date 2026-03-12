@@ -27,6 +27,11 @@ export default function AdminFeedbackClient() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
   const [showUnread, setShowUnread] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [replySending, setReplySending] = useState<string | null>(null); // id of item being sent
+  const [replySent, setReplySent] = useState<Set<string>>(new Set());
+  const [replyError, setReplyError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/feedback")
@@ -43,6 +48,33 @@ export default function AdminFeedbackClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, isRead: next }),
     });
+  };
+
+  const sendReply = async (id: string) => {
+    const text = replyText.trim();
+    if (!text) return;
+    setReplySending(id);
+    setReplyError(null);
+    try {
+      const res = await fetch("/api/admin/feedback", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, reply: text }),
+      });
+      if (res.ok) {
+        setReplySent((prev) => new Set(prev).add(id));
+        setItems((prev) => prev.map((f) => f.id === id ? { ...f, isRead: true } : f));
+        setReplyingTo(null);
+        setReplyText("");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setReplyError(data.error ?? "Failed to send reply");
+      }
+    } catch {
+      setReplyError("Network error — please try again");
+    } finally {
+      setReplySending(null);
+    }
   };
 
   const filtered = items.filter((f) => {
@@ -129,21 +161,38 @@ export default function AdminFeedbackClient() {
                   </span>
                 </div>
 
-                {/* Right: date + mark read */}
+                {/* Right: date + actions */}
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <p className="text-xs text-gray-500">
                     {new Date(f.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
-                  <button
-                    onClick={() => toggleRead(f.id, f.isRead)}
-                    className={`text-xs px-2.5 py-1 rounded-lg transition-colors border ${
-                      f.isRead
-                        ? "text-gray-500 border-white/10 hover:text-white hover:border-white/20"
-                        : "text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20"
-                    }`}
-                  >
-                    {f.isRead ? "Mark unread" : "✓ Mark read"}
-                  </button>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => {
+                        setReplyingTo(replyingTo === f.id ? null : f.id);
+                        setReplyText("");
+                      }}
+                      className={`text-xs px-2.5 py-1 rounded-lg transition-colors border ${
+                        replySent.has(f.id)
+                          ? "text-green-400 border-green-500/30 bg-green-500/10"
+                          : replyingTo === f.id
+                          ? "text-purple-300 border-purple-500/40 bg-purple-500/15"
+                          : "text-blue-400 border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20"
+                      }`}
+                    >
+                      {replySent.has(f.id) ? "✓ Replied" : replyingTo === f.id ? "Cancel" : "↩ Reply"}
+                    </button>
+                    <button
+                      onClick={() => toggleRead(f.id, f.isRead)}
+                      className={`text-xs px-2.5 py-1 rounded-lg transition-colors border ${
+                        f.isRead
+                          ? "text-gray-500 border-white/10 hover:text-white hover:border-white/20"
+                          : "text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20"
+                      }`}
+                    >
+                      {f.isRead ? "Mark unread" : "✓ Mark read"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -151,6 +200,31 @@ export default function AdminFeedbackClient() {
               <p className="mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap pl-11">
                 {f.message}
               </p>
+
+              {/* Reply input */}
+              {replyingTo === f.id && (
+                <div className="mt-4 pl-11">
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => { setReplyText(e.target.value); setReplyError(null); }}
+                    placeholder="Type your reply… it will be sent to the user's notifications."
+                    rows={3}
+                    className="w-full bg-white/5 border border-purple-500/30 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none"
+                  />
+                  {replyError && (
+                    <p className="text-xs text-red-400 mt-1">{replyError}</p>
+                  )}
+                  <div className="flex justify-end mt-2">
+                    <button
+                      onClick={() => sendReply(f.id)}
+                      disabled={!replyText.trim() || replySending === f.id}
+                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {replySending === f.id ? "Sending…" : "Send Reply"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

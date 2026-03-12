@@ -23,8 +23,28 @@ export async function GET() {
 export async function PATCH(req: Request) {
   if (!await requireAdmin()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { id, isRead } = await req.json();
+  const { id, isRead, reply } = await req.json();
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  // Admin reply: create a notification for the feedback author
+  if (reply !== undefined) {
+    const feedback = await prisma.feedback.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+    if (!feedback) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    await prisma.notification.create({
+      data: {
+        userId: feedback.userId,
+        type: "feedback_reply",
+        message: `Admin replied to your feedback: "${reply}"`,
+      },
+    });
+    // Auto-mark as read when replied
+    await prisma.feedback.update({ where: { id }, data: { isRead: true } });
+    return NextResponse.json({ ok: true });
+  }
 
   const updated = await prisma.feedback.update({
     where: { id },

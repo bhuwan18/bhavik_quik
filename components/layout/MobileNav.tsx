@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -21,7 +21,7 @@ const MORE_NAV = [
   { href: "/feedback", icon: "💬", label: "Feedback" },
   { href: "/info", icon: "ℹ️", label: "Info" },
   { href: "/shop", icon: "🏪", label: "Shop" },
-  { href: "/buy-coins", icon: "🪙", label: "Buy Coins" },
+  { href: "/notifications", icon: "🔔", label: "Notifications" },
 ];
 
 export default function MobileNav() {
@@ -34,6 +34,18 @@ export default function MobileNav() {
   const user = session?.user as { isAdmin?: boolean; isPro?: boolean } | undefined;
   const isAdmin = !!user?.isAdmin;
   const isPro = !!user?.isPro;
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    fetch("/api/notifications")
+      .then((r) => r.json())
+      .then((data: { isRead: boolean }[]) => {
+        if (Array.isArray(data)) setUnreadCount(data.filter((n) => !n.isRead).length);
+      })
+      .catch(() => {});
+  }, [session, pathname]);
 
   const isMoreActive = MORE_NAV.some(
     ({ href }) => pathname === href || pathname.startsWith(href + "/")
@@ -131,19 +143,27 @@ export default function MobileNav() {
           <div className="grid grid-cols-3 gap-1">
             {MORE_NAV.map(({ href, icon, label }) => {
               const active = pathname === href || pathname.startsWith(href + "/");
+              const isNotif = href === "/notifications";
               return (
                 <Link
                   key={href}
                   href={href}
                   onClick={() => setDrawerOpen(false)}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-3 px-2 rounded-xl text-xs font-medium transition-colors",
+                    "flex flex-col items-center gap-1 py-3 px-2 rounded-xl text-xs font-medium transition-colors relative",
                     active
                       ? "bg-purple-500/20 text-purple-400"
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   )}
                 >
-                  <span className="text-2xl leading-none">{icon}</span>
+                  <span className="text-2xl leading-none relative">
+                    {icon}
+                    {isNotif && unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border border-black text-[8px] font-bold text-white flex items-center justify-center leading-none">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </span>
                   <span className="text-center leading-tight">{label}</span>
                 </Link>
               );
@@ -179,15 +199,20 @@ export default function MobileNav() {
             );
           })}
 
-          {/* More button */}
+          {/* More button — shows red dot if unread notifications */}
           <button
             onClick={() => setDrawerOpen((v) => !v)}
             className={cn(
-              "flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors",
+              "flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors relative",
               drawerOpen || isMoreActive ? "text-purple-400" : "text-gray-500"
             )}
           >
-            <span className="text-xl leading-none">{drawerOpen ? "✕" : "☰"}</span>
+            <span className="text-xl leading-none relative">
+              {drawerOpen ? "✕" : "☰"}
+              {!drawerOpen && unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />
+              )}
+            </span>
             <span>More</span>
           </button>
         </div>

@@ -35,6 +35,7 @@ model User {
   paymentRequests      PaymentRequest[]
   feedbacks            Feedback[]
   correctAnswers       CorrectAnswer[]
+  notifications        Notification[]
 }
 
 model Account {
@@ -165,6 +166,16 @@ model CorrectAnswer {
   createdAt  DateTime @default(now())
 
   @@unique([userId, questionId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // "overtaken" | "top3_join" | "feedback_reply"
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model Pack {

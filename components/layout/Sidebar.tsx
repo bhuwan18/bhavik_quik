@@ -6,6 +6,7 @@ import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: "📊", label: "Dashboard" },
@@ -17,7 +18,6 @@ const NAV_ITEMS = [
   { href: "/info", icon: "ℹ️", label: "Info" },
   { href: "/feedback", icon: "💬", label: "Feedback" },
   { href: "/shop", icon: "🏪", label: "Shop" },
-  { href: "/buy-coins", icon: "🪙", label: "Buy Coins" },
 ];
 
 const ADMIN_NAV_ITEMS = [
@@ -36,6 +36,18 @@ export default function Sidebar() {
   const isAdmin = !!user?.isAdmin;
   const isPro = !!user?.isPro;
   const isLight = theme === "light";
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    fetch("/api/notifications")
+      .then((r) => r.json())
+      .then((data: { isRead: boolean }[]) => {
+        if (Array.isArray(data)) setUnreadCount(data.filter((n) => !n.isRead).length);
+      })
+      .catch(() => {});
+  }, [session, pathname]);
 
   return (
     <aside
@@ -90,6 +102,25 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Notifications */}
+        <Link
+          href="/notifications"
+          className={cn(
+            "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150",
+            pathname === "/notifications"
+              ? "bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-purple-200 border border-purple-500/40 shadow-lg shadow-purple-500/10"
+              : "text-gray-400 hover:bg-white/5 hover:text-white hover:translate-x-1"
+          )}
+        >
+          <span className="text-xl">🔔</span>
+          <span className="flex-1">Notifications</span>
+          {unreadCount > 0 && (
+            <span className="text-xs bg-red-500 text-white font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </Link>
 
         {/* Admin-only section */}
         {isAdmin && (

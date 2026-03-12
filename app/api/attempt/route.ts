@@ -34,6 +34,8 @@ export async function POST(req: NextRequest) {
       email: true,
       dailyCoinsEarned: true,
       dailyCoinsReset: true,
+      totalCoinsEarned: true,
+      name: true,
     },
   });
 
@@ -158,6 +160,62 @@ export async function POST(req: NextRequest) {
       data: newCorrectIds.map((questionId) => ({ userId: session.user.id, questionId })),
       skipDuplicates: true,
     });
+  }
+
+  // Leaderboard notifications: fire-and-forget (don't block response)
+  if (coinsEarned > 0) {
+    const oldTotal = dbUser.totalCoinsEarned;
+    const newTotal = oldTotal + coinsEarned;
+    const userName = dbUser.name ?? "Someone";
+
+    // Find users overtaken (their totalCoinsEarned was between old and new)
+    const overtakenUsers = await prisma.user.findMany({
+      where: {
+        id: { not: session.user.id },
+        totalCoinsEarned: { gt: oldTotal, lte: newTotal },
+      },
+      select: { id: true },
+    });
+
+    const notificationsToCreate: { userId: string; type: string; message: string }[] = [];
+
+    if (overtakenUsers.length > 0) {
+      for (const u of overtakenUsers) {
+        notificationsToCreate.push({
+          userId: u.id,
+          type: "overtaken",
+          message: `${userName} just overtook you on the leaderboard! Keep playing to reclaim your spot.`,
+        });
+      }
+    }
+
+    // Check if user just entered top 3 (wasn't there before, is now)
+    const top3Before = await prisma.user.findMany({
+      where: { id: { not: session.user.id } },
+      orderBy: { totalCoinsEarned: "desc" },
+      take: 3,
+      select: { id: true, totalCoinsEarned: true },
+    });
+
+    const wasInTop3 = top3Before.length < 3 ? false : oldTotal > top3Before[2].totalCoinsEarned;
+    const isInTop3Now = top3Before.length < 3 || newTotal > top3Before[2].totalCoinsEarned;
+
+    if (isInTop3Now && !wasInTop3) {
+      for (const u of top3Before.slice(0, 3)) {
+        // Avoid duplicate notification if already notified via overtaken
+        if (!notificationsToCreate.some((n) => n.userId === u.id)) {
+          notificationsToCreate.push({
+            userId: u.id,
+            type: "top3_join",
+            message: `${userName} just joined the top 3 on the leaderboard!`,
+          });
+        }
+      }
+    }
+
+    if (notificationsToCreate.length > 0) {
+      await prisma.notification.createMany({ data: notificationsToCreate });
+    }
   }
 
   return NextResponse.json({
