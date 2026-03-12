@@ -16,6 +16,7 @@ export const CATEGORIES = [
   { slug: "math", label: "Math", icon: "🔢" },
   { slug: "science", label: "Science", icon: "🔬" },
   { slug: "physics", label: "Physics", icon: "⚛️" },
+  { slug: "world-languages", label: "World Languages", icon: "🌍" },
 ] as const;
 
 export type CategorySlug = (typeof CATEGORIES)[number]["slug"];

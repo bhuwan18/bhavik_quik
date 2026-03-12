@@ -4,8 +4,10 @@ import { useState } from "react";
 import HackDevGame from "./HackDevGame";
 import DinoRexLobby from "./DinoRexLobby";
 import SpeedBlitzGame from "./SpeedBlitzGame";
+import SurvivalGame from "./SurvivalGame";
+import DailyChallengeGame from "./DailyChallengeGame";
 
-type Mode = "select" | "hackdev" | "dinorex" | "speedblitz";
+type Mode = "select" | "hackdev" | "dinorex" | "speedblitz" | "survival" | "daily";
 
 const MODES = [
   {
@@ -36,6 +38,24 @@ const MODES = [
     tagColor: "bg-yellow-500/20 text-yellow-400",
   },
   {
+    id: "survival",
+    name: "Survival",
+    description: "Answer correctly to stay alive. One wrong answer = game over. How far can you go?",
+    icon: "❤️",
+    tag: "Single Player",
+    color: "from-red-900/50 to-rose-900/30 border-red-500/30",
+    tagColor: "bg-red-500/20 text-red-400",
+  },
+  {
+    id: "daily",
+    name: "Daily Challenge",
+    description: "5 questions, same for everyone today. Come back daily for a new challenge!",
+    icon: "📅",
+    tag: "Single Player",
+    color: "from-teal-900/50 to-cyan-900/30 border-teal-500/30",
+    tagColor: "bg-teal-500/20 text-teal-400",
+  },
+  {
     id: "classic",
     name: "Classic Mode",
     description: "Standard quiz — no pressure, just enjoy the quiz from Discover.",
@@ -54,6 +74,8 @@ export default function GameModesClient() {
   if (mode === "hackdev") return <HackDevGame onBack={() => setMode("select")} />;
   if (mode === "dinorex") return <DinoRexLobby onBack={() => setMode("select")} />;
   if (mode === "speedblitz") return <SpeedBlitzGame onBack={() => setMode("select")} />;
+  if (mode === "survival") return <SurvivalGame onBack={() => setMode("select")} />;
+  if (mode === "daily") return <DailyChallengeGame onBack={() => setMode("select")} />;
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -86,7 +108,7 @@ export default function GameModesClient() {
       </div>
 
       <div className="mt-8 p-4 bg-white/5 border border-white/10 rounded-xl text-gray-500 text-sm text-center">
-        🪙 All game modes award 5 coins per correct answer. Multiplayer winners get bonus coins!
+        🪙 All game modes award coins per correct answer. Pro members earn 1.5× — Max members earn 2×!
       </div>
     </div>
   );

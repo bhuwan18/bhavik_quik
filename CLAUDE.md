@@ -104,39 +104,40 @@ app/
 ├── globals.css                   CSS variables for dark/light theme + Tailwind overrides
 ├── (main)/                       Auth-guarded area (sidebar layout + AudioProvider)
 │   ├── layout.tsx                Auth guard + Sidebar (desktop) + MobileNav + OnlinePing + AudioPlayer
-│   ├── dashboard/page.tsx        Play-first hero + category quick-play + stats (server component)
+│   ├── loading.tsx               App-level loading screen with rotating game facts
+│   ├── dashboard/page.tsx        Play-first hero + IntroOverlay + category quick-play + stats
 │   ├── discover/page.tsx         Browse quizzes — shows ✓ Completed badge on perfect-score quizzes
-│   ├── quiz/[id]/page.tsx        Quiz player (music auto-pauses here)
+│   ├── quiz/[id]/page.tsx        Quiz player — checks isLocked + school hours before rendering
 │   ├── marketplace/page.tsx      Buy packs with coins
 │   ├── quizlets/page.tsx         View/sell owned Quizlet characters (+ Hidden section)
 │   ├── quiz-maker/page.tsx       Create and publish custom quizzes
-│   ├── leaderboard/page.tsx      Top players — green online dot if active within 5 min
+│   ├── leaderboard/page.tsx      Top 50 players — Pro/Max badges, green online dot, quizlet/attempt counts
 │   ├── feedback/page.tsx         User feedback form → saves to DB (no email)
 │   ├── info/page.tsx             All quizlets directory with rarity guide
 │   ├── game/page.tsx             Game mode selection hub
 │   ├── buy-coins/page.tsx        UPI payment flow for coins
-│   ├── upgrade/page.tsx          UPI payment flow for Pro
+│   ├── shop/page.tsx             Buy Pro (₹250/mo) or Max (₹500/mo) via UPI
 │   └── admin/
 │       ├── quizzes/page.tsx      List all quizzes with Edit links
 │       ├── quizzes/[id]/edit/    Edit quiz title/description/category/difficulty/questions
-│       ├── payments/page.tsx     Approve/reject pending UPI payment requests
+│       ├── payments/page.tsx     Approve/reject pending UPI payment requests (coins/pro/max)
 │       └── feedback/page.tsx     View all user feedback — filter by type, mark read/unread
 └── api/
     ├── auth/[...nextauth]/       NextAuth handler
     ├── feedback/                 POST — saves feedback to DB (Feedback model)
     ├── quizzes/                  GET quizzes list, POST create quiz
     ├── quizzes/[id]/             GET single quiz; PATCH (admin) update quiz + questions
-    ├── attempt/                  POST quiz attempt, awards coins
+    ├── attempt/                  POST quiz attempt — awards coins with multiplier, daily cap, dedup
     ├── packs/                    GET active packs (incl. festival packs)
     ├── packs/open/               POST open pack, roll characters
     ├── quizlets/                 GET owned quizlets
     ├── quizlets/sell/            POST sell a quizlet for coins
     ├── user/stats/               GET dashboard stats
     ├── user/ping/                POST update lastSeenAt — called every 2 min by OnlinePing
-    ├── user/submit-payment/      POST submit UTR number for UPI payment
+    ├── user/submit-payment/      POST submit UTR number for UPI payment (coins/pro/max)
     ├── admin/payments/
     │   ├── route.ts              GET list payment requests
-    │   └── [id]/route.ts         PATCH approve/reject payment → credit coins/pro
+    │   └── [id]/route.ts         PATCH approve/reject → credit coins, grant Pro, or grant Max
     └── admin/feedback/
         └── route.ts              GET all feedback; PATCH mark isRead
 
@@ -154,25 +155,28 @@ components/
 │   └── PackOpeningModal.tsx      Animated pack reveal (tap cards)
 ├── quizlets/QuizletsClient.tsx   Collection grid + sell + filters + Hidden section
 └── game/
-    ├── GameModesClient.tsx       Mode selection
+    ├── GameModesClient.tsx       Mode selection (HackDev, DinoRex, SpeedBlitz, Survival, Daily, Classic)
     ├── HackDevGame.tsx           60-second tech quiz sprint
     ├── DinoRexLobby.tsx          Elimination game (AI sim mode)
-    └── SpeedBlitzGame.tsx        20 questions in 30 seconds
+    ├── SpeedBlitzGame.tsx        20 questions in 30 seconds
+    ├── SurvivalGame.tsx          One wrong answer = game over, 10s timer per question
+    └── DailyChallengeGame.tsx    5 deterministic questions per day (date-seeded), 30s per question
 
 lib/
-├── auth.ts                       NextAuth config — Google + admin credentials + createUser email event
+├── auth.ts                       NextAuth config — Google + admin credentials + isMax in session
 ├── db.ts                         Prisma client singleton
 ├── email.ts                      Nodemailer helper — sendEmail() + ADMIN_EMAIL constant
 ├── audio-context.tsx             React context for background music state + controls
 ├── quizlets-data.ts              All character definitions
-├── packs-data.ts                 All pack definitions
+├── packs-data.ts                 All pack definitions (prices at ~25% of original)
 ├── festivals.ts                  Festival calendar (6 festivals)
 ├── roll.ts                       Pack opening RNG logic
-└── utils.ts                      cn(), CATEGORIES, RARITY_COLORS, SELL_VALUES
+└── utils.ts                      cn(), CATEGORIES (11 incl. world-languages), RARITY_COLORS, SELL_VALUES
 
 prisma/
-├── schema.prisma                 Full DB schema (includes PaymentRequest, Feedback models + lastSeenAt on User)
-└── seed.ts                       50 official quizzes + all quizlets + packs
+├── schema.prisma                 Full DB schema — User has isMax, maxExpiresAt, schoolAccessOverride;
+│                                 CorrectAnswer model (@@unique userId+questionId); Feedback model
+└── seed.ts                       55 official quizzes (11 categories × 5) + all quizlets + packs
 ```
 
 ---
@@ -198,10 +202,21 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - Impossible: full rainbow animation
 
 ### Coin Economy
-- 1 correct quiz answer = **5 coins**
+- Coins per correct answer vary by difficulty: 1→3, 2→5, 3→8, 4→12, 5→20
+- Multipliers: Regular 1×, Pro 1.5×, Max 2× (applied before daily cap)
+- Daily earn limits: Regular 500, Pro 1000, Max 1500 coins/day (resets UTC midnight)
+- No duplicate coins: each question can only earn coins once per user (`CorrectAnswer` table)
 - Selling a quizlet returns `sellValue` coins (defined in `SELL_VALUES` in utils.ts)
-- Pack costs: 80–500 coins (festival: 160–250)
+- Pack costs: 20–125 coins standard, 40–65 festival
 - Coins can also be purchased via UPI (1 coin = ₹1)
+
+### Membership Tiers
+- **Regular**: default, 1× multiplier, 500 coins/day limit
+- **Pro**: ₹250/month via UPI, 1.5× multiplier, 1000 coins/day limit — `isPro + proExpiresAt`
+- **Max**: ₹500/month via UPI, 2× multiplier, 1500 coins/day limit — `isMax + maxExpiresAt`
+- Tiers stack from highest active: Max > Pro > Regular
+- Expiry is checked at request time (not cached); renewal extends from current expiry date
+- Shop page at `/shop` — replaces old `/upgrade`
 
 ### Pack Opening (`lib/roll.ts`)
 When a pack is opened, guaranteed slots: 2 common, 2 uncommon, 1 rare.
@@ -214,8 +229,8 @@ If user already owns a quizlet: refund coins equal to its sell value.
 the festival pack slug. No DB change needed — pure date comparison at request time.
 
 ### Pre-made Quiz Content
-10 categories × 5 quizzes (difficulty 1–5) = **50 official quizzes** seeded via `prisma/seed.ts`.
-Categories: football, cricket, harry-potter, technology, avengers, artists, musicians, math, science, physics.
+11 categories × 5 quizzes (difficulty 1–5) = **55 official quizzes** seeded via `prisma/seed.ts`.
+Categories: football, cricket, harry-potter, technology, avengers, artists, musicians, math, science, physics, world-languages.
 
 ### Quiz Answer Shuffling
 QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates shuffle (`shuffleOrder` in `components/quiz/QuizPlayer.tsx`). The correct answer mapping is preserved — do not change this logic.
@@ -224,14 +239,19 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - **HackDev**: Single player, tech questions, 60-second timer
 - **DinoRex**: Elimination mode (practice vs AI bots; real multiplayer via Socket.io pending)
 - **Speed Blitz**: 20 questions in 30 seconds, all categories
+- **Survival**: Any category, 10s per question — first wrong answer ends the game, score = streak
+- **Daily Challenge**: 5 questions, same for all users on a given day (date-seeded selection), 30s per question
+- **Classic**: Links to `/discover` for standard quiz browsing
+- All modes submit to `/api/attempt` for coin awards (multiplier + daily limit apply)
 
 ### UPI Payment Flow
-1. User selects amount on `/buy-coins` or `/upgrade`
+1. User selects amount on `/buy-coins` (coins) or `/shop` (Pro/Max membership)
 2. QR code + UPI deep link shown (`upi://pay?pa=...`)
 3. User pays in GPay/PhonePe/etc., enters UTR number
-4. `POST /api/user/submit-payment` → creates `PaymentRequest` (status: pending)
+4. `POST /api/user/submit-payment` → creates `PaymentRequest` with type `coins`, `pro`, or `max` (status: pending)
 5. Admin sees it at `/admin/payments` → clicks Approve or Reject
-6. On approve: coins credited or Pro granted via `prisma.user.update`
+6. On approve: coins credited OR `isPro=true` with `proExpiresAt` set OR `isMax=true` with `maxExpiresAt` set
+7. Renewal stacks: if already active, extends from current expiry date rather than today
 
 ### Feedback System
 - `/feedback` page with type selector (General, Bug Report, Feature Request, Content Issue, Other)
@@ -248,7 +268,29 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 ### Online Status (Leaderboard)
 - `User.lastSeenAt DateTime?` field updated every 2 minutes by `OnlinePing` client component
 - Leaderboard shows green dot on avatar if `lastSeenAt > now - 5 minutes`
+- Leaderboard shows ⭐ badge for Pro users, 👑 badge for Max users (Max takes priority)
+- Columns: rank, player, coins, correct answers, accuracy %, quizlets owned, quiz attempts
+- Admin sees extra column: email + join date
 - `POST /api/user/ping` handles the update
+
+### School Hours Restriction
+- Applies to users whose email ends in `@oberoi-is.net`
+- Blocked Mon–Fri 08:00–15:00 IST (UTC+5:30 offset applied server-side)
+- Enforced at two layers: `/quiz/[id]` page render AND `/api/attempt` POST
+- Shows friendly "school hours" UI message when blocked
+- Admin can set `schoolAccessOverride = true` on a user to bypass the restriction
+
+### Account Locking
+- `User.isLocked Boolean` — when true, user cannot play quiz or earn coins
+- Quiz page shows a locked account UI before rendering the quiz
+- `/api/attempt` returns 403 if `isLocked`
+- Admin can unlock via the admin users panel
+
+### No-Duplicate Coins
+- `CorrectAnswer` model tracks every (userId, questionId) pair a user answered correctly
+- `@@unique([userId, questionId])` prevents double-recording
+- `/api/attempt` only awards coins for questions NOT already in this table
+- New correct answers are inserted via `prisma.correctAnswer.createMany({ skipDuplicates: true })`
 
 ### New User Email Notification
 - NextAuth `events.createUser` fires when a brand-new Google account signs up
@@ -289,19 +331,24 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | File | Purpose |
 |------|---------|
 | `lib/quizlets-data.ts` | All 55 character definitions |
-| `lib/packs-data.ts` | All 13 pack definitions (7 standard + 6 festival) |
+| `lib/packs-data.ts` | All 13 pack definitions (7 standard + 6 festival) — prices at ~25% of original |
 | `lib/roll.ts` | Pack opening RNG — edit drop rates here |
 | `lib/festivals.ts` | Add/modify festival dates here |
-| `lib/utils.ts` | RARITY_COLORS, SELL_VALUES, CATEGORIES |
+| `lib/utils.ts` | RARITY_COLORS, SELL_VALUES, CATEGORIES (11 total incl. world-languages) |
 | `lib/email.ts` | sendEmail() helper — used by auth createUser event (new user alerts); NOT used by feedback |
 | `lib/audio-context.tsx` | Background music context + state |
 | `app/icon.svg` | App favicon — SVG lightning bolt on purple-to-pink gradient (auto-served by Next.js) |
 | `app/globals.css` | Theme CSS variables + font config + light mode Tailwind overrides |
+| `app/(main)/loading.tsx` | App-level loading screen — rotating game facts, shown during route transitions |
+| `app/(main)/shop/page.tsx` | Pro/Max membership purchase page (replaces old /upgrade) |
 | `components/ThemeProvider.tsx` | next-themes wrapper |
+| `components/IntroOverlay.tsx` | First-visit onboarding (5 steps, shown once via localStorage) |
 | `components/layout/MobileNav.tsx` | Mobile bottom nav — edit items here |
 | `components/layout/OnlinePing.tsx` | Pings /api/user/ping every 2 min |
+| `components/game/SurvivalGame.tsx` | Survival mode — streak until first wrong answer |
+| `components/game/DailyChallengeGame.tsx` | Daily challenge — 5 deterministic questions per day |
 | `prisma/schema.prisma` | DB schema — run `npm run db:push` after changes |
-| `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed |
+| `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed (55 quizzes, 11 categories) |
 
 ---
 
@@ -347,3 +394,7 @@ npm run db:seed      # re-seed data (idempotent)
 - **Mobile**: pages should use `p-4 md:p-8` responsive padding; sidebar is desktop-only
 - **Fonts**: body = Plus Jakarta Sans (`--font-jakarta`), headings = Space Grotesk (`--font-grotesk`) — do not change font imports in `app/layout.tsx`
 - **Confirm before**: deleting files, dropping DB tables, force-pushing
+- **Shop vs Upgrade**: `/shop` replaced `/upgrade` everywhere — do not link to `/upgrade`
+- **isMax**: always check `isMax && (!maxExpiresAt || maxExpiresAt > new Date())` for active Max status, same pattern for Pro
+- **CorrectAnswer**: never skip the dedup check in `/api/attempt` — it prevents infinite coin farming
+- **School hours**: IST = UTC+5:30; use `new Date(now.getTime() + 5.5*60*60*1000)` and `.getUTCHours()` / `.getUTCDay()`

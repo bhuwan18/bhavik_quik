@@ -20,6 +20,8 @@ export default async function LeaderboardPage() {
       totalAnswered: true,
       lastSeenAt: true,
       createdAt: true,
+      isPro: true,
+      isMax: true,
       _count: { select: { ownedQuizlets: true, quizAttempts: true } },
     },
     orderBy: { coins: "desc" },
@@ -78,7 +80,7 @@ export default async function LeaderboardPage() {
 
       {/* Full Table */}
       <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-        <div className={`grid ${isAdmin ? "grid-cols-[3rem_1fr_1fr_1fr_1fr_1fr_1fr]" : "grid-cols-[3rem_1fr_1fr_1fr_1fr_1fr]"} gap-0`}>
+        <div className={`grid ${isAdmin ? "grid-cols-[3rem_1fr_auto_auto_auto_auto_auto_auto]" : "grid-cols-[3rem_1fr_auto_auto_auto_auto_auto]"} gap-0`}>
           {/* Header */}
           <div className="col-span-full grid grid-cols-subgrid bg-white/5 px-4 py-3 border-b border-white/10">
             <div className="text-xs text-gray-500 font-semibold">#</div>
@@ -87,6 +89,7 @@ export default async function LeaderboardPage() {
             <div className="text-xs text-gray-500 font-semibold text-right">Correct</div>
             <div className="text-xs text-gray-500 font-semibold text-right">Accuracy</div>
             <div className="text-xs text-gray-500 font-semibold text-right">Quizlets</div>
+            <div className="text-xs text-gray-500 font-semibold text-right">Quizzes</div>
             {isAdmin && <div className="text-xs text-gray-500 font-semibold text-right">Details</div>}
           </div>
 
@@ -122,10 +125,22 @@ export default async function LeaderboardPage() {
                       />
                     )}
                   </div>
-                  <span className={`text-sm font-medium truncate ${isCurrentUser ? "text-purple-300" : "text-white"}`}>
-                    {user.name ?? "Anonymous"}
-                    {isCurrentUser && <span className="text-xs text-purple-400 ml-1">(you)</span>}
-                  </span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={`text-sm font-medium truncate ${isCurrentUser ? "text-purple-300" : "text-white"}`}>
+                      {user.name ?? "Anonymous"}
+                      {isCurrentUser && <span className="text-xs text-purple-400 ml-1">(you)</span>}
+                    </span>
+                    {user.isMax && (
+                      <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                        👑
+                      </span>
+                    )}
+                    {!user.isMax && user.isPro && (
+                      <span className="text-xs bg-gradient-to-r from-yellow-500 to-orange-400 text-black px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                        ⭐
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-sm text-yellow-400 font-bold text-right flex items-center justify-end">
                   🪙 {user.coins.toLocaleString()}
@@ -141,10 +156,12 @@ export default async function LeaderboardPage() {
                 <div className="text-sm text-purple-400 text-right flex items-center justify-end">
                   🎴 {user._count.ownedQuizlets}
                 </div>
+                <div className="text-sm text-blue-400 text-right flex items-center justify-end">
+                  {user._count.quizAttempts}
+                </div>
                 {isAdmin && (
                   <div className="text-xs text-gray-500 text-right flex flex-col items-end justify-center gap-0.5">
                     <span className="text-gray-400">{user.email}</span>
-                    <span>{user._count.quizAttempts} attempts</span>
                     <span>{new Date(user.createdAt).toLocaleDateString()}</span>
                   </div>
                 )}

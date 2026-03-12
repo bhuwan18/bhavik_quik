@@ -1060,6 +1060,73 @@ const QUIZZES = [
       { text: "What is antimatter?", options: ["Dark matter variant", "Matter with opposite quantum properties to normal matter", "Unstable heavy atoms", "Matter moving faster than light"], correctIndex: 1 },
     ],
   },
+
+  // ── WORLD LANGUAGES ───────────────────────────────────────────
+  {
+    title: "Spanish Basics",
+    description: "Test your knowledge of the Spanish language.",
+    category: "world-languages",
+    difficulty: 1,
+    questions: [
+      { text: "How do you say 'Hello' in Spanish?", options: ["Bonjour", "Hola", "Ciao", "Namaste"], correctIndex: 1 },
+      { text: "What does 'Gracias' mean?", options: ["Please", "Sorry", "Thank you", "Goodbye"], correctIndex: 2 },
+      { text: "How do you say 'Good morning' in Spanish?", options: ["Buenas noches", "Buenos días", "Buenas tardes", "Bienvenido"], correctIndex: 1 },
+      { text: "What does 'Agua' mean in Spanish?", options: ["Fire", "Earth", "Air", "Water"], correctIndex: 3 },
+      { text: "How do you say 'Yes' in Spanish?", options: ["Non", "Oui", "Sí", "Ja"], correctIndex: 2 },
+    ],
+  },
+  {
+    title: "French Fundamentals",
+    description: "Essential French words and phrases.",
+    category: "world-languages",
+    difficulty: 2,
+    questions: [
+      { text: "How do you say 'Thank you' in French?", options: ["Danke", "Merci", "Grazie", "Obrigado"], correctIndex: 1 },
+      { text: "What does 'Maison' mean?", options: ["School", "Car", "House", "Road"], correctIndex: 2 },
+      { text: "How do you say 'Where is?' in French?", options: ["Qu'est-ce que", "Comment", "Où est", "Pourquoi"], correctIndex: 2 },
+      { text: "What does 'Boulangerie' mean?", options: ["Bakery", "Pharmacy", "Library", "Bank"], correctIndex: 0 },
+      { text: "How do you say 'I love you' in French?", options: ["Te amo", "Je t'aime", "Ti amo", "Ich liebe dich"], correctIndex: 1 },
+    ],
+  },
+  {
+    title: "Hindi & Indian Languages",
+    description: "Explore Hindi and Indian language basics.",
+    category: "world-languages",
+    difficulty: 3,
+    questions: [
+      { text: "What does 'Namaste' mean?", options: ["Goodbye", "How are you", "I greet you / Hello", "Thank you"], correctIndex: 2 },
+      { text: "How do you say 'Water' in Hindi?", options: ["Paani", "Khana", "Ghar", "Kitab"], correctIndex: 0 },
+      { text: "Which script is used to write Hindi?", options: ["Gujarati", "Devanagari", "Tamil", "Bengali"], correctIndex: 1 },
+      { text: "How do you say 'Good' in Hindi?", options: ["Bura", "Achha", "Naya", "Purana"], correctIndex: 1 },
+      { text: "What does 'Dhanyawad' mean?", options: ["Welcome", "Sorry", "Please", "Thank you"], correctIndex: 3 },
+    ],
+  },
+  {
+    title: "European Languages Mix",
+    description: "Common words across European languages.",
+    category: "world-languages",
+    difficulty: 4,
+    questions: [
+      { text: "What does 'Danke' mean (German)?", options: ["Hello", "Please", "Thank you", "Goodbye"], correctIndex: 2 },
+      { text: "How do you say 'Hello' in Italian?", options: ["Hola", "Bonjour", "Ciao", "Ola"], correctIndex: 2 },
+      { text: "What does 'Por favor' mean in Portuguese?", options: ["Thank you", "Please", "Sorry", "Welcome"], correctIndex: 1 },
+      { text: "How do you say 'I don't understand' in German?", options: ["Ich verstehe nicht", "Wie bitte", "Entschuldigung", "Sprechen Sie Englisch"], correctIndex: 0 },
+      { text: "What language is 'Tak' meaning 'yes' from?", options: ["Czech", "Polish", "Russian", "Danish"], correctIndex: 1 },
+    ],
+  },
+  {
+    title: "World Languages Expert",
+    description: "Advanced knowledge of global languages.",
+    category: "world-languages",
+    difficulty: 5,
+    questions: [
+      { text: "How many official languages does South Africa have?", options: ["5", "8", "11", "14"], correctIndex: 2 },
+      { text: "Which language has the most native speakers in the world?", options: ["English", "Spanish", "Mandarin Chinese", "Hindi"], correctIndex: 2 },
+      { text: "What is the official language of Brazil?", options: ["Spanish", "Portuguese", "French", "English"], correctIndex: 1 },
+      { text: "Which language is written right to left AND is spoken by over 300 million people?", options: ["Urdu", "Hebrew", "Arabic", "Farsi"], correctIndex: 2 },
+      { text: "Swahili is a major language in which continent?", options: ["Asia", "South America", "Europe", "Africa"], correctIndex: 3 },
+    ],
+  },
 ];
 
 async function main() {

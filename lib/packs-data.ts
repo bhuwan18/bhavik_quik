@@ -15,7 +15,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Tech Pack",
     description: "Discover digital creatures born from code and circuits.",
-    cost: 100,
+    cost: 25,
     slug: "tech-pack",
     icon: "💻",
     colorFrom: "#0f172a",
@@ -26,7 +26,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Sports Pack",
     description: "Collect legendary athletes and sporting spirits.",
-    cost: 80,
+    cost: 20,
     slug: "sports-pack",
     icon: "⚽",
     colorFrom: "#052e16",
@@ -37,7 +37,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Magic Pack",
     description: "Uncover mystical beings from the wizarding world.",
-    cost: 120,
+    cost: 30,
     slug: "magic-pack",
     icon: "⚡",
     colorFrom: "#1e1b4b",
@@ -48,7 +48,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Hero Pack",
     description: "Assemble earth's mightiest collectible quizlets.",
-    cost: 150,
+    cost: 40,
     slug: "hero-pack",
     icon: "🦸",
     colorFrom: "#450a0a",
@@ -59,7 +59,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Music Pack",
     description: "Collect the spirits of art, music, and creativity.",
-    cost: 90,
+    cost: 25,
     slug: "music-pack",
     icon: "🎵",
     colorFrom: "#4a044e",
@@ -70,7 +70,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Science Pack",
     description: "Discover beings made from atoms, equations, and cosmos.",
-    cost: 110,
+    cost: 30,
     slug: "science-pack",
     icon: "🔬",
     colorFrom: "#082f49",
@@ -81,7 +81,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Rainbow Pack",
     description: "The rarest pack. Contains beings from all realms — and one impossible legend.",
-    cost: 500,
+    cost: 125,
     slug: "rainbow-pack",
     icon: "🌈",
     colorFrom: "#1f2937",
@@ -93,7 +93,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "New Year Bash",
     description: "Ring in the new year with exclusive festive quizlets!",
-    cost: 200,
+    cost: 50,
     slug: "newyear-pack",
     icon: "🎆",
     colorFrom: "#1c1917",
@@ -105,7 +105,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Valentine's Pack",
     description: "Love is in the air — and in these exclusive quizlets.",
-    cost: 180,
+    cost: 45,
     slug: "love-pack",
     icon: "❤️",
     colorFrom: "#4c0519",
@@ -117,7 +117,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Holi Splash",
     description: "Colour-soaked quizlets from the festival of colours!",
-    cost: 160,
+    cost: 40,
     slug: "holi-pack",
     icon: "🌈",
     colorFrom: "#4a044e",
@@ -129,7 +129,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Halloween Haunt",
     description: "Spooky spirits that only emerge on the scariest night.",
-    cost: 220,
+    cost: 55,
     slug: "spooky-pack",
     icon: "🎃",
     colorFrom: "#1c0a00",
@@ -141,7 +141,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Diwali Glow",
     description: "Illuminate your collection with festival of lights quizlets.",
-    cost: 175,
+    cost: 45,
     slug: "diwali-pack",
     icon: "🪔",
     colorFrom: "#422006",
@@ -153,7 +153,7 @@ export const PACKS_DATA: PackDef[] = [
   {
     name: "Christmas Magic",
     description: "Collect the magic of the most wonderful time of the year.",
-    cost: 250,
+    cost: 65,
     slug: "xmas-pack",
     icon: "🎄",
     colorFrom: "#052e16",

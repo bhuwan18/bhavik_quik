@@ -30,7 +30,7 @@ export async function PATCH(
 
   const payment = await prisma.paymentRequest.findUnique({
     where: { id },
-    include: { user: { select: { isLocked: true, isPro: true, proExpiresAt: true } } },
+    include: { user: { select: { isLocked: true, isPro: true, proExpiresAt: true, isMax: true, maxExpiresAt: true } } },
   });
 
   if (!payment) return NextResponse.json({ error: "Payment not found" }, { status: 404 });
@@ -69,6 +69,22 @@ export async function PATCH(
       prisma.user.update({
         where: { id: payment.userId },
         data: { isPro: true, proExpiresAt },
+      }),
+      prisma.paymentRequest.update({
+        where: { id },
+        data: { status: "approved" },
+      }),
+    ]);
+  } else if (payment.type === "max") {
+    const base =
+      payment.user.isMax && payment.user.maxExpiresAt && payment.user.maxExpiresAt > new Date()
+        ? payment.user.maxExpiresAt
+        : new Date();
+    const maxExpiresAt = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000);
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: payment.userId },
+        data: { isMax: true, maxExpiresAt },
       }),
       prisma.paymentRequest.update({
         where: { id },

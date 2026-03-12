@@ -11,8 +11,9 @@ const COINS_BY_DIFFICULTY: Record<number, number> = {
   5: 20,
 };
 
-const DAILY_LIMIT_REGULAR = 100;
-const DAILY_LIMIT_PRO = 500;
+const DAILY_LIMIT_REGULAR = 500;
+const DAILY_LIMIT_PRO = 1000;
+const DAILY_LIMIT_MAX = 1500;
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -27,6 +28,10 @@ export async function POST(req: NextRequest) {
       isLocked: true,
       isPro: true,
       proExpiresAt: true,
+      isMax: true,
+      maxExpiresAt: true,
+      schoolAccessOverride: true,
+      email: true,
       dailyCoinsEarned: true,
       dailyCoinsReset: true,
     },
@@ -34,6 +39,19 @@ export async function POST(req: NextRequest) {
 
   if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
   if (dbUser.isLocked) return NextResponse.json({ error: "Account is locked" }, { status: 403 });
+
+  // School hours check: Oberoi International School students
+  const isOberoi = (dbUser.email ?? "").endsWith("@oberoi-is.net");
+  if (isOberoi && !dbUser.schoolAccessOverride) {
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istTime = new Date(now.getTime() + istOffset);
+    const day = istTime.getUTCDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+    const hour = istTime.getUTCHours();
+    if (day >= 1 && day <= 5 && hour >= 8 && hour < 15) {
+      return NextResponse.json({ error: "School hours restriction active" }, { status: 403 });
+    }
+  }
 
   // Validate request body
   let quizId: string;
@@ -75,11 +93,28 @@ export async function POST(req: NextRequest) {
 
   // Determine coins per correct answer from difficulty
   const coinsPerCorrect = COINS_BY_DIFFICULTY[quiz.difficulty] ?? 5;
-  const rawCoinsEarned = score * coinsPerCorrect;
 
-  // Determine if pro is still active
-  const isProActive = dbUser.isPro && (!dbUser.proExpiresAt || dbUser.proExpiresAt > new Date());
-  const dailyLimit = isProActive ? DAILY_LIMIT_PRO : DAILY_LIMIT_REGULAR;
+  // Determine active tier
+  const isMaxActive = dbUser.isMax && (!dbUser.maxExpiresAt || dbUser.maxExpiresAt > new Date());
+  const isProActive = !isMaxActive && dbUser.isPro && (!dbUser.proExpiresAt || dbUser.proExpiresAt > new Date());
+  const multiplier = isMaxActive ? 2 : isProActive ? 1.5 : 1;
+  const dailyLimit = isMaxActive ? DAILY_LIMIT_MAX : isProActive ? DAILY_LIMIT_PRO : DAILY_LIMIT_REGULAR;
+
+  // No-duplicate-coins: only award coins for newly correct questions
+  const correctQuestionIds = answers
+    .filter((a) => quiz.questions.find((q: any) => q.id === a.questionId)?.correctIndex === a.selectedIndex)
+    .map((a) => a.questionId);
+
+  // Check which are NEW (not already in CorrectAnswer)
+  const existing = await prisma.correctAnswer.findMany({
+    where: { userId: session.user.id, questionId: { in: correctQuestionIds } },
+    select: { questionId: true },
+  });
+  const existingIds = new Set(existing.map((e) => e.questionId));
+  const newCorrectIds = correctQuestionIds.filter((id) => !existingIds.has(id));
+
+  // rawCoinsEarned based on new correct answers only
+  const rawCoinsEarned = Math.round(newCorrectIds.length * coinsPerCorrect * multiplier);
 
   // Reset daily counter if it's a new day (UTC)
   const now = new Date();
@@ -116,10 +151,19 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Record new correct answers
+  if (newCorrectIds.length > 0) {
+    await prisma.correctAnswer.createMany({
+      data: newCorrectIds.map((questionId) => ({ userId: session.user.id, questionId })),
+      skipDuplicates: true,
+    });
+  }
+
   return NextResponse.json({
     score,
     total,
     coinsEarned,
+    newCorrectAnswers: newCorrectIds.length,
     dailyLimitReached: coinsEarned < rawCoinsEarned,
     dailyLimit,
     dailyEarned: currentDailyEarned + coinsEarned,

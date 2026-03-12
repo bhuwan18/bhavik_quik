@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { href: "/game", icon: "🎮", label: "Game Modes" },
   { href: "/info", icon: "ℹ️", label: "Info" },
   { href: "/feedback", icon: "💬", label: "Feedback" },
-  { href: "/upgrade", icon: "⭐", label: "Go Pro" },
+  { href: "/shop", icon: "🏪", label: "Shop" },
   { href: "/buy-coins", icon: "🪙", label: "Buy Coins" },
 ];
 

@@ -17,6 +17,8 @@ export default async function DashboardPage() {
       name: true,
       isPro: true,
       proExpiresAt: true,
+      isMax: true,
+      maxExpiresAt: true,
       dailyCoinsEarned: true,
       dailyCoinsReset: true,
     },
@@ -38,8 +40,9 @@ export default async function DashboardPage() {
 
   const hasAll = ownedQuizlets >= totalQuizlets && totalQuizlets > 0;
 
-  const isProActive = user?.isPro && (!user.proExpiresAt || user.proExpiresAt > new Date());
-  const dailyLimit = isProActive ? 500 : 100;
+  const isMaxActive = user?.isMax && (!user.maxExpiresAt || user.maxExpiresAt > new Date());
+  const isProActive = !isMaxActive && user?.isPro && (!user.proExpiresAt || user.proExpiresAt > new Date());
+  const dailyLimit = isMaxActive ? 1500 : isProActive ? 1000 : 500;
   const now = new Date();
   const resetDate = user?.dailyCoinsReset ? new Date(user.dailyCoinsReset) : new Date(0);
   const isNewDay =
@@ -158,20 +161,21 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-semibold text-white flex items-center gap-1.5">
               🪙 Daily Coins
-              {isProActive && <span className="text-yellow-400 text-xs">(Pro)</span>}
+              {isMaxActive && <span className="text-purple-400 text-xs">(Max)</span>}
+              {!isMaxActive && isProActive && <span className="text-yellow-400 text-xs">(Pro)</span>}
             </span>
             <span className="text-sm text-gray-400">{dailyEarned} / {dailyLimit}</span>
           </div>
           <div className="w-full bg-white/10 rounded-full h-2.5 mb-2">
             <div
-              className={`h-2.5 rounded-full transition-all ${isProActive ? "bg-gradient-to-r from-yellow-500 to-orange-400" : "bg-gradient-to-r from-indigo-500 to-purple-500"}`}
+              className={`h-2.5 rounded-full transition-all ${isMaxActive ? "bg-gradient-to-r from-purple-500 to-pink-500" : isProActive ? "bg-gradient-to-r from-yellow-500 to-orange-400" : "bg-gradient-to-r from-indigo-500 to-purple-500"}`}
               style={{ width: `${Math.min(100, Math.round((dailyEarned / dailyLimit) * 100))}%` }}
             />
           </div>
           {dailyEarned >= dailyLimit ? (
             <p className="text-xs text-orange-400">
               Daily limit reached — resets tomorrow.{" "}
-              {!isProActive && <Link href="/upgrade" className="underline">Upgrade to Pro</Link>} for 5× more.
+              {!isProActive && !isMaxActive && <Link href="/shop" className="underline">Upgrade to Pro or Max</Link>} for more.
             </p>
           ) : (
             <p className="text-xs text-gray-500">{dailyLimit - dailyEarned} coins left today</p>
