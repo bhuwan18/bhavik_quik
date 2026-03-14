@@ -105,6 +105,7 @@ model Question {
   order        Int     @default(0)
   explanation  String? @db.Text
   readMoreUrl  String?
+  imageUrl     String?
 }
 
 model QuizAttempt {

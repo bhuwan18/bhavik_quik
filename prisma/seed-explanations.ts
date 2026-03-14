@@ -812,6 +812,556 @@ const EXPLANATIONS: Record<string, { explanation: string; readMoreUrl: string }>
     explanation: "Nagini is Voldemort's giant serpent and one of his Horcruxes. He can speak to her via Parseltongue and later uses her venom to sustain himself. Neville Longbottom ultimately kills her with Godric Gryffindor's sword.",
     readMoreUrl: "https://en.wikipedia.org/wiki/Nagini_(Harry_Potter)",
   },
+
+  // ── MUSICIANS: MUSIC BASICS (Difficulty 1) ───────────────────────────────
+  "Who is known as the 'King of Pop'?": {
+    explanation: "Michael Jackson earned the title 'King of Pop' for his revolutionary impact on music, dance, and fashion. His 1982 album Thriller remains the best-selling album of all time with over 66 million copies sold.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Michael_Jackson",
+  },
+  "What instrument does a pianist play?": {
+    explanation: "The piano is a keyboard instrument where pressing keys causes hammers to strike strings, producing sound. It was invented around 1700 by Bartolomeo Cristofori in Italy and has 88 keys on a standard modern piano.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Piano",
+  },
+  "How many strings does a standard guitar have?": {
+    explanation: "A standard guitar has 6 strings, typically tuned E-A-D-G-B-E from lowest to highest. Bass guitars have 4 strings, while 7- and 8-string guitars exist for extended range in metal and jazz.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Guitar",
+  },
+  "Which band sang 'Bohemian Rhapsody'?": {
+    explanation: "Queen released 'Bohemian Rhapsody' in 1975, written by Freddie Mercury. The 6-minute operatic rock song was groundbreaking for its genre-blending style and was voted the greatest song of all time in multiple polls.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Bohemian_Rhapsody",
+  },
+  "What does a conductor do?": {
+    explanation: "An orchestra conductor leads and coordinates an ensemble using a baton and hand gestures, controlling tempo, dynamics, and interpretation. They unify up to 100+ musicians playing simultaneously without a conductor's sound being heard.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Conducting",
+  },
+
+  // ── MUSICIANS: ROCK & POP ICONS (Difficulty 2) ───────────────────────────
+  "Which band had members John, Paul, George, and Ringo?": {
+    explanation: "The Beatles — John Lennon, Paul McCartney, George Harrison, and Ringo Starr — were a British rock band formed in Liverpool in 1960. They are the best-selling music act of all time, with estimated sales of 600 million records.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/The_Beatles",
+  },
+  "What is Elvis Presley's nickname?": {
+    explanation: "Elvis Presley is called 'The King' (of Rock and Roll). He is regarded as one of the most significant cultural icons of the 20th century, credited with popularising rock and roll worldwide in the 1950s.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Elvis_Presley",
+  },
+  "Who sang 'Like a Prayer'?": {
+    explanation: "'Like a Prayer' (1989) is one of Madonna's most iconic songs. The accompanying music video — featuring burning crosses and religious imagery — caused significant controversy and led Pepsi to cancel a $5 million endorsement deal.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Like_a_Prayer",
+  },
+  "Which artist released the album 'Thriller'?": {
+    explanation: "Michael Jackson released Thriller in 1982, produced by Quincy Jones. It produced seven Billboard Hot 100 top-ten singles, a record at the time, and the 14-minute 'Thriller' music video revolutionised the form.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Thriller_(album)",
+  },
+  "Who is 'Slim Shady'?": {
+    explanation: "Slim Shady is the alter ego of rapper Eminem (Marshall Mathers), introduced on his 1999 major-label debut The Slim Shady LP. The character allowed him to express darker, more satirical content distinct from his real persona.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Eminem",
+  },
+
+  // ── MUSICIANS: MUSICAL THEORY (Difficulty 3) ─────────────────────────────
+  "How many notes are in an octave?": {
+    explanation: "An octave contains 8 notes in the diatonic (major/minor) scale (e.g., C D E F G A B C), but 12 semitones in the chromatic scale. The word 'octave' comes from the Latin for 'eighth'.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Octave",
+  },
+  "What does 'tempo' refer to?": {
+    explanation: "Tempo is the speed at which a piece of music is played, measured in BPM (beats per minute). Common tempo markings include Largo (very slow), Andante (walking pace), Allegro (fast), and Presto (very fast).",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Tempo",
+  },
+  "What is the time signature 4/4 known as?": {
+    explanation: "4/4 is called 'common time' because it is the most frequently used time signature in Western music, with 4 quarter-note beats per bar. It is sometimes represented by a 'C' symbol on sheet music.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Time_signature",
+  },
+  "What does 'forte' mean in music?": {
+    explanation: "Forte (f) is an Italian musical term meaning 'loud' or 'strong'. Its opposite is piano (p), meaning soft. Other dynamics include fortissimo (ff, very loud), mezzo-forte (mf, moderately loud), and pianissimo (pp, very soft).",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Dynamics_(music)",
+  },
+  "How many keys does a standard piano have?": {
+    explanation: "A standard modern piano has 88 keys — 52 white and 36 black. This range spans over 7 octaves. Earlier pianos had fewer keys; Beethoven's earlier works were written for instruments with fewer than 88.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Piano",
+  },
+
+  // ── MUSICIANS: MUSIC LEGENDS DEEP DIVE (Difficulty 4) ────────────────────
+  "Which guitar did Jimi Hendrix famously set on fire at Monterey?": {
+    explanation: "At the 1967 Monterey Pop Festival, Jimi Hendrix doused his Fender Stratocaster in lighter fluid and set it ablaze — one of rock history's most iconic moments. He called it 'sacrificing something I loved'.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Jimi_Hendrix",
+  },
+  "Which composer was deaf when he wrote his 9th Symphony?": {
+    explanation: "Ludwig van Beethoven composed his 9th Symphony (1824) while completely deaf, relying on his inner musical imagination. At its premiere he had to be turned around to see the audience's applause as he couldn't hear it.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Symphony_No._9_(Beethoven)",
+  },
+  "What is the name of David Bowie's alien alter ego?": {
+    explanation: "Ziggy Stardust was David Bowie's androgynous rock-star alien persona, debuted on the 1972 album 'The Rise and Fall of Ziggy Stardust and the Spiders from Mars'. Bowie 'killed' the character on stage in 1973.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Ziggy_Stardust_(character)",
+  },
+  "How many Grammys has Beyoncé won (as of 2024)?": {
+    explanation: "Beyoncé has won 32 Grammy Awards as of early 2024 (updated from 28 after the 2024 ceremony where she won 4 more), making her the most decorated artist in Grammy history, surpassing Georg Solti's previous record.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Beyonc%C3%A9",
+  },
+  "What was the first No.1 single in the UK charts (1952)?": {
+    explanation: "'Here in My Heart' by Al Martino was the first ever UK Singles Chart number one, debuting at the top on 14 November 1952. The UK chart was established in that year by the New Musical Express.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Here_in_My_Heart",
+  },
+
+  // ── MUSICIANS: MUSIC MASTERMIND (Difficulty 5) ───────────────────────────
+  "What is the time signature of Dave Brubeck's 'Take Five'?": {
+    explanation: "'Take Five' (1959) by the Dave Brubeck Quartet is written in 5/4 time — an unusual asymmetric meter for jazz. It became the best-selling jazz single of all time, largely due to Paul Desmond's famous alto saxophone riff.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Take_Five",
+  },
+  "Which composer wrote 'The Four Seasons'?": {
+    explanation: "Antonio Vivaldi composed 'The Four Seasons' (Le quattro stagioni) around 1718–1720. It is a set of four violin concertos depicting spring, summer, autumn, and winter, and remains one of the most performed Baroque works.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/The_Four_Seasons_(Vivaldi)",
+  },
+  "What key is Beethoven's 5th Symphony in?": {
+    explanation: "Beethoven's 5th Symphony (1808) is in C minor, famous for its four-note 'fate motif' (da-da-da-DUM). It is considered one of the most performed symphonies in the classical repertoire and a cornerstone of Western music.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Symphony_No._5_(Beethoven)",
+  },
+  "Who invented the synthesizer?": {
+    explanation: "Robert Moog invented the Moog synthesizer in 1964, making electronic music widely accessible. Its debut on Wendy Carlos's 1968 album 'Switched-On Bach' brought synthesizers to mainstream attention and revolutionised modern music production.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Robert_Moog",
+  },
+  "Which artist holds the record for most weeks at No.1 on the Billboard Hot 100?": {
+    explanation: "Mariah Carey holds the record with the most weeks at No.1 on the Billboard Hot 100. 'One Sweet Day' (with Boyz II Men) held the record for 16 weeks until 'Old Town Road' by Lil Nas X surpassed it with 19 weeks in 2019.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Mariah_Carey",
+  },
+
+  // ── ARTISTS: ART BASICS (Difficulty 1) ───────────────────────────────────
+  "Who painted the Mona Lisa?": {
+    explanation: "The Mona Lisa was painted by Leonardo da Vinci between approximately 1503 and 1519. It is housed in the Louvre in Paris and is considered the world's most famous painting, renowned for its subject's enigmatic smile and Leonardo's use of sfumato technique.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Mona_Lisa",
+  },
+  "What are the three primary colours?": {
+    explanation: "In traditional (RYB) colour theory used in painting, the three primary colours are red, blue, and yellow. They cannot be created by mixing other colours, but can be combined to produce secondary colours like orange, green, and purple.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Primary_color",
+  },
+  "Who painted the Sistine Chapel ceiling?": {
+    explanation: "Michelangelo painted the Sistine Chapel ceiling between 1508 and 1512 for Pope Julius II. The most famous section depicts 'The Creation of Adam'. Though Michelangelo preferred sculpture, the result became one of the greatest artworks ever created.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Sistine_Chapel_ceiling",
+  },
+  "What is a 'canvas'?": {
+    explanation: "A canvas is a woven fabric surface, traditionally linen or cotton, stretched over a wooden frame and used for painting. It replaced wooden panels as the preferred surface during the Renaissance and remains standard for oil and acrylic painting today.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Canvas",
+  },
+  "Van Gogh famously cut off which body part?": {
+    explanation: "In December 1888, during a mental breakdown, Vincent van Gogh cut off part of his left ear and presented it to a woman at a nearby brothel. The incident occurred in Arles, France, shortly after a dispute with fellow artist Paul Gauguin.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Vincent_van_Gogh",
+  },
+
+  // ── ARTISTS: IMPRESSIONISM (Difficulty 2) ────────────────────────────────
+  "Who painted 'Water Lilies'?": {
+    explanation: "Claude Monet painted around 250 'Water Lilies' works between 1896 and 1926, depicting the water garden at his home in Giverny, France. The large-scale series is spread across major museums worldwide and is considered a precursor to Abstract Expressionism.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Water_Lilies_(Monet_series)",
+  },
+  "Where did Impressionism originate?": {
+    explanation: "Impressionism originated in France in the 1860s–1870s, primarily in Paris. Led by Monet, Renoir, and Degas, the movement rejected the formal Academic style and instead painted everyday scenes with loose, visible brushstrokes capturing fleeting light.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Impressionism",
+  },
+  "Which artist is known for his ballet dancer paintings?": {
+    explanation: "Edgar Degas produced over 600 works depicting ballet dancers — in rehearsal, rest, and performance. His unusual viewpoints and fascination with movement were influenced by Japanese woodblock prints and early photography.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Edgar_Degas",
+  },
+  "What gave Impressionism its name?": {
+    explanation: "The name 'Impressionism' originated as a critic's insult. In 1874, critic Louis Leroy mockingly used Monet's painting 'Impression, Sunrise' to ridicule the style as unfinished. The artists embraced the label, and it became the movement's official name.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Impressionism",
+  },
+  "Who painted 'A Sunday on La Grande Jatte'?": {
+    explanation: "'A Sunday on La Grande Jatte' (1886) is by Georges Seurat and the defining work of Pointillism — a technique using tiny dots of pure colour placed side by side, allowing the viewer's eye to blend them from a distance rather than mixing paint on the palette.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/A_Sunday_on_La_Grande_Jatte",
+  },
+
+  // ── ARTISTS: MODERN ART MASTERS (Difficulty 3) ───────────────────────────
+  "Who founded Cubism?": {
+    explanation: "Pablo Picasso (along with Georges Braque) co-founded Cubism around 1907–1908. Cubism broke objects into geometric facets viewed from multiple angles simultaneously. Picasso's 'Les Demoiselles d'Avignon' (1907) is widely regarded as the proto-Cubist breakthrough.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Cubism",
+  },
+  "What is Andy Warhol famous for printing?": {
+    explanation: "Andy Warhol became iconic for his silkscreen prints of Campbell's Soup Cans (1962). By reproducing everyday commercial images as fine art, Warhol challenged the boundary between art and consumer culture, becoming the leading figure of Pop Art.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Campbell%27s_Soup_Cans",
+  },
+  "Which artist created the melting clocks painting?": {
+    explanation: "'The Persistence of Memory' (1931) — the melting clocks — was painted by Salvador Dalí. A defining work of Surrealism, Dalí said the image was inspired by a piece of melting Camembert cheese, depicting time as fluid and unstable in the dreamscape.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/The_Persistence_of_Memory",
+  },
+  "What movement did Frida Kahlo belong to?": {
+    explanation: "Frida Kahlo is most associated with Surrealism, though she resisted the label, saying she painted her own reality not her dreams. She used vivid symbolism, Mexican folk art influences, and intensely personal imagery to explore identity, pain, and the female experience.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Frida_Kahlo",
+  },
+  "Which artist is known for his drip painting technique?": {
+    explanation: "Jackson Pollock pioneered 'drip painting' — laying canvases flat on the floor and pouring or dripping paint onto them. Part of Abstract Expressionism, this method removed the traditional brush contact and emphasised spontaneous physical movement as the creative act.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Jackson_Pollock",
+  },
+
+  // ── ARTISTS: ART HISTORY SCHOLAR (Difficulty 4) ──────────────────────────
+  "What is 'chiaroscuro' in art?": {
+    explanation: "Chiaroscuro (Italian for 'light-dark') is a technique using strong contrasts between light and dark to create the illusion of three-dimensionality. Mastered by Leonardo, it was dramatically amplified by Caravaggio and became a defining feature of Baroque painting.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Chiaroscuro",
+  },
+  "Who painted The School of Athens?": {
+    explanation: "'The School of Athens' (1509–1511) was painted by Raphael as part of the Vatican's Stanza della Segnatura frescoes. It depicts ancient Greek philosophers with Plato and Aristotle at its centre, and is one of the greatest examples of High Renaissance art.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/The_School_of_Athens",
+  },
+  "What is the technique of applying thick paint called?": {
+    explanation: "Impasto is the technique of applying paint thickly to create a raised, textured surface. Van Gogh was its most celebrated practitioner — his swirling, deeply textured brushstrokes are visible from across a room and add movement and raw emotion to his paintings.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Impasto",
+  },
+  "Which artist inspired the term 'Pointillism'?": {
+    explanation: "Georges Seurat developed Pointillism, building entire paintings from thousands of tiny colour dots. The term was coined by critics in 1886. Seurat called his method 'Chromoluminarism', grounding it in the scientific colour theories of Michel Eugène Chevreul.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Pointillism",
+  },
+  "What is the Uffizi?": {
+    explanation: "The Uffizi Gallery is one of the world's most celebrated art museums, located in Florence, Italy. Built in 1560 as offices (uffizi) for Florentine magistrates, it now houses masterpieces by Botticelli, Leonardo, Michelangelo, Raphael, and Titian.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Uffizi",
+  },
+
+  // ── ARTISTS: ART EXPERT CHALLENGE (Difficulty 5) ─────────────────────────
+  "What technique did da Vinci use to create soft transitions in skin tones?": {
+    explanation: "Sfumato (Italian for 'smoky') is Leonardo da Vinci's signature technique of blending tones imperceptibly to create soft, haze-like transitions — especially around eyes and mouths. The Mona Lisa's mysterious expression is largely achieved through sfumato.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Sfumato",
+  },
+  "Who painted 'The Birth of Venus'?": {
+    explanation: "'The Birth of Venus' (c. 1484–1486) was painted by Sandro Botticelli for the Medici family, depicting Venus emerging from the sea fully grown. It was one of the first large-scale non-religious paintings since antiquity and now hangs in the Uffizi Gallery.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/The_Birth_of_Venus",
+  },
+  "What does 'Baroque' mean?": {
+    explanation: "The word 'Baroque' derives from the Portuguese 'barroco', meaning an irregularly shaped pearl. Originally pejorative, it now describes the dramatic, ornate 17th-century style characterised by grandeur, emotional intensity, movement, and rich detail.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Baroque",
+  },
+  "In which city is the Rijksmuseum?": {
+    explanation: "The Rijksmuseum is in Amsterdam, Netherlands. Opened in 1885, it is the Dutch national museum and holds the world's greatest collection of Golden Age art, including Rembrandt's 'The Night Watch' and Vermeer's 'The Milkmaid'.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Rijksmuseum",
+  },
+  "Which Rembrandt painting shows a group of militia men?": {
+    explanation: "'The Night Watch' (1642) depicts Captain Frans Banninck Cocq and his militia company. Celebrated for its dramatic chiaroscuro, monumental scale, and sense of movement, it is Rembrandt's most famous work and hangs in the Rijksmuseum in Amsterdam.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/The_Night_Watch",
+  },
+
+  // ── SCIENCE: SCIENCE STARTER (Difficulty 1) ──────────────────────────────
+  "What gas do plants absorb?": {
+    explanation: "Plants absorb carbon dioxide (CO₂) from the air during photosynthesis and convert it into glucose using sunlight and water. This process also releases oxygen as a by-product — the source of most of Earth's atmospheric oxygen.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Photosynthesis",
+  },
+  "What is H₂O?": {
+    explanation: "H₂O is the chemical formula for water — two hydrogen atoms bonded to one oxygen atom. Water is the most abundant compound on Earth's surface and is essential for all known forms of life.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Water",
+  },
+  "What is the closest star to Earth?": {
+    explanation: "The Sun is the closest star to Earth, at an average distance of about 150 million km (1 AU). The next closest star system, Proxima Centauri, is about 4.24 light-years away — roughly 268,000 times further.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Sun",
+  },
+  "What is the process by which plants make food?": {
+    explanation: "Photosynthesis is the process by which plants, algae, and some bacteria convert light energy, CO₂, and water into glucose and oxygen. The overall equation is: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Photosynthesis",
+  },
+  "How many chromosomes does a human cell have?": {
+    explanation: "Most human cells contain 46 chromosomes arranged in 23 pairs. One chromosome in each pair comes from each parent. Sperm and egg cells (gametes) are exceptions — they contain only 23 chromosomes each.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Human_genome",
+  },
+
+  // ── SCIENCE: CHEMISTRY FOUNDATIONS (Difficulty 2) ────────────────────────
+  "What is the symbol for Gold?": {
+    explanation: "Gold's chemical symbol is Au, from the Latin word 'aurum'. Gold has been valued since ancient times for its rarity, lustre, and resistance to tarnish. It has atomic number 79 and is used in electronics, jewellery, and currency.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Gold",
+  },
+  "How many elements are in the periodic table (as of 2024)?": {
+    explanation: "The periodic table contains 118 confirmed elements as of 2024. Element 118, oganesson, was officially added in 2016. Elements 1–94 occur naturally; elements 95–118 are synthetic and were created in laboratories.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Periodic_table",
+  },
+  "What is the pH of pure water?": {
+    explanation: "Pure water has a pH of 7 — the midpoint of the pH scale (0–14), making it neutral. Solutions with pH below 7 are acidic; above 7 are basic (alkaline). pH measures the concentration of hydrogen ions (H⁺) in a solution.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/PH",
+  },
+  "What type of bond shares electrons?": {
+    explanation: "Covalent bonds form when two atoms share electrons. This contrasts with ionic bonds, where electrons are transferred from one atom to another. Covalent bonds are common in organic molecules like water (H₂O) and DNA.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Covalent_bond",
+  },
+  "What is the atomic number of Carbon?": {
+    explanation: "Carbon has atomic number 6, meaning it has 6 protons in its nucleus. It is the basis of all organic life, capable of forming four bonds simultaneously — creating the vast diversity of organic molecules including DNA, proteins, and carbohydrates.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Carbon",
+  },
+
+  // ── SCIENCE: BIOLOGY & CELLS (Difficulty 3) ──────────────────────────────
+  "What is the powerhouse of the cell?": {
+    explanation: "Mitochondria are often called the powerhouses of the cell because they produce ATP (adenosine triphosphate) — the cell's primary energy currency — through cellular respiration. They have their own DNA, evidence of their ancient bacterial origin.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Mitochondrion",
+  },
+  "What does DNA stand for?": {
+    explanation: "DNA stands for Deoxyribonucleic Acid. It is the molecule that carries the genetic instructions for the development, functioning, growth, and reproduction of all known living organisms. It forms a double helix structure, first described by Watson and Crick in 1953.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/DNA",
+  },
+  "Which blood type is the universal donor?": {
+    explanation: "Blood type O negative (O−) is the universal red cell donor because it lacks A, B, and Rh antigens on red blood cells, so it can be given to patients of any blood type without triggering an immune rejection reaction.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/ABO_blood_group_system",
+  },
+  "What is osmosis?": {
+    explanation: "Osmosis is the movement of water molecules through a semi-permeable membrane from a region of low solute concentration to one of high solute concentration. It is the mechanism by which plant roots absorb water from soil.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Osmosis",
+  },
+  "What is meiosis?": {
+    explanation: "Meiosis is the type of cell division that produces gametes (sperm and egg cells) with half the chromosome number of the parent cell. It introduces genetic variation through crossing over and random chromosome assortment.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Meiosis",
+  },
+
+  // ── SCIENCE: SCIENCE DEEP DIVE (Difficulty 4) ────────────────────────────
+  "What is the speed of light (approx)?": {
+    explanation: "The speed of light in a vacuum is approximately 300,000 km/s (299,792,458 m/s exactly). It is the universal speed limit — nothing with mass can reach it. Light from the Sun takes about 8 minutes 20 seconds to reach Earth.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Speed_of_light",
+  },
+  "What is a catalyst?": {
+    explanation: "A catalyst is a substance that speeds up a chemical reaction without being consumed in the process. Biological catalysts are called enzymes. Catalysts work by providing an alternative reaction pathway with a lower activation energy.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Catalysis",
+  },
+  "What is the Krebs cycle?": {
+    explanation: "The Krebs cycle (citric acid cycle) is a series of chemical reactions in mitochondria that cells use to generate energy. It is the second stage of cellular respiration, following glycolysis, and produces NADH and FADH₂ to drive ATP synthesis.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Citric_acid_cycle",
+  },
+  "What particle carries no electric charge?": {
+    explanation: "The neutron is an electrically neutral subatomic particle found in the nucleus of every atom except hydrogen-1. Neutrons have approximately the same mass as protons and help hold the nucleus together via the strong nuclear force.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Neutron",
+  },
+  "What does CRISPR do?": {
+    explanation: "CRISPR-Cas9 is a gene-editing tool that allows scientists to precisely cut, delete, or replace specific DNA sequences in any organism. It was adapted from a natural bacterial immune system and won the 2020 Nobel Prize in Chemistry for Jennifer Doudna and Emmanuelle Charpentier.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/CRISPR",
+  },
+
+  // ── SCIENCE: SCIENCE EXPERT (Difficulty 5) ───────────────────────────────
+  "What is the Higgs boson?": {
+    explanation: "The Higgs boson is an elementary particle that gives mass to other fundamental particles through its interaction with the Higgs field. It was theorised in 1964 and confirmed experimentally at CERN's Large Hadron Collider in July 2012 — completing the Standard Model.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Higgs_boson",
+  },
+  "What is quantum entanglement?": {
+    explanation: "Quantum entanglement is a phenomenon where two particles become correlated such that measuring one instantly determines the state of the other, regardless of the distance separating them. Einstein called it 'spooky action at a distance'. It is the basis of quantum cryptography and quantum computing.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Quantum_entanglement",
+  },
+  "What is the half-life of Carbon-14?": {
+    explanation: "Carbon-14 has a half-life of approximately 5,730 years, meaning half of any C-14 sample decays to nitrogen-14 in that time. This predictable decay rate is exploited in radiocarbon dating to determine the age of organic material up to about 50,000 years old.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Radiocarbon_dating",
+  },
+  "What is a quark?": {
+    explanation: "Quarks are elementary particles that combine to form hadrons such as protons and neutrons. There are six 'flavours': up, down, charm, strange, top, and bottom. Quarks are never found in isolation — they are always confined within composite particles by the strong force.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Quark",
+  },
+  "What is the name of the enzyme that unzips DNA?": {
+    explanation: "Helicase is the enzyme that unwinds and separates ('unzips') the two strands of the DNA double helix during DNA replication and transcription. It breaks the hydrogen bonds between base pairs, allowing each strand to serve as a template.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Helicase",
+  },
+
+  // ── MATH: NUMBER FUNDAMENTALS (Difficulty 1) ─────────────────────────────
+  "What is 7 × 8?": {
+    explanation: "7 × 8 = 56. A classic multiplication fact — you can derive it as 7 × 8 = (7 × 10) − (7 × 2) = 70 − 14 = 56. Memorising the times table up to 12 is a foundational arithmetic skill.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Multiplication_table",
+  },
+  "What is the square root of 144?": {
+    explanation: "√144 = 12, because 12 × 12 = 144. The square root of a number n is the value that, when multiplied by itself, equals n. 144 is a perfect square.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Square_root",
+  },
+  "What is 15% of 200?": {
+    explanation: "15% of 200 = (15/100) × 200 = 30. Percentages are a way of expressing a proportion out of 100. A quick trick: 10% of 200 is 20, plus half of that (5% = 10) gives 30.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Percentage",
+  },
+  "What is the value of Pi to 2 decimal places?": {
+    explanation: "Pi (π) ≈ 3.14. It is the ratio of a circle's circumference to its diameter and is an irrational, transcendental number — its decimal expansion never repeats or terminates. It has been calculated to trillions of digits.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Pi",
+  },
+  "What is 2 to the power of 10?": {
+    explanation: "2¹⁰ = 1024. Powers of 2 are fundamental in computing — 1024 bytes = 1 kilobyte. Each step doubles the previous value: 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Power_of_two",
+  },
+
+  // ── MATH: ALGEBRA INTRO (Difficulty 2) ───────────────────────────────────
+  "If x + 5 = 12, what is x?": {
+    explanation: "Subtract 5 from both sides: x = 12 − 5 = 7. This uses the golden rule of algebra — whatever you do to one side of an equation, you must do to the other side to keep it balanced.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Algebra",
+  },
+  "What is 3x if x = 4?": {
+    explanation: "Substituting x = 4: 3 × 4 = 12. This is algebraic substitution — replacing a variable with its known value to evaluate an expression.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Substitution_(algebra)",
+  },
+  "Simplify: 2(x + 3) = ?": {
+    explanation: "Using the distributive law: 2(x + 3) = 2x + 6. The distributive property states that a(b + c) = ab + ac — multiply each term inside the brackets by the factor outside.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Distributive_property",
+  },
+  "What is the slope in y = 2x + 1?": {
+    explanation: "In the slope-intercept form y = mx + b, m is the slope and b is the y-intercept. Here m = 2, meaning the line rises 2 units vertically for every 1 unit it moves horizontally.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Slope",
+  },
+  "Solve: 4x = 20": {
+    explanation: "Divide both sides by 4: x = 20 ÷ 4 = 5. Division is the inverse of multiplication — dividing isolates the variable by undoing the multiplication.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Linear_equation",
+  },
+
+  // ── MATH: GEOMETRY & SHAPES (Difficulty 3) ───────────────────────────────
+  "What is the area of a circle with radius 5?": {
+    explanation: "Area = πr² = π × 5² = 25π ≈ 78.54 square units. The formula A = πr² was proven by Archimedes around 250 BC by inscribing and circumscribing polygons around a circle.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Area_of_a_circle",
+  },
+  "How many degrees in a triangle?": {
+    explanation: "The interior angles of any triangle always sum to 180°. This follows from the parallel postulate of Euclidean geometry and can be demonstrated by tearing the three corners of a paper triangle and placing them in a straight line.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Triangle",
+  },
+  "What is Pythagoras' theorem?": {
+    explanation: "Pythagoras' theorem states a² + b² = c², where c is the hypotenuse (longest side) of a right-angled triangle. It is used in navigation, construction, and computer graphics to calculate distances.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Pythagorean_theorem",
+  },
+  "How many sides does a hexagon have?": {
+    explanation: "A hexagon has 6 sides. Regular hexagons tile a plane perfectly with no gaps — honeybees build their combs in this shape because it is the most efficient structure for storing the most honey with the least wax.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Hexagon",
+  },
+  "What is the volume formula for a cylinder?": {
+    explanation: "Volume = πr²h, where r is the base radius and h is the height. It is essentially the area of the circular base (πr²) multiplied by the height — the same logic applies to any prism.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Cylinder",
+  },
+
+  // ── MATH: CALCULUS & STATISTICS (Difficulty 4) ───────────────────────────
+  "What is the derivative of x²?": {
+    explanation: "Using the power rule: d/dx(xⁿ) = nxⁿ⁻¹, so d/dx(x²) = 2x. The derivative represents the instantaneous rate of change — geometrically, it is the slope of the tangent line to the curve y = x² at any point x.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Derivative",
+  },
+  "What is the integral of 2x?": {
+    explanation: "∫2x dx = x² + C. Integration is the reverse of differentiation. The constant C (constant of integration) is added because differentiating any constant gives 0, so infinitely many functions have the same derivative.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Integral",
+  },
+  "What does 'mean' mean in statistics?": {
+    explanation: "The mean (arithmetic average) is calculated by summing all values and dividing by the count. It is the most common measure of central tendency, though it is sensitive to outliers — one extreme value can skew it significantly.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Mean",
+  },
+  "What is the formula for standard deviation based on?": {
+    explanation: "Standard deviation is the square root of variance. Variance measures how spread out values are from the mean by averaging the squared differences. Standard deviation brings the measure back to the original units.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Standard_deviation",
+  },
+  "What is the limit of (1/x) as x approaches infinity?": {
+    explanation: "As x grows infinitely large, 1/x gets arbitrarily close to 0. This limit = 0. Limits are the foundation of calculus — they describe the value a function approaches as the input tends toward a specific point.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Limit_(mathematics)",
+  },
+
+  // ── MATH: MATH OLYMPIAD (Difficulty 5) ───────────────────────────────────
+  "What is Euler's identity?": {
+    explanation: "Euler's identity is e^(iπ) + 1 = 0 — often called the most beautiful equation in mathematics. It connects five fundamental constants: e (natural log base), i (imaginary unit), π, 1, and 0, in a single elegant formula.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Euler%27s_identity",
+  },
+  "What is the Riemann Hypothesis about?": {
+    explanation: "The Riemann Hypothesis (1859) conjectures that all non-trivial zeros of the Riemann zeta function have a real part of exactly ½. It has deep implications for the distribution of prime numbers and remains one of mathematics' greatest unsolved problems — with a $1 million Millennium Prize.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Riemann_hypothesis",
+  },
+  "How many primes are there less than 100?": {
+    explanation: "There are 25 prime numbers below 100: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97. The prime counting function π(100) = 25.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Prime_number",
+  },
+  "What is the Fibonacci sequence rule?": {
+    explanation: "Each Fibonacci number is the sum of the two preceding ones: 0, 1, 1, 2, 3, 5, 8, 13, 21… The ratio of consecutive Fibonacci numbers converges to the Golden Ratio φ ≈ 1.618, which appears in nature, art, and architecture.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Fibonacci_sequence",
+  },
+  "What is P vs NP?": {
+    explanation: "P vs NP asks whether every problem whose solution can be quickly verified (NP) can also be quickly solved (P). It is the central unsolved problem in computer science — if P = NP, encryption as we know it would collapse. It carries a $1 million Millennium Prize.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/P_versus_NP_problem",
+  },
+
+  // ── AVENGERS: EARTH'S MIGHTIEST HEROES (Difficulty 1) ────────────────────
+  "What is Tony Stark's hero name?": {
+    explanation: "Tony Stark is Iron Man — a genius billionaire who built a powered suit of armour to escape captivity and went on to become one of the founding Avengers. The Iron Man name first appeared in Marvel Comics in 1963 (Tales of Suspense #39), created by Stan Lee, Larry Lieber, Don Heck, and Jack Kirby.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Iron_Man",
+  },
+  "What colour is the Hulk?": {
+    explanation: "The Hulk is green. He was originally grey in his first comic appearance (1962), but printer ink inconsistencies led Stan Lee to change him to green from issue #2 onwards. The green colour has since become one of Marvel's most iconic visual identities.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Hulk",
+  },
+  "Who can lift Thor's hammer?": {
+    explanation: "Only those 'deemed worthy' can lift Mjolnir. In the MCU, this enchantment was placed on the hammer by Odin. Characters confirmed worthy include Thor, Vision, and Captain America (who lifts it in Avengers: Endgame). Raw strength alone is not enough — character matters.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Mjolnir_(comics)",
+  },
+  "What is the name of Thor's hammer?": {
+    explanation: "Mjolnir (Old Norse: 'crusher') is the enchanted hammer of Thor, the Asgardian god of thunder. In Norse mythology it was forged by the dwarven brothers Sindri and Brokkr. In the MCU it was destroyed by Hela in Thor: Ragnarok, later replaced by the axe Stormbreaker.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Mjolnir_(comics)",
+  },
+  "Where is Black Widow from?": {
+    explanation: "Natasha Romanoff / Black Widow is from Russia. She was trained as a spy and assassin in the Soviet Red Room programme. In the comics she was born in Stalingrad (now Volgograd). In the MCU she is portrayed by Scarlett Johansson.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Black_Widow_(Natasha_Romanova)",
+  },
+
+  // ── AVENGERS: INFINITY STONES (Difficulty 2) ──────────────────────────────
+  "How many Infinity Stones are there?": {
+    explanation: "There are 6 Infinity Stones: Space (blue), Mind (yellow), Reality (red), Power (purple), Time (green), and Soul (orange). When all six are set in the Infinity Gauntlet, the wielder can reshape reality itself — as Thanos demonstrated with his snap in Avengers: Infinity War.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Infinity_Stones",
+  },
+  "What does the Time Stone do?": {
+    explanation: "The Time Stone (housed in the Eye of Agamotto) allows its wielder to manipulate time — rewinding, fast-forwarding, or creating time loops. Doctor Strange uses it to view 14 million possible futures in Infinity War and famously traps Dormammu in a time loop in his solo film.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Infinity_Stones#Time_Stone",
+  },
+  "Where was the Soul Stone hidden?": {
+    explanation: "The Soul Stone was hidden on the planet Vormir, guarded by Red Skull — who was transported there after touching the Tesseract in Captain America: The First Avenger. Obtaining it requires sacrificing the soul of someone you love, leading to Gamora's death in Infinity War.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Infinity_Stones#Soul_Stone",
+  },
+  "Who originally had the Mind Stone?": {
+    explanation: "Loki was given the Mind Stone (embedded in his sceptre) by Thanos at the start of The Avengers (2012) to use in his invasion of Earth. It was later embedded in Vision's forehead by Tony Stark and Bruce Banner, until Thanos forcibly removed it — killing Vision — in Infinity War.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Infinity_Stones#Mind_Stone",
+  },
+  "What colour is the Time Stone?": {
+    explanation: "The Time Stone is green. It glows with a distinctive emerald light and was kept inside the Eye of Agamotto amulet by the Sorcerer Supreme. Doctor Strange wears it as the Master of the New York Sanctum and uses it as his primary weapon against reality-level threats.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Infinity_Stones#Time_Stone",
+  },
+
+  // ── AVENGERS: MCU TIMELINE (Difficulty 3) ─────────────────────────────────
+  "Which film came first in the MCU?": {
+    explanation: "Iron Man (2008) was the first film of the Marvel Cinematic Universe, directed by Jon Favreau and starring Robert Downey Jr. It launched Phase One of the MCU and ended with Tony Stark's famous line 'I am Iron Man', establishing the franchise's tone of wit and spectacle.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Iron_Man_(film)",
+  },
+  "What is the name of the alien race Thanos commands?": {
+    explanation: "Thanos commands the Chitauri — a cybernetic alien army that serves as the main threat in The Avengers (2012). In the comics they are an alternate version of the Skrulls. In Infinity War and Endgame, Thanos also deploys the Outriders and the Black Order as his elite forces.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Chitauri",
+  },
+  "Where does the Battle of Wakanda take place?": {
+    explanation: "The Battle of Wakanda occurs in Avengers: Infinity War when Thanos's forces attack to extract the Mind Stone from Vision. The Avengers, aided by Wakanda's armies and the newly arrived Thor, fight a massive ground battle against the Outriders across the Wakandan plains.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Avengers:_Infinity_War",
+  },
+  "Who snaps the stones to bring everyone back in Endgame?": {
+    explanation: "Bruce Banner (the Hulk) performs the 'Smart Hulk snap' in Avengers: Endgame, using a nano-gauntlet built by Tony Stark to reverse Thanos's original snap and bring back all the dusted heroes. Banner is chosen because his gamma radiation makes him the most suited to survive the Stones' energy.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Avengers:_Endgame",
+  },
+  "What year does the first Avengers movie take place?": {
+    explanation: "The Avengers (2012) is set in 2012 within the MCU timeline. This is later revisited in Avengers: Endgame when the heroes time-travel back to 2012 New York to retrieve the Tesseract and the Sceptre during the events of the original Battle of New York.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/The_Avengers_(2012_film)",
+  },
+
+  // ── AVENGERS: VILLAIN DEEP DIVE (Difficulty 4) ────────────────────────────
+  "What is Thanos's homeworld?": {
+    explanation: "Thanos is from Titan, a moon of Saturn in the MCU — depicted as a once-beautiful world that collapsed due to overpopulation, driving Thanos to his genocidal philosophy. In the comics, Titan is a colonised moon inhabited by the Eternals. Thanos is one of the most powerful beings in the universe.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Thanos",
+  },
+  "Who created Ultron?": {
+    explanation: "In the MCU, Ultron was jointly created by Tony Stark and Bruce Banner using the Mind Stone's artificial intelligence in Avengers: Age of Ultron (2015). This differs from the comics, where Hank Pym (Ant-Man) is Ultron's creator. MCU Ultron quickly concludes humanity is the greatest threat to peace.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Ultron",
+  },
+  "What is Loki the god of?": {
+    explanation: "Loki is the Asgardian god of Mischief. In Norse mythology he is a shape-shifting trickster of mixed reputation — sometimes a helper, sometimes an adversary. The MCU version, played by Tom Hiddleston, became one of Marvel's most beloved anti-heroes and received his own Disney+ series.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Loki_(Marvel_Comics)",
+  },
+  "What is the name of the Black Order member who is the biggest?": {
+    explanation: "Cull Obsidian (also known as Black Dwarf in the comics) is the largest member of Thanos's Black Order — a towering, near-indestructible warrior. In Avengers: Infinity War he battles Bruce Banner (in the Hulkbuster armour) and is later destroyed by Wong using a portal.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Black_Order_(comics)",
+  },
+  "Which villain uses the Mandarin name in Iron Man 3?": {
+    explanation: "Aldrich Killian (played by Guy Pearce) is revealed to be the true villain of Iron Man 3, having manipulated the actor Trevor Slattery to play a fake Mandarin persona as a distraction. Killian uses the Extremis virus to give people superhuman regeneration — and explosive instability.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Iron_Man_3",
+  },
+
+  // ── AVENGERS: MARVEL EXPERT (Difficulty 5) ────────────────────────────────
+  "What is Tony Stark's AI assistant called in the original Iron Man?": {
+    explanation: "JARVIS (Just A Rather Very Intelligent System) is Tony Stark's AI butler and assistant in the original Iron Man trilogy. He manages Tony's suit systems, home, and research. In Age of Ultron, JARVIS's core matrix is used by Tony and Bruce to create Vision, who inherits some of his characteristics.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/J.A.R.V.I.S.",
+  },
+  "What is the real name of the Ancient One?": {
+    explanation: "The Ancient One's real name is never revealed in the MCU. She is simply addressed as 'The Ancient One' — the title given to the Sorcerer Supreme who protects Earth from mystical threats. Played by Tilda Swinton in Doctor Strange (2016), her Celtic origins were a deliberate departure from the comics' Tibetan portrayal.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Ancient_One_(Marvel_Comics)",
+  },
+  "In what language does Thor communicate with Groot?": {
+    explanation: "Thor reveals in Avengers: Infinity War that he learned Groot's language ('Groot') as an elective at school in Asgard, to the surprise of the other Guardians of the Galaxy. This comedic detail underscores the All-Speak / Universal Translator concept used by Asgardians throughout the MCU.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Groot_(comics)",
+  },
+  "What is the name of the quantum realm vehicle in Endgame?": {
+    explanation: "The 'Quantum Van' (officially Scott Lang's repurposed van containing the mobile quantum tunnel) is the time machine used by the Avengers in Endgame. It was nearly destroyed during the final battle, which would have prevented the Avengers from returning from the past — a key plot tension of the film's climax.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Avengers:_Endgame",
+  },
+  "Which stone was Thanos unable to get in the main timeline of Infinity War?": {
+    explanation: "Thanos collected all six Infinity Stones in the main timeline of Infinity War — none eluded him. Doctor Strange's surrender of the Time Stone and the extraction of the Mind Stone from Vision completed the Gauntlet, leading to the snap that erased half of all life. Strange's vision of the one winning future made giving it up necessary.",
+    readMoreUrl: "https://en.wikipedia.org/wiki/Avengers:_Infinity_War",
+  },
 };
 
 async function main() {

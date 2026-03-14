@@ -48,7 +48,15 @@
       "Bash(cmd /c \"rmdir /S /Q \"\".next\"\" 2>nul & echo cleared\")",
       "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id, CPU, StartTime | Format-Table\")",
       "Bash(powershell -Command \"Stop-Process -Id 4152,22644,34156,48700 -Force\")",
-      "Bash(npm run db:explain)"
+      "Bash(npm run db:explain)",
+      "Bash(npx tsx prisma/seed-explanations.ts)",
+      "Bash(npm run:*)",
+      "Bash(grep -n \"imageUrl\\\\|explanation\\\\|readMoreUrl\\\\|select\\\\|questions\" d:/VS_WS/bhavik_quik/app/api/quizzes/[id]/route.ts)",
+      "Bash(curl -I https://flagcdn.com/w320/jp.png)",
+      "Bash(curl -sI \"https://logo.clearbit.com/apple.com\")",
+      "Bash(curl -o /dev/null -w \"%{http_code} %{content_type}\" \"https://logo.clearbit.com/apple.com\")",
+      "Bash(curl -o /dev/null -w \"%{http_code} %{content_type}\" \"https://cdn.simpleicons.org/apple\")",
+      "Bash(curl -o /dev/null -w \"%{http_code} %{content_type}\" \"https://cdn.simpleicons.org/google\")"
     ]
   }
 }

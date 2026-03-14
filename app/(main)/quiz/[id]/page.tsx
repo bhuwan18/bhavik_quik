@@ -86,6 +86,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
             correctIndex: q.correctIndex,
             explanation: q.explanation,
             readMoreUrl: q.readMoreUrl,
+            imageUrl: q.imageUrl,
           })),
         }}
       />

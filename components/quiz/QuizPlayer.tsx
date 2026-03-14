@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 type Question = {
   id: string;
@@ -10,6 +11,7 @@ type Question = {
   correctIndex: number;
   explanation?: string | null;
   readMoreUrl?: string | null;
+  imageUrl?: string | null;
 };
 
 const COINS_BY_DIFFICULTY: Record<number, number> = { 1: 3, 2: 5, 3: 8, 4: 12, 5: 20 };
@@ -146,6 +148,20 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
 
       {/* Question card */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8 mb-6">
+        {question.imageUrl && (
+          <div className="mb-5 flex justify-center">
+            <div className="bg-white rounded-2xl p-5 shadow-lg inline-flex items-center justify-center">
+              <Image
+                src={question.imageUrl}
+                alt="Question image"
+                width={240}
+                height={160}
+                className="object-contain max-h-40"
+                unoptimized
+              />
+            </div>
+          </div>
+        )}
         <p className="text-xl font-semibold text-white leading-relaxed">{question.text}</p>
       </div>
 
