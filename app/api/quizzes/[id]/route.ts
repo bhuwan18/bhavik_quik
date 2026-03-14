@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     description?: string;
     category?: string;
     difficulty?: number;
-    questions?: Array<{ text: string; options: string[]; correctIndex: number; order: number }>;
+    questions?: Array<{ text: string; options: string[]; correctIndex: number; order: number; explanation?: string; readMoreUrl?: string }>;
   };
   try {
     body = await req.json();
@@ -66,6 +66,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         correctIndex: q.correctIndex,
         order: q.order ?? i,
         points: 1,
+        ...(q.explanation !== undefined ? { explanation: q.explanation.slice(0, 2000) } : {}),
+        ...(q.readMoreUrl !== undefined ? { readMoreUrl: q.readMoreUrl.slice(0, 500) } : {}),
       })),
     });
   }

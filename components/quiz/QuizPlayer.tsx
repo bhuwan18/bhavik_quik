@@ -8,6 +8,8 @@ type Question = {
   text: string;
   options: string[];
   correctIndex: number;
+  explanation?: string | null;
+  readMoreUrl?: string | null;
 };
 
 const COINS_BY_DIFFICULTY: Record<number, number> = { 1: 3, 2: 5, 3: 8, 4: 12, 5: 20 };
@@ -174,6 +176,28 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
           );
         })}
       </div>
+
+      {/* Explanation panel — shown after answering */}
+      {selected !== null && (question.explanation || question.readMoreUrl) && (
+        <div className="mb-6 bg-indigo-500/10 border border-indigo-500/30 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-indigo-400 text-sm font-semibold">💡 Explanation</span>
+          </div>
+          {question.explanation && (
+            <p className="text-gray-300 text-sm leading-relaxed">{question.explanation}</p>
+          )}
+          {question.readMoreUrl && (
+            <a
+              href={question.readMoreUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-3 text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
+            >
+              Read more →
+            </a>
+          )}
+        </div>
+      )}
 
       {/* Next button */}
       <button

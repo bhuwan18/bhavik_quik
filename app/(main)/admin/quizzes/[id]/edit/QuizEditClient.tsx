@@ -14,6 +14,8 @@ type Question = {
   options: string[];
   correctIndex: number;
   order: number;
+  explanation: string;
+  readMoreUrl: string;
 };
 
 type Quiz = {
@@ -61,7 +63,7 @@ export default function QuizEditClient({ quiz }: { quiz: Quiz }) {
   const addQuestion = () => {
     setQuestions((prev) => [
       ...prev,
-      { text: "", options: ["", "", "", ""], correctIndex: 0, order: prev.length },
+      { text: "", options: ["", "", "", ""], correctIndex: 0, order: prev.length, explanation: "", readMoreUrl: "" },
     ]);
   };
 
@@ -224,6 +226,29 @@ export default function QuizEditClient({ quiz }: { quiz: Quiz }) {
                   )}
                 </div>
               ))}
+            </div>
+
+            {/* Explanation */}
+            <div className="ml-7 mt-3 space-y-2">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Explanation (shown after answering)</label>
+                <textarea
+                  value={q.explanation}
+                  onChange={(e) => updateQuestion(qIdx, { explanation: e.target.value })}
+                  rows={2}
+                  placeholder="Brief explanation of the correct answer..."
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500 resize-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Read more URL (optional)</label>
+                <input
+                  value={q.readMoreUrl}
+                  onChange={(e) => updateQuestion(qIdx, { readMoreUrl: e.target.value })}
+                  placeholder="https://en.wikipedia.org/wiki/..."
+                  className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500"
+                />
+              </div>
             </div>
           </div>
         ))}

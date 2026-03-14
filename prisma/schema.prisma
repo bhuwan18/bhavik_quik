@@ -95,14 +95,16 @@ model Quiz {
 }
 
 model Question {
-  id           String @id @default(cuid())
+  id           String  @id @default(cuid())
   quizId       String
-  quiz         Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz         Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
   text         String
   options      Json
   correctIndex Int
-  points       Int    @default(1)
-  order        Int    @default(0)
+  points       Int     @default(1)
+  order        Int     @default(0)
+  explanation  String? @db.Text
+  readMoreUrl  String?
 }
 
 model QuizAttempt {

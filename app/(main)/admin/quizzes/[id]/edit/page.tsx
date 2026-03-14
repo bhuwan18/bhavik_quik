@@ -24,6 +24,8 @@ export default async function AdminQuizEditPage({ params }: { params: Promise<{ 
       options: Array.isArray(q.options) ? (q.options as string[]) : [],
       correctIndex: q.correctIndex,
       order: q.order,
+      explanation: q.explanation ?? "",
+      readMoreUrl: q.readMoreUrl ?? "",
     })),
   };
 
