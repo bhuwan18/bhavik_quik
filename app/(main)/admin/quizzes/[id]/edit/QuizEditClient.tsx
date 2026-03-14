@@ -64,7 +64,7 @@ export default function QuizEditClient({ quiz }: { quiz: Quiz }) {
   const addQuestion = () => {
     setQuestions((prev) => [
       ...prev,
-      { text: "", options: ["", "", "", ""], correctIndex: 0, order: prev.length, explanation: "", readMoreUrl: "" },
+      { text: "", options: ["", "", "", ""], correctIndex: 0, order: prev.length, explanation: "", readMoreUrl: "", imageUrl: "" },
     ]);
   };
 
