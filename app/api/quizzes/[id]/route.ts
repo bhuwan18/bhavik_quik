@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     data: {
       ...(body.title !== undefined       ? { title: body.title.slice(0, 200) } : {}),
       ...(body.description !== undefined ? { description: body.description.slice(0, 1000) } : {}),
-      ...(body.category !== undefined    ? { category: VALID_CATEGORIES.has(body.category) ? (body.category as typeof quiz.category) : quiz.category } : {}),
+      ...(body.category !== undefined    ? { category: (VALID_CATEGORIES as Set<string>).has(body.category) ? (body.category as typeof quiz.category) : quiz.category } : {}),
       ...(body.difficulty !== undefined  ? { difficulty: Math.max(1, Math.min(5, body.difficulty)) } : {}),
     },
   });
