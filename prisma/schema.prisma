@@ -36,6 +36,10 @@ model User {
   feedbacks            Feedback[]
   correctAnswers       CorrectAnswer[]
   notifications        Notification[]
+
+  @@index([totalCoinsEarned])
+  @@index([lastSeenAt])
+  @@index([createdAt])
 }
 
 model Account {
@@ -84,6 +88,10 @@ model Quiz {
   questions   Question[]
   attempts    QuizAttempt[]
   createdAt   DateTime      @default(now())
+
+  @@index([category])
+  @@index([authorId])
+  @@index([isOfficial])
 }
 
 model Question {
@@ -107,6 +115,10 @@ model QuizAttempt {
   total       Int
   coinsEarned Int
   completedAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([quizId])
+  @@index([completedAt])
 }
 
 model Quizlet {
@@ -132,6 +144,7 @@ model UserQuizlet {
   obtainedAt DateTime @default(now())
 
   @@unique([userId, quizletId])
+  @@index([userId])
 }
 
 model PaymentRequest {
@@ -146,6 +159,10 @@ model PaymentRequest {
   adminNote String?  // optional note from admin on rejection
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Feedback {
@@ -156,6 +173,10 @@ model Feedback {
   message   String   @db.Text
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }
 
 model CorrectAnswer {
@@ -176,6 +197,10 @@ model Notification {
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }
 
 model Pack {

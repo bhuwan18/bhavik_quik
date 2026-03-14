@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { CATEGORIES } from "@/lib/utils";
 import type { Session } from "next-auth";
+
+const VALID_CATEGORIES = new Set(CATEGORIES.map((c) => c.slug));
 
 function adminOnly(session: Session | null): boolean {
   return !!(session?.user?.id && (session.user as { isAdmin?: boolean }).isAdmin);
@@ -48,7 +51,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     data: {
       ...(body.title !== undefined       ? { title: body.title.slice(0, 200) } : {}),
       ...(body.description !== undefined ? { description: body.description.slice(0, 1000) } : {}),
-      ...(body.category !== undefined    ? { category: body.category } : {}),
+      ...(body.category !== undefined    ? { category: VALID_CATEGORIES.has(body.category) ? body.category : quiz.category } : {}),
       ...(body.difficulty !== undefined  ? { difficulty: Math.max(1, Math.min(5, body.difficulty)) } : {}),
     },
   });

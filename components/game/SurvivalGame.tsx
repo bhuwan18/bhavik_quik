@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { SURVIVAL_TIMER_S, SURVIVAL_TIMER_WARNING_S, SURVIVAL_ANSWER_REVEAL_MS, GAME_COINS_PER_CORRECT } from "@/lib/game-config";
 
 type Question = { id: string; text: string; options: string[]; correctIndex: number };
 
@@ -9,12 +10,24 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
   const [quizId, setQuizId] = useState<string>("");
   const [current, setCurrent] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(SURVIVAL_TIMER_S);
   const [answers, setAnswers] = useState<{ questionId: string; selectedIndex: number }[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [loading, setLoading] = useState(false);
   const [survived, setSurvived] = useState(false);
+
+  // Refs to avoid stale closures in timer effect
+  const answersRef = useRef(answers);
+  const streakRef = useRef(streak);
+  const questionsRef = useRef(questions);
+  const currentRef = useRef(current);
+  const quizIdRef = useRef(quizId);
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { streakRef.current = streak; }, [streak]);
+  useEffect(() => { questionsRef.current = questions; }, [questions]);
+  useEffect(() => { currentRef.current = current; }, [current]);
+  useEffect(() => { quizIdRef.current = quizId; }, [quizId]);
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -37,7 +50,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
   const endGame = useCallback(
     async (finalAnswers: typeof answers, finalStreak: number, qId: string) => {
       setPhase("done");
-      const estimatedCoins = finalStreak * 5;
+      const estimatedCoins = finalStreak * GAME_COINS_PER_CORRECT;
       setCoinsEarned(estimatedCoins);
       if (qId && finalAnswers.length > 0) {
         try {
@@ -56,19 +69,18 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
     []
   );
 
-  // 10-second countdown per question
+  // Countdown per question — only depends on phase, timeLeft, selected; uses refs for stable values
   useEffect(() => {
     if (phase !== "playing" || selected !== null) return;
     if (timeLeft <= 0) {
-      // Time ran out = game over
-      const currentQ = questions[current];
-      const newAnswers = [...answers, { questionId: currentQ.id, selectedIndex: -1 }];
-      endGame(newAnswers, streak, quizId);
+      const currentQ = questionsRef.current[currentRef.current];
+      const newAnswers = [...answersRef.current, { questionId: currentQ.id, selectedIndex: -1 }];
+      endGame(newAnswers, streakRef.current, quizIdRef.current);
       return;
     }
     const t = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, timeLeft, selected, current, questions, answers, streak, quizId, endGame]);
+  }, [phase, timeLeft, selected, endGame]);
 
   const handleAnswer = (idx: number) => {
     if (selected !== null) return;
@@ -80,7 +92,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
 
     if (!correct) {
       setSurvived(false);
-      setTimeout(() => endGame(newAnswers, streak, quizId), 800);
+      setTimeout(() => endGame(newAnswers, streak, quizId), SURVIVAL_ANSWER_REVEAL_MS);
       return;
     }
 
@@ -92,13 +104,13 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
       if (current + 1 < questions.length) {
         setCurrent((c) => c + 1);
         setSelected(null);
-        setTimeLeft(10);
+        setTimeLeft(SURVIVAL_TIMER_S);
         setSurvived(false);
       } else {
         // Completed all questions
         endGame(newAnswers, newStreak, quizId);
       }
-    }, 700);
+    }, SURVIVAL_ANSWER_REVEAL_MS);
   };
 
   if (phase === "intro") {
@@ -127,7 +139,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
               setStreak(0);
               setAnswers([]);
               setSelected(null);
-              setTimeLeft(10);
+              setTimeLeft(SURVIVAL_TIMER_S);
             }}
             disabled={loading}
             className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold text-lg rounded-xl transition-colors disabled:opacity-50"
@@ -160,7 +172,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
               setStreak(0);
               setAnswers([]);
               setSelected(null);
-              setTimeLeft(10);
+              setTimeLeft(SURVIVAL_TIMER_S);
               setQuestions([]);
             }}
             className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl"
@@ -187,7 +199,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
   }
 
   const q = questions[current];
-  const timerPct = (timeLeft / 10) * 100;
+  const timerPct = (timeLeft / SURVIVAL_TIMER_S) * 100;
 
   return (
     <div className="p-8 max-w-xl mx-auto">
@@ -199,7 +211,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
         </div>
         <div
           className={`text-2xl font-bold px-4 py-2 rounded-xl border ${
-            timeLeft <= 3
+            timeLeft <= SURVIVAL_TIMER_WARNING_S
               ? "text-red-400 border-red-500/50 bg-red-500/10 animate-pulse"
               : "text-orange-400 border-orange-500/30 bg-orange-500/10"
           }`}
@@ -211,7 +223,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
       {/* Timer bar */}
       <div className="w-full bg-white/10 rounded-full h-1.5 mb-4">
         <div
-          className={`h-1.5 rounded-full transition-all ${timeLeft <= 3 ? "bg-red-500" : "bg-orange-500"}`}
+          className={`h-1.5 rounded-full transition-all ${timeLeft <= SURVIVAL_TIMER_WARNING_S ? "bg-red-500" : "bg-orange-500"}`}
           style={{ width: `${timerPct}%` }}
         />
       </div>

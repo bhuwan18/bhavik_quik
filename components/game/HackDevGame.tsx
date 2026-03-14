@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { HACKDEV_DURATION_S, HACKDEV_CATEGORY, HACKDEV_TIMER_WARNING_S, HACKDEV_ANSWER_REVEAL_MS, GAME_COINS_PER_CORRECT } from "@/lib/game-config";
 
 type Question = {
   id: string;
@@ -14,16 +15,24 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(HACKDEV_DURATION_S);
   const [answers, setAnswers] = useState<{ questionId: string; selectedIndex: number }[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // Refs to avoid stale closures in timer effect
+  const answersRef = useRef(answers);
+  const scoreRef = useRef(score);
+  const questionsRef = useRef(questions);
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { scoreRef.current = score; }, [score]);
+  useEffect(() => { questionsRef.current = questions; }, [questions]);
+
   const loadQuestions = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/quizzes?category=technology&official=true");
+      const res = await fetch("/api/quizzes?category=${HACKDEV_CATEGORY}&official=true");
       const quizzes = await res.json();
       if (quizzes.length === 0) return;
       // Pick a random official tech quiz
@@ -40,34 +49,31 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
 
   const submitAndEnd = useCallback(async (finalAnswers: typeof answers, finalScore: number) => {
     setPhase("done");
-    setCoinsEarned(finalScore * 5);
-    if (questions.length > 0) {
+    setCoinsEarned(finalScore * GAME_COINS_PER_CORRECT);
+    if (questionsRef.current.length > 0) {
       try {
-        const quizRes = await fetch("/api/quizzes?category=technology&official=true");
+        const quizRes = await fetch("/api/quizzes?category=${HACKDEV_CATEGORY}&official=true");
         const quizzes = await quizRes.json();
         if (quizzes.length > 0) {
           await fetch("/api/attempt", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              quizId: quizzes[0].id,
-              answers: finalAnswers,
-            }),
+            body: JSON.stringify({ quizId: quizzes[0].id, answers: finalAnswers }),
           });
         }
       } catch { /* ignore */ }
     }
-  }, [questions, answers]);
+  }, []);
 
   useEffect(() => {
     if (phase !== "playing") return;
     if (timeLeft <= 0) {
-      submitAndEnd(answers, score);
+      submitAndEnd(answersRef.current, scoreRef.current);
       return;
     }
     const t = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, timeLeft, answers, score, submitAndEnd]);
+  }, [phase, timeLeft, submitAndEnd]);
 
   const handleAnswer = (idx: number) => {
     if (selected !== null) return;
@@ -86,7 +92,7 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
       } else {
         submitAndEnd(newAnswers, newScore);
       }
-    }, 600);
+    }, HACKDEV_ANSWER_REVEAL_MS);
   };
 
   if (phase === "intro") {
@@ -110,7 +116,7 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
             onClick={async () => {
               await loadQuestions();
               setPhase("playing");
-              setTimeLeft(60);
+              setTimeLeft(HACKDEV_DURATION_S);
             }}
             disabled={loading}
             className="w-full py-4 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-lg rounded-xl transition-colors disabled:opacity-50"
@@ -154,14 +160,14 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
       {/* Timer */}
       <div className="flex items-center justify-between mb-6">
         <span className="text-gray-400 text-sm">Question {current + 1}/{questions.length}</span>
-        <div className={`text-2xl font-bold px-4 py-2 rounded-xl border ${timeLeft <= 10 ? "text-red-400 border-red-500/50 bg-red-500/10 animate-pulse" : "text-cyan-400 border-cyan-500/30 bg-cyan-500/10"}`}>
+        <div className={`text-2xl font-bold px-4 py-2 rounded-xl border ${timeLeft <= HACKDEV_TIMER_WARNING_S ? "text-red-400 border-red-500/50 bg-red-500/10 animate-pulse" : "text-cyan-400 border-cyan-500/30 bg-cyan-500/10"}`}>
           ⏱️ {timeLeft}s
         </div>
       </div>
       <div className="mb-4 text-center">
         <span className="text-yellow-400 font-bold">Score: {score}</span>
         <span className="text-gray-500 mx-2">•</span>
-        <span className="text-gray-400">{score * 5} coins</span>
+        <span className="text-gray-400">{score * GAME_COINS_PER_CORRECT} coins</span>
       </div>
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-4">
         <p className="text-lg font-semibold text-white">{q.text}</p>

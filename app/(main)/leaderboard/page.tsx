@@ -16,7 +16,7 @@ export default async function LeaderboardPage({
   const page = Math.max(1, parseInt(params.page ?? "1", 10));
   const skip = (page - 1) * PAGE_SIZE;
 
-  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@quizlet.internal";
+  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@bittsquiz.internal";
   const where = { NOT: { email: adminEmail } };
 
   const [users, total] = await Promise.all([

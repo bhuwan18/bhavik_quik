@@ -9,15 +9,25 @@ async function requireAdmin() {
   return session;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   if (!await requireAdmin()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const items = await prisma.feedback.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { user: { select: { name: true, email: true, image: true } } },
-  });
+  const { searchParams } = new URL(req.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const take = 50;
+  const skip = (page - 1) * take;
 
-  return NextResponse.json(items);
+  const [items, total] = await Promise.all([
+    prisma.feedback.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { user: { select: { name: true, email: true, image: true } } },
+      take,
+      skip,
+    }),
+    prisma.feedback.count(),
+  ]);
+
+  return NextResponse.json({ items, total, page, pageSize: take });
 }
 
 export async function PATCH(req: Request) {
@@ -28,6 +38,11 @@ export async function PATCH(req: Request) {
 
   // Admin reply: create a notification for the feedback author
   if (reply !== undefined) {
+    if (typeof reply !== "string" || reply.trim().length === 0) {
+      return NextResponse.json({ error: "Reply cannot be empty" }, { status: 400 });
+    }
+    const truncatedReply = reply.slice(0, 500);
+
     const feedback = await prisma.feedback.findUnique({
       where: { id },
       select: { userId: true },
@@ -38,7 +53,7 @@ export async function PATCH(req: Request) {
       data: {
         userId: feedback.userId,
         type: "feedback_reply",
-        message: `Admin replied to your feedback: "${reply}"`,
+        message: `Admin replied to your feedback: "${truncatedReply}"`,
       },
     });
     // Auto-mark as read when replied

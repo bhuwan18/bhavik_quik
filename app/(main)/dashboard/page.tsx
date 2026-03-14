@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/utils";
+import { DAILY_LIMIT_REGULAR, DAILY_LIMIT_PRO, DAILY_LIMIT_MAX } from "@/lib/game-config";
 import IntroOverlay from "@/components/IntroOverlay";
 
 export default async function DashboardPage() {
@@ -42,7 +43,7 @@ export default async function DashboardPage() {
 
   const isMaxActive = user?.isMax && (!user.maxExpiresAt || user.maxExpiresAt > new Date());
   const isProActive = !isMaxActive && user?.isPro && (!user.proExpiresAt || user.proExpiresAt > new Date());
-  const dailyLimit = isMaxActive ? 1500 : isProActive ? 1000 : 500;
+  const dailyLimit = isMaxActive ? DAILY_LIMIT_MAX : isProActive ? DAILY_LIMIT_PRO : DAILY_LIMIT_REGULAR;
   const now = new Date();
   const resetDate = user?.dailyCoinsReset ? new Date(user.dailyCoinsReset) : new Date(0);
   const isNewDay =

@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-
-// Coins earned per correct answer based on quiz difficulty (1–5)
-const COINS_BY_DIFFICULTY: Record<number, number> = {
-  1: 3,
-  2: 5,
-  3: 8,
-  4: 12,
-  5: 20,
-};
-
-const DAILY_LIMIT_REGULAR = 500;
-const DAILY_LIMIT_PRO = 1000;
-const DAILY_LIMIT_MAX = 1500;
+import { SCHOOL_EMAIL_DOMAIN, isSchoolHours } from "@/lib/time";
+import {
+  COINS_BY_DIFFICULTY,
+  DAILY_LIMIT_REGULAR,
+  DAILY_LIMIT_PRO,
+  DAILY_LIMIT_MAX,
+  MULTIPLIER_REGULAR,
+  MULTIPLIER_PRO,
+  MULTIPLIER_MAX,
+} from "@/lib/game-config";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -43,16 +40,9 @@ export async function POST(req: NextRequest) {
   if (dbUser.isLocked) return NextResponse.json({ error: "Account is locked" }, { status: 403 });
 
   // School hours check: Oberoi International School students
-  const isOberoi = (dbUser.email ?? "").endsWith("@oberoi-is.net");
-  if (isOberoi && !dbUser.schoolAccessOverride) {
-    const now = new Date();
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const istTime = new Date(now.getTime() + istOffset);
-    const day = istTime.getUTCDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
-    const hour = istTime.getUTCHours();
-    if (day >= 1 && day <= 5 && hour >= 8 && hour < 15) {
-      return NextResponse.json({ error: "School hours restriction active" }, { status: 403 });
-    }
+  const isOberoi = (dbUser.email ?? "").endsWith(SCHOOL_EMAIL_DOMAIN);
+  if (isOberoi && !dbUser.schoolAccessOverride && isSchoolHours()) {
+    return NextResponse.json({ error: "School hours restriction active" }, { status: 403 });
   }
 
   // Validate request body
@@ -85,7 +75,7 @@ export async function POST(req: NextRequest) {
   // Score the attempt
   let score = 0;
   for (const answer of answers) {
-    const question = quiz.questions.find((q: any) => q.id === answer.questionId);
+    const question = quiz.questions.find((q) => q.id === answer.questionId);
     if (question && question.correctIndex === answer.selectedIndex) {
       score++;
     }
@@ -99,12 +89,12 @@ export async function POST(req: NextRequest) {
   // Determine active tier
   const isMaxActive = dbUser.isMax && (!dbUser.maxExpiresAt || dbUser.maxExpiresAt > new Date());
   const isProActive = !isMaxActive && dbUser.isPro && (!dbUser.proExpiresAt || dbUser.proExpiresAt > new Date());
-  const multiplier = isMaxActive ? 2 : isProActive ? 1.5 : 1;
+  const multiplier = isMaxActive ? MULTIPLIER_MAX : isProActive ? MULTIPLIER_PRO : MULTIPLIER_REGULAR;
   const dailyLimit = isMaxActive ? DAILY_LIMIT_MAX : isProActive ? DAILY_LIMIT_PRO : DAILY_LIMIT_REGULAR;
 
   // No-duplicate-coins: only award coins for newly correct questions
   const correctQuestionIds = answers
-    .filter((a) => quiz.questions.find((q: any) => q.id === a.questionId)?.correctIndex === a.selectedIndex)
+    .filter((a) => quiz.questions.find((q) => q.id === a.questionId)?.correctIndex === a.selectedIndex)
     .map((a) => a.questionId);
 
   // Check which are NEW (not already in CorrectAnswer)
@@ -168,41 +158,33 @@ export async function POST(req: NextRequest) {
     const newTotal = oldTotal + coinsEarned;
     const userName = dbUser.name ?? "Someone";
 
-    // Find users overtaken (their totalCoinsEarned was between old and new)
-    const overtakenUsers = await prisma.user.findMany({
-      where: {
-        id: { not: session.user.id },
-        totalCoinsEarned: { gt: oldTotal, lte: newTotal },
-      },
-      select: { id: true },
+    // Single query: fetch users near the current total range (covers both overtaken + top-3 checks)
+    const nearbyUsers = await prisma.user.findMany({
+      where: { id: { not: session.user.id } },
+      orderBy: { totalCoinsEarned: "desc" },
+      select: { id: true, totalCoinsEarned: true },
     });
+
+    const top3Before = nearbyUsers.slice(0, 3);
+    const overtakenUsers = nearbyUsers.filter(
+      (u) => u.totalCoinsEarned > oldTotal && u.totalCoinsEarned <= newTotal
+    );
 
     const notificationsToCreate: { userId: string; type: string; message: string }[] = [];
 
-    if (overtakenUsers.length > 0) {
-      for (const u of overtakenUsers) {
-        notificationsToCreate.push({
-          userId: u.id,
-          type: "overtaken",
-          message: `${userName} just overtook you on the leaderboard! Keep playing to reclaim your spot.`,
-        });
-      }
+    for (const u of overtakenUsers) {
+      notificationsToCreate.push({
+        userId: u.id,
+        type: "overtaken",
+        message: `${userName} just overtook you on the leaderboard! Keep playing to reclaim your spot.`,
+      });
     }
-
-    // Check if user just entered top 3 (wasn't there before, is now)
-    const top3Before = await prisma.user.findMany({
-      where: { id: { not: session.user.id } },
-      orderBy: { totalCoinsEarned: "desc" },
-      take: 3,
-      select: { id: true, totalCoinsEarned: true },
-    });
 
     const wasInTop3 = top3Before.length < 3 ? false : oldTotal > top3Before[2].totalCoinsEarned;
     const isInTop3Now = top3Before.length < 3 || newTotal > top3Before[2].totalCoinsEarned;
 
     if (isInTop3Now && !wasInTop3) {
-      for (const u of top3Before.slice(0, 3)) {
-        // Avoid duplicate notification if already notified via overtaken
+      for (const u of top3Before) {
         if (!notificationsToCreate.some((n) => n.userId === u.id)) {
           notificationsToCreate.push({
             userId: u.id,

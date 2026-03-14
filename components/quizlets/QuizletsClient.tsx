@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { RARITY_COLORS } from "@/lib/utils";
 import type { Quizlet } from "@prisma/client";
 
@@ -24,15 +24,15 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
   const [toast, setToast] = useState<string | null>(null);
 
   // Separate hidden (secret/unique/impossible) from regular
-  const regularQuizlets = quizlets.filter((q) => !HIDDEN_RARITIES.has(q.rarity));
-  const hiddenQuizlets = quizlets.filter((q) => HIDDEN_RARITIES.has(q.rarity));
+  const regularQuizlets = useMemo(() => quizlets.filter((q) => !HIDDEN_RARITIES.has(q.rarity)), [quizlets]);
+  const hiddenQuizlets = useMemo(() => quizlets.filter((q) => HIDDEN_RARITIES.has(q.rarity)), [quizlets]);
 
-  const packs = ["all", ...Array.from(new Set(regularQuizlets.map((q) => q.pack)))];
-  const filtered = regularQuizlets.filter((q) => {
+  const packs = useMemo(() => ["all", ...Array.from(new Set(regularQuizlets.map((q) => q.pack)))], [regularQuizlets]);
+  const filtered = useMemo(() => regularQuizlets.filter((q) => {
     if (rarityFilter !== "all" && q.rarity !== rarityFilter) return false;
     if (packFilter !== "all" && q.pack !== packFilter) return false;
     return true;
-  });
+  }), [regularQuizlets, rarityFilter, packFilter]);
 
   const handleSell = async (quizlet: OwnedQuizlet) => {
     if (!confirm(`Sell ${quizlet.name} for ${quizlet.sellValue} coins?`)) return;

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { SPEEDBLITZ_DURATION_S, SPEEDBLITZ_QUESTION_COUNT, SPEEDBLITZ_TIMER_WARNING_S, GAME_COINS_PER_CORRECT } from "@/lib/game-config";
 
 type Question = { id: string; text: string; options: string[]; correctIndex: number };
 
@@ -9,7 +10,7 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(SPEEDBLITZ_DURATION_S);
   const [loading, setLoading] = useState(false);
   const [coinsEarned, setCoinsEarned] = useState(0);
 
@@ -19,30 +20,33 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
       const res = await fetch("/api/quizzes?official=true");
       const quizzes = await res.json();
       const allQ: Question[] = [];
-      for (const quiz of quizzes.slice(0, 4)) {
+      for (const quiz of quizzes.slice(0, Math.ceil(SPEEDBLITZ_QUESTION_COUNT / 5))) {
         const qRes = await fetch(`/api/quizzes/${quiz.id}`);
         const full = await qRes.json();
         allQ.push(...full.questions);
       }
       // Shuffle and take 20
-      const shuffled = allQ.sort(() => Math.random() - 0.5).slice(0, 20);
+      const shuffled = allQ.sort(() => Math.random() - 0.5).slice(0, SPEEDBLITZ_QUESTION_COUNT);
       setQuestions(shuffled);
     } finally {
       setLoading(false);
     }
   };
 
+  const scoreRef = useRef(score);
+  useEffect(() => { scoreRef.current = score; }, [score]);
+
   const end = useCallback((finalScore: number) => {
     setPhase("done");
-    setCoinsEarned(finalScore * 5);
+    setCoinsEarned(finalScore * GAME_COINS_PER_CORRECT);
   }, []);
 
   useEffect(() => {
     if (phase !== "playing") return;
-    if (timeLeft <= 0) { end(score); return; }
+    if (timeLeft <= 0) { end(scoreRef.current); return; }
     const t = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, timeLeft, score, end]);
+  }, [phase, timeLeft, end]);
 
   const handleAnswer = (idx: number) => {
     const q = questions[current];
@@ -65,7 +69,7 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
         <h1 className="text-3xl font-bold text-white mb-3">Speed Blitz</h1>
         <p className="text-gray-400 mb-6">20 questions. 30 seconds. No time to think!</p>
         <button
-          onClick={async () => { await loadQuestions(); setPhase("playing"); setTimeLeft(30); }}
+          onClick={async () => { await loadQuestions(); setPhase("playing"); setTimeLeft(SPEEDBLITZ_DURATION_S); }}
           disabled={loading}
           className="w-full py-4 bg-yellow-600 hover:bg-yellow-700 text-white font-bold text-lg rounded-xl disabled:opacity-50"
         >
@@ -99,13 +103,13 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
   return (
     <div className="p-8 max-w-xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-gray-400 text-sm">{current + 1}/20 • Score: {score}</span>
-        <div className={`text-xl font-bold px-4 py-1.5 rounded-xl border ${timeLeft <= 10 ? "text-red-400 border-red-500/50 bg-red-500/10 animate-pulse" : "text-yellow-400 border-yellow-500/30 bg-yellow-500/10"}`}>
+        <span className="text-gray-400 text-sm">{current + 1}/{SPEEDBLITZ_QUESTION_COUNT} • Score: {score}</span>
+        <div className={`text-xl font-bold px-4 py-1.5 rounded-xl border ${timeLeft <= SPEEDBLITZ_TIMER_WARNING_S ? "text-red-400 border-red-500/50 bg-red-500/10 animate-pulse" : "text-yellow-400 border-yellow-500/30 bg-yellow-500/10"}`}>
           ⏱️ {timeLeft}s
         </div>
       </div>
       <div className="w-full bg-white/10 rounded-full h-1.5 mb-6">
-        <div className="bg-yellow-500 h-1.5 rounded-full transition-all" style={{ width: `${(timeLeft / 30) * 100}%` }} />
+        <div className="bg-yellow-500 h-1.5 rounded-full transition-all" style={{ width: `${(timeLeft / SPEEDBLITZ_DURATION_S) * 100}%` }} />
       </div>
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-4">
         <p className="text-lg font-semibold text-white">{q.text}</p>

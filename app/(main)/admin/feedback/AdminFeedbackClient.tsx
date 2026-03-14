@@ -36,7 +36,7 @@ export default function AdminFeedbackClient() {
   useEffect(() => {
     fetch("/api/admin/feedback")
       .then((r) => r.json())
-      .then((data) => { setItems(data); setLoading(false); })
+      .then((data) => { setItems(data.items ?? data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 

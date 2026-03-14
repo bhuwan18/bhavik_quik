@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { DAILY_CHALLENGE_TIMER_S, DAILY_CHALLENGE_QUESTION_COUNT, DAILY_ANSWER_REVEAL_MS, DAILY_SCORE_GOOD_THRESHOLD, GAME_COINS_PER_CORRECT, TIMER_WARNING_THRESHOLD_S } from "@/lib/game-config";
 
 type Question = { id: string; text: string; options: string[]; correctIndex: number };
 
@@ -9,7 +10,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
   const [quizId, setQuizId] = useState<string>("");
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(DAILY_CHALLENGE_TIMER_S);
   const [answers, setAnswers] = useState<{ questionId: string; selectedIndex: number }[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [coinsEarned, setCoinsEarned] = useState(0);
@@ -24,7 +25,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
       if (quizzes.length === 0) return;
 
       // Sort by id for determinism, pick by day of year
-      const sorted = [...quizzes].sort((a: any, b: any) => a.id.localeCompare(b.id));
+      const sorted = [...quizzes].sort((a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id));
       const now = new Date();
       const start = new Date(now.getFullYear(), 0, 0);
       const diff = now.getTime() - start.getTime();
@@ -35,7 +36,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
       const full = await qRes.json();
       // Take first 5 questions
       setQuizId(quiz.id);
-      setQuestions(full.questions.slice(0, 5));
+      setQuestions(full.questions.slice(0, DAILY_CHALLENGE_QUESTION_COUNT));
       setTodayDate(now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }));
     } catch {
       // empty
@@ -44,9 +45,21 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
     }
   };
 
+  // Refs for stable timer effect
+  const answersRef = useRef(answers);
+  const scoreRef = useRef(score);
+  const questionsRef = useRef(questions);
+  const currentRef = useRef(current);
+  const quizIdRef = useRef(quizId);
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { scoreRef.current = score; }, [score]);
+  useEffect(() => { questionsRef.current = questions; }, [questions]);
+  useEffect(() => { currentRef.current = current; }, [current]);
+  useEffect(() => { quizIdRef.current = quizId; }, [quizId]);
+
   const endGame = useCallback(async (finalAnswers: typeof answers, finalScore: number, qId: string) => {
     setPhase("done");
-    setCoinsEarned(finalScore * 5);
+    setCoinsEarned(finalScore * GAME_COINS_PER_CORRECT);
     if (qId && finalAnswers.length > 0) {
       try {
         const res = await fetch("/api/attempt", {
@@ -62,24 +75,24 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
     }
   }, []);
 
-  // 30-second timer per question
+  // Timer per question — only phase, timeLeft, selected needed; stable values via refs
   useEffect(() => {
     if (phase !== "playing" || selected !== null) return;
     if (timeLeft <= 0) {
-      const currentQ = questions[current];
-      const newAnswers = [...answers, { questionId: currentQ.id, selectedIndex: -1 }];
+      const currentQ = questionsRef.current[currentRef.current];
+      const newAnswers = [...answersRef.current, { questionId: currentQ.id, selectedIndex: -1 }];
       setAnswers(newAnswers);
-      if (current + 1 < questions.length) {
+      if (currentRef.current + 1 < questionsRef.current.length) {
         setCurrent((c) => c + 1);
-        setTimeLeft(30);
+        setTimeLeft(DAILY_CHALLENGE_TIMER_S);
       } else {
-        endGame(newAnswers, score, quizId);
+        endGame(newAnswers, scoreRef.current, quizIdRef.current);
       }
       return;
     }
     const t = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, timeLeft, selected, current, questions, answers, score, quizId, endGame]);
+  }, [phase, timeLeft, selected, endGame]);
 
   const handleAnswer = (idx: number) => {
     if (selected !== null) return;
@@ -95,11 +108,11 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
       if (current + 1 < questions.length) {
         setCurrent((c) => c + 1);
         setSelected(null);
-        setTimeLeft(30);
+        setTimeLeft(DAILY_CHALLENGE_TIMER_S);
       } else {
         endGame(newAnswers, newScore, quizId);
       }
-    }, 800);
+    }, DAILY_ANSWER_REVEAL_MS);
   };
 
   if (phase === "intro") {
@@ -131,7 +144,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
               setScore(0);
               setAnswers([]);
               setSelected(null);
-              setTimeLeft(30);
+              setTimeLeft(DAILY_CHALLENGE_TIMER_S);
             }}
             disabled={loading}
             className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg rounded-xl transition-colors disabled:opacity-50"
@@ -147,7 +160,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
     const pct = Math.round((score / questions.length) * 100);
     return (
       <div className="p-8 max-w-xl mx-auto text-center">
-        <div className="text-6xl mb-4">{pct === 100 ? "🏆" : pct >= 60 ? "⭐" : "📅"}</div>
+        <div className="text-6xl mb-4">{pct === 100 ? "🏆" : pct >= DAILY_SCORE_GOOD_THRESHOLD ? "⭐" : "📅"}</div>
         <h2 className="text-3xl font-bold text-white mb-2">Challenge Complete!</h2>
         <p className="text-gray-400 mb-1">
           You scored <span className="text-white font-bold">{score}/{questions.length}</span>
@@ -178,7 +191,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
   }
 
   const q = questions[current];
-  const timerPct = (timeLeft / 30) * 100;
+  const timerPct = (timeLeft / DAILY_CHALLENGE_TIMER_S) * 100;
 
   return (
     <div className="p-8 max-w-xl mx-auto">
@@ -192,7 +205,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
         </div>
         <div
           className={`text-2xl font-bold px-4 py-2 rounded-xl border ${
-            timeLeft <= 5
+            timeLeft <= TIMER_WARNING_THRESHOLD_S
               ? "text-red-400 border-red-500/50 bg-red-500/10 animate-pulse"
               : "text-teal-400 border-teal-500/30 bg-teal-500/10"
           }`}
@@ -204,7 +217,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
       {/* Timer bar */}
       <div className="w-full bg-white/10 rounded-full h-1.5 mb-4">
         <div
-          className={`h-1.5 rounded-full transition-all ${timeLeft <= 5 ? "bg-red-500" : "bg-teal-500"}`}
+          className={`h-1.5 rounded-full transition-all ${timeLeft <= TIMER_WARNING_THRESHOLD_S ? "bg-red-500" : "bg-teal-500"}`}
           style={{ width: `${timerPct}%` }}
         />
       </div>

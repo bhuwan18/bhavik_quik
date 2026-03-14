@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import QuizPlayer from "@/components/quiz/QuizPlayer";
 import { CATEGORIES } from "@/lib/utils";
+import { SCHOOL_EMAIL_DOMAIN, isSchoolHours } from "@/lib/time";
 
 export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,14 +30,8 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
       );
     }
 
-    const isOberoi = email.endsWith("@oberoi-is.net");
-    if (isOberoi && !userFlags?.schoolAccessOverride) {
-      const now = new Date();
-      const istOffset = 5.5 * 60 * 60 * 1000;
-      const istTime = new Date(now.getTime() + istOffset);
-      const day = istTime.getUTCDay();
-      const hour = istTime.getUTCHours();
-      if (day >= 1 && day <= 5 && hour >= 8 && hour < 15) {
+    const isOberoi = email.endsWith(SCHOOL_EMAIL_DOMAIN);
+    if (isOberoi && !userFlags?.schoolAccessOverride && isSchoolHours()) {
         return (
           <div className="p-8 max-w-2xl mx-auto">
             <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-8 text-center">
@@ -49,7 +44,6 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
         );
-      }
     }
   }
 
@@ -85,7 +79,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
           id: quiz.id,
           title: quiz.title,
           difficulty: quiz.difficulty,
-          questions: quiz.questions.map((q: any) => ({
+          questions: quiz.questions.map((q) => ({
             id: q.id,
             text: q.text,
             options: q.options as string[],

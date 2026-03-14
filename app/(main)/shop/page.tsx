@@ -2,6 +2,18 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { QRCodeSVG } from "qrcode.react";
+import {
+  PRO_AMOUNT_INR,
+  MAX_AMOUNT_INR,
+  MEMBERSHIP_DURATION_DAYS,
+  DAILY_LIMIT_PRO,
+  DAILY_LIMIT_MAX,
+  MULTIPLIER_PRO,
+  MULTIPLIER_MAX,
+  BUY_COINS_MIN,
+  BUY_COINS_MAX,
+  BUY_COINS_QUICK_AMOUNTS,
+} from "@/lib/game-config";
 
 const UPI_ID = process.env.NEXT_PUBLIC_UPI_ID ?? "";
 const UPI_NAME = process.env.NEXT_PUBLIC_UPI_NAME ?? "BittsQuiz";
@@ -14,15 +26,15 @@ const TIERS = [
   {
     id: "pro" as Tier,
     name: "Pro",
-    price: 250,
+    price: PRO_AMOUNT_INR,
     icon: "⭐",
     tagline: "Level up your game",
     features: [
-      "1.5× coins per correct answer",
-      "1,000 daily coin limit",
+      `${MULTIPLIER_PRO}× coins per correct answer`,
+      `${DAILY_LIMIT_PRO.toLocaleString()} daily coin limit`,
       "Golden ring avatar",
       "Pro badge on leaderboard",
-      "30 days access",
+      `${MEMBERSHIP_DURATION_DAYS} days access`,
     ],
     gradient: "from-yellow-900/50 to-orange-900/30",
     border: "border-yellow-500/50",
@@ -33,16 +45,16 @@ const TIERS = [
   {
     id: "max" as Tier,
     name: "Max",
-    price: 500,
+    price: MAX_AMOUNT_INR,
     icon: "👑",
     tagline: "Dominate the leaderboard",
     features: [
-      "2× coins per correct answer",
-      "1,500 daily coin limit",
+      `${MULTIPLIER_MAX}× coins per correct answer`,
+      `${DAILY_LIMIT_MAX.toLocaleString()} daily coin limit`,
       "Rainbow ring avatar",
       "Max badge on leaderboard",
       "Priority support",
-      "30 days access",
+      `${MEMBERSHIP_DURATION_DAYS} days access`,
     ],
     gradient: "from-purple-900/50 to-pink-900/30",
     border: "border-purple-500/50",
@@ -211,14 +223,14 @@ function MembershipTab({ isPro, isMax }: { isPro: boolean; isMax: boolean }) {
             </div>
             <div>
               <p className="text-yellow-400 font-bold mb-2">⭐ Pro</p>
-              <p className="text-white">1,000</p>
-              <p className="text-white mt-2">1.5×</p>
+              <p className="text-white">{DAILY_LIMIT_PRO.toLocaleString()}</p>
+              <p className="text-white mt-2">{MULTIPLIER_PRO}×</p>
               <p className="text-white mt-2">Golden</p>
             </div>
             <div>
               <p className="text-purple-400 font-bold mb-2">👑 Max</p>
-              <p className="text-white">1,500</p>
-              <p className="text-white mt-2">2×</p>
+              <p className="text-white">{DAILY_LIMIT_MAX.toLocaleString()}</p>
+              <p className="text-white mt-2">{MULTIPLIER_MAX}×</p>
               <p className="text-white mt-2">Rainbow</p>
             </div>
           </div>
@@ -230,9 +242,6 @@ function MembershipTab({ isPro, isMax }: { isPro: boolean; isMax: boolean }) {
 
 // ─── Buy Coins ─────────────────────────────────────────────────────────────────
 
-const QUICK_AMOUNTS = [50, 100, 250, 500, 1000];
-const MIN_COINS = 10;
-const MAX_COINS = 10000;
 
 function upiCoinLink(amount: number) {
   const params = new URLSearchParams({ pa: UPI_ID, pn: UPI_NAME, am: String(amount), cu: "INR", tn: `BittsQuiz ${amount} coins` });
@@ -249,7 +258,7 @@ function BuyCoinsTab() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isValid = Number.isInteger(coins) && coins >= MIN_COINS && coins <= MAX_COINS;
+  const isValid = Number.isInteger(coins) && coins >= BUY_COINS_MIN && coins <= BUY_COINS_MAX;
   const utrValid = /^[A-Za-z0-9]{8,30}$/.test(utr.trim());
 
   const handleInputChange = (value: string) => {
@@ -314,7 +323,7 @@ function BuyCoinsTab() {
           <div className="mb-6">
             <p className="text-sm text-gray-400 mb-3">Quick select</p>
             <div className="flex flex-wrap gap-2">
-              {QUICK_AMOUNTS.map((amt) => (
+              {BUY_COINS_QUICK_AMOUNTS.map((amt) => (
                 <button
                   key={amt}
                   onClick={() => { setCoins(amt); setInputValue(String(amt)); }}
@@ -329,12 +338,12 @@ function BuyCoinsTab() {
           </div>
 
           <div className="mb-6">
-            <label className="text-sm text-gray-400 mb-2 block">Custom amount ({MIN_COINS}–{MAX_COINS})</label>
+            <label className="text-sm text-gray-400 mb-2 block">Custom amount ({BUY_COINS_MIN}–{BUY_COINS_MAX})</label>
             <div className="flex items-center gap-3">
               <input
                 type="number"
-                min={MIN_COINS}
-                max={MAX_COINS}
+                min={BUY_COINS_MIN}
+                max={BUY_COINS_MAX}
                 value={inputValue}
                 onChange={(e) => handleInputChange(e.target.value)}
                 className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-purple-500 text-sm"
@@ -345,7 +354,7 @@ function BuyCoinsTab() {
               </div>
             </div>
             {!isValid && inputValue !== "" && (
-              <p className="text-xs text-red-400 mt-1">Must be between {MIN_COINS} and {MAX_COINS}.</p>
+              <p className="text-xs text-red-400 mt-1">Must be between {BUY_COINS_MIN} and {BUY_COINS_MAX}.</p>
             )}
           </div>
 

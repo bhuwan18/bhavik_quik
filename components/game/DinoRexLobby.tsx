@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { DINOREX_TIMER_S, DINOREX_QUESTION_COUNT, DINOREX_WIN_BONUS_COINS, DINOREX_TIMER_WARNING_S, DINOREX_BOT_NAMES, GAME_COINS_PER_CORRECT } from "@/lib/game-config";
 
 type Player = { id: string; name: string; eliminated: boolean };
 type GameState = "lobby" | "playing" | "waiting" | "eliminated" | "won" | "ended";
@@ -16,7 +17,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
   const [question, setQuestion] = useState<{ text: string; options: string[]; correctIndex: number } | null>(null);
   const [round, setRound] = useState(1);
   const [selected, setSelected] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(DINOREX_TIMER_S);
   const [winner, setWinner] = useState<string | null>(null);
   const [coinsEarned, setCoinsEarned] = useState(0);
   const socketRef = useRef<WebSocket | null>(null);
@@ -28,7 +29,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
   const [simIdx, setSimIdx] = useState(0);
   const [simEliminated, setSimEliminated] = useState(false);
   const [simScore, setSimScore] = useState(0);
-  const simPlayers = ["You", "DinoBot_X", "RexChallenger", "QuizMaster_99"];
+  const simPlayers = ["You", ...DINOREX_BOT_NAMES];
 
   const loadSimQuestions = async () => {
     try {
@@ -38,7 +39,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
       const quiz = quizzes[Math.floor(Math.random() * quizzes.length)];
       const qRes = await fetch(`/api/quizzes/${quiz.id}`);
       const full = await qRes.json();
-      setSimQuestions(full.questions.slice(0, 8));
+      setSimQuestions(full.questions.slice(0, DINOREX_QUESTION_COUNT));
     } catch { /* ignore */ }
   };
 
@@ -51,7 +52,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
     if (!correct) {
       setSimEliminated(true);
       setGameState("eliminated");
-      const coins = simScore * 5;
+      const coins = simScore * GAME_COINS_PER_CORRECT;
       setCoinsEarned(coins);
       await fetch("/api/attempt", {
         method: "POST",
@@ -65,11 +66,11 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
       if (simIdx + 1 >= simQuestions.length) {
         setGameState("won");
         setWinner(session?.user?.name ?? "You");
-        setCoinsEarned((simScore + 1) * 5 + 50); // bonus for winning
+        setCoinsEarned((simScore + 1) * GAME_COINS_PER_CORRECT + DINOREX_WIN_BONUS_COINS);
       } else {
         setSimIdx((i) => i + 1);
         setSelected(null);
-        setTimeLeft(15);
+        setTimeLeft(DINOREX_TIMER_S);
         setRound((r) => r + 1);
       }
     }, 800);
@@ -107,7 +108,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
                 setSimulatedMode(true);
                 await loadSimQuestions();
                 setGameState("playing");
-                setTimeLeft(15);
+                setTimeLeft(DINOREX_TIMER_S);
               }}
               className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors"
             >
@@ -137,7 +138,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
         <h2 className="text-2xl font-bold text-white mb-2">You&apos;re Out!</h2>
         <p className="text-gray-400 mb-4">Eliminated on round {round}</p>
         <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-6 py-3 rounded-xl inline-flex items-center gap-2 font-bold mb-8">
-          🪙 +{simScore * 5} coins earned
+          🪙 +{simScore * GAME_COINS_PER_CORRECT} coins earned
         </div>
         <div className="flex gap-3 justify-center">
           <button onClick={() => { setGameState("lobby"); setSimIdx(0); setSimScore(0); setRound(1); setSelected(null); }} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl">Try Again</button>
@@ -154,7 +155,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
         <h2 className="text-2xl font-bold text-white mb-2">You Won DinoRex!</h2>
         <p className="text-gray-400 mb-4">Survived all {round} rounds!</p>
         <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-6 py-3 rounded-xl inline-flex items-center gap-2 font-bold mb-8">
-          🪙 +{(simScore * 5) + 50} coins (incl. 50 winner bonus)
+          🪙 +{(simScore * GAME_COINS_PER_CORRECT) + DINOREX_WIN_BONUS_COINS} coins (incl. {DINOREX_WIN_BONUS_COINS} winner bonus)
         </div>
         <div className="flex gap-3 justify-center">
           <button onClick={() => { setGameState("lobby"); setSimIdx(0); setSimScore(0); setRound(1); setSelected(null); }} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl">Play Again</button>
@@ -171,7 +172,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
     <div className="p-8 max-w-xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <span className="text-green-400 font-bold">Round {round}</span>
-        <div className={`text-xl font-bold px-4 py-1.5 rounded-xl border ${timeLeft <= 5 ? "text-red-400 border-red-500/50 bg-red-500/10 animate-pulse" : "text-green-400 border-green-500/30 bg-green-500/10"}`}>
+        <div className={`text-xl font-bold px-4 py-1.5 rounded-xl border ${timeLeft <= DINOREX_TIMER_WARNING_S ? "text-red-400 border-red-500/50 bg-red-500/10 animate-pulse" : "text-green-400 border-green-500/30 bg-green-500/10"}`}>
           ⏱️ {timeLeft}s
         </div>
       </div>

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { PRO_AMOUNT_INR, MAX_AMOUNT_INR, BUY_COINS_MIN, BUY_COINS_MAX } from "@/lib/game-config";
 
-const PRO_AMOUNT_INR = 500;
-const MIN_COINS = 10;
-const MAX_COINS = 10000;
 // UTR: alphanumeric, 8–30 characters
 const UTR_RE = /^[A-Za-z0-9]{8,30}$/;
 
@@ -21,13 +19,13 @@ export async function POST(req: NextRequest) {
     utrNumber = body.utrNumber;
     coins = body.coins;
 
-    if (type !== "pro" && type !== "coins") throw new Error("Invalid type");
+    if (type !== "pro" && type !== "max" && type !== "coins") throw new Error("Invalid type");
     if (typeof utrNumber !== "string" || !UTR_RE.test(utrNumber)) {
       throw new Error("UTR must be 8–30 alphanumeric characters");
     }
     if (type === "coins") {
-      if (typeof coins !== "number" || !Number.isInteger(coins) || coins < MIN_COINS || coins > MAX_COINS) {
-        throw new Error(`Coins must be between ${MIN_COINS} and ${MAX_COINS}`);
+      if (typeof coins !== "number" || !Number.isInteger(coins) || coins < BUY_COINS_MIN || coins > BUY_COINS_MAX) {
+        throw new Error(`Coins must be between ${BUY_COINS_MIN} and ${BUY_COINS_MAX}`);
       }
     }
   } catch (e: unknown) {
@@ -50,7 +48,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "This UTR is already submitted and pending review" }, { status: 409 });
   }
 
-  const amountInr = type === "pro" ? PRO_AMOUNT_INR : coins!;
+  const amountInr = type === "pro" ? PRO_AMOUNT_INR : type === "max" ? MAX_AMOUNT_INR : coins!;
 
   const payment = await prisma.paymentRequest.create({
     data: {
