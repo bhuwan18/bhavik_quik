@@ -26,6 +26,7 @@ export default async function AdminQuizEditPage({ params }: { params: Promise<{ 
       order: q.order,
       explanation: q.explanation ?? "",
       readMoreUrl: q.readMoreUrl ?? "",
+      imageUrl: q.imageUrl ?? "",
     })),
   };
 
