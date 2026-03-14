@@ -56,7 +56,10 @@
       "Bash(curl -sI \"https://logo.clearbit.com/apple.com\")",
       "Bash(curl -o /dev/null -w \"%{http_code} %{content_type}\" \"https://logo.clearbit.com/apple.com\")",
       "Bash(curl -o /dev/null -w \"%{http_code} %{content_type}\" \"https://cdn.simpleicons.org/apple\")",
-      "Bash(curl -o /dev/null -w \"%{http_code} %{content_type}\" \"https://cdn.simpleicons.org/google\")"
+      "Bash(curl -o /dev/null -w \"%{http_code} %{content_type}\" \"https://cdn.simpleicons.org/google\")",
+      "Bash(node -e \":*)",
+      "Bash(npx dotenv -e .env -- node -e \":*)",
+      "Bash(npx tsx --tsconfig tsconfig.json -e \":*)"
     ]
   }
 }

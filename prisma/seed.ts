@@ -1275,7 +1275,7 @@ const QUIZZES = [
       { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/discord", options: ["Slack", "Microsoft Teams", "Discord", "Zoom"], correctIndex: 2 },
       { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/notion", options: ["Evernote", "Notion", "Coda", "Obsidian"], correctIndex: 1 },
       { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/github", options: ["GitLab", "GitHub", "Bitbucket", "SourceForge"], correctIndex: 1 },
-      { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/mastercard", options: ["Visa", "Amex", "Discover", "Mastercard"], correctIndex: 3 },
+      { text: "Which brand does this logo belong to?", imageUrl: "/mastercard.png", options: ["Visa", "Amex", "Discover", "Mastercard"], correctIndex: 3 },
       { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/revolut", options: ["N26", "Monzo", "Wise", "Revolut"], correctIndex: 3 },
     ],
   },

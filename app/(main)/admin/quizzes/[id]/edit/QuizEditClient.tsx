@@ -16,6 +16,7 @@ type Question = {
   order: number;
   explanation: string;
   readMoreUrl: string;
+  imageUrl: string;
 };
 
 type Quiz = {
@@ -35,7 +36,7 @@ export default function QuizEditClient({ quiz }: { quiz: Quiz }) {
   const [category, setCategory] = useState(quiz.category);
   const [difficulty, setDiff]   = useState(quiz.difficulty);
   const [questions, setQuestions] = useState<Question[]>(
-    quiz.questions.map((q) => ({ ...q, options: Array.isArray(q.options) ? q.options as string[] : [] }))
+    quiz.questions.map((q) => ({ ...q, options: Array.isArray(q.options) ? q.options as string[] : [], imageUrl: (q as Question).imageUrl ?? "" }))
   );
   const [saving, setSaving]  = useState(false);
   const [toast, setToast]    = useState<{ text: string; ok: boolean } | null>(null);
@@ -246,6 +247,15 @@ export default function QuizEditClient({ quiz }: { quiz: Quiz }) {
                   value={q.readMoreUrl}
                   onChange={(e) => updateQuestion(qIdx, { readMoreUrl: e.target.value })}
                   placeholder="https://en.wikipedia.org/wiki/..."
+                  className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Image URL (optional)</label>
+                <input
+                  value={q.imageUrl}
+                  onChange={(e) => updateQuestion(qIdx, { imageUrl: e.target.value })}
+                  placeholder="https://... or /public-path.png"
                   className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500"
                 />
               </div>
