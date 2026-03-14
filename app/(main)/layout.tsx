@@ -14,11 +14,11 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     <AudioProvider>
       <div className="flex min-h-screen">
         {/* Sidebar hidden on mobile */}
-        <div className="hidden md:flex">
+        <div className="hidden md:flex sticky top-0 h-screen">
           <Sidebar />
         </div>
         <div className="flex-1 flex flex-col min-h-screen" style={{ background: "var(--main-bg)" }}>
-          <main className="flex-1 overflow-auto pb-20 md:pb-0">
+          <main className="flex-1 pb-20 md:pb-0">
             {children}
           </main>
           <footer className="hidden md:block border-t border-white/5 py-3 px-6 text-center text-xs text-gray-600">
