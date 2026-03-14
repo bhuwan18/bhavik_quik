@@ -32,7 +32,7 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
   const loadQuestions = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/quizzes?category=${HACKDEV_CATEGORY}&official=true");
+      const res = await fetch(`/api/quizzes?category=${HACKDEV_CATEGORY}&official=true`);
       const quizzes = await res.json();
       if (quizzes.length === 0) return;
       // Pick a random official tech quiz
@@ -52,7 +52,7 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
     setCoinsEarned(finalScore * GAME_COINS_PER_CORRECT);
     if (questionsRef.current.length > 0) {
       try {
-        const quizRes = await fetch("/api/quizzes?category=${HACKDEV_CATEGORY}&official=true");
+        const quizRes = await fetch(`/api/quizzes?category=${HACKDEV_CATEGORY}&official=true`);
         const quizzes = await quizRes.json();
         if (quizzes.length > 0) {
           await fetch("/api/attempt", {
