@@ -26,6 +26,7 @@ const ADMIN_NAV_ITEMS = [
   { href: "/admin/payments", icon: "💳", label: "Payments" },
   { href: "/admin/quizzes", icon: "📋", label: "Edit Quizzes" },
   { href: "/admin/feedback", icon: "💬", label: "Feedback" },
+  { href: "/admin/settings", icon: "⚙️", label: "Settings" },
 ];
 
 export default function Sidebar() {

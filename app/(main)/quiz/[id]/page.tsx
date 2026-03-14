@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import QuizPlayer from "@/components/quiz/QuizPlayer";
 import { CATEGORIES } from "@/lib/utils";
 import { SCHOOL_EMAIL_DOMAIN, isSchoolHours } from "@/lib/time";
+import { getSchoolHoursEnabled } from "@/lib/app-settings";
 
 export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,7 +32,8 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
     }
 
     const isOberoi = email.endsWith(SCHOOL_EMAIL_DOMAIN);
-    if (isOberoi && !userFlags?.schoolAccessOverride && isSchoolHours()) {
+    const schoolHoursEnabled = await getSchoolHoursEnabled();
+    if (isOberoi && !userFlags?.schoolAccessOverride && schoolHoursEnabled && isSchoolHours()) {
         return (
           <div className="p-8 max-w-2xl mx-auto">
             <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-8 text-center">

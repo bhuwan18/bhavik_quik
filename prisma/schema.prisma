@@ -219,3 +219,9 @@ model Pack {
   festivalDate String?
   isActive     Boolean @default(true)
 }
+
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

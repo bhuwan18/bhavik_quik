@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SCHOOL_EMAIL_DOMAIN, isSchoolHours } from "@/lib/time";
+import { getSchoolHoursEnabled } from "@/lib/app-settings";
 import {
   COINS_BY_DIFFICULTY,
   DAILY_LIMIT_REGULAR,
@@ -41,7 +42,8 @@ export async function POST(req: NextRequest) {
 
   // School hours check: Oberoi International School students
   const isOberoi = (dbUser.email ?? "").endsWith(SCHOOL_EMAIL_DOMAIN);
-  if (isOberoi && !dbUser.schoolAccessOverride && isSchoolHours()) {
+  const schoolHoursEnabled = await getSchoolHoursEnabled();
+  if (isOberoi && !dbUser.schoolAccessOverride && schoolHoursEnabled && isSchoolHours()) {
     return NextResponse.json({ error: "School hours restriction active" }, { status: 403 });
   }
 
