@@ -106,9 +106,31 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
         <p className="text-gray-400 mb-6 md:text-lg">
           You scored <span className="text-white font-bold">{result.score}/{result.total}</span> ({pct}%)
         </p>
-        <div className="inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-5 py-2.5 rounded-xl mb-8 text-lg font-bold">
+        <div className="inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-5 py-2.5 rounded-xl mb-4 text-lg font-bold">
           🪙 +{result.coinsEarned} coins earned
         </div>
+
+        {result.coinsEarned === 0 && result.score > 0 && (
+          <div className="mb-6 bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 text-left">
+            <p className="text-orange-300 font-semibold text-sm mb-1">🚫 You hit your daily coin limit</p>
+            <p className="text-gray-400 text-xs mb-3">You answered correctly but earned no coins — your daily cap is full. Reset it or upgrade for a higher limit.</p>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => router.push("/shop?tab=reset")}
+                className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold rounded-lg transition-colors"
+              >
+                🔄 Reset limit — ₹100
+              </button>
+              <button
+                onClick={() => router.push("/shop")}
+                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-colors"
+              >
+                ⭐ Upgrade for higher cap
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-3 justify-center flex-wrap">
           <button
             onClick={() => router.push("/discover")}

@@ -617,7 +617,9 @@ export default function ShopPage() {
   const isPro = !!user?.isPro;
   const isMax = !!user?.isMax;
 
-  const [tab, setTab] = useState<ShopTab>("membership");
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const initialTab = (searchParams?.get("tab") as ShopTab | null) ?? "membership";
+  const [tab, setTab] = useState<ShopTab>(initialTab);
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
