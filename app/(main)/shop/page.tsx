@@ -13,6 +13,7 @@ import {
   BUY_COINS_MIN,
   BUY_COINS_MAX,
   BUY_COINS_QUICK_AMOUNTS,
+  DAILY_RESET_AMOUNT_INR,
 } from "@/lib/game-config";
 
 const UPI_ID = process.env.NEXT_PUBLIC_UPI_ID ?? "";
@@ -183,6 +184,12 @@ function MembershipTab({ isPro, isMax }: { isPro: boolean; isMax: boolean }) {
               <p className="text-white font-mono font-bold text-lg">{UPI_ID || "merchant@upi"}</p>
               <p className="text-gray-500 text-xs mt-1">{UPI_NAME}</p>
             </div>
+            <div className="flex justify-center mb-4">
+              <div className="bg-white p-3 rounded-xl inline-block">
+                <QRCodeSVG value={upiLink} size={180} />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">Scan with any UPI app (GPay, PhonePe, Paytm, etc.)</p>
             <a href={upiLink} className={`block w-full text-center py-3 bg-gradient-to-r ${activeTier.buttonGradient} text-white font-bold rounded-xl hover:opacity-90 transition-all mb-2`}>
               Open UPI App — Pay ₹{activeTier.price}
             </a>
@@ -451,9 +458,158 @@ function BuyCoinsTab() {
   );
 }
 
+// ─── Daily Reset ───────────────────────────────────────────────────────────────
+
+function DailyResetTab() {
+  const [utr, setUtr] = useState("");
+  const [step, setStep] = useState<"info" | "pay" | "submitted">("info");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const utrValid = /^[A-Za-z0-9]{8,30}$/.test(utr.trim());
+  const upiLink = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${DAILY_RESET_AMOUNT_INR}&cu=INR&tn=${encodeURIComponent("BittsQuiz Daily Limit Reset")}`;
+
+  const handleSubmit = async () => {
+    if (!utrValid) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/user/submit-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "reset", utrNumber: utr.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Submission failed");
+      setStep("submitted");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === "submitted") {
+    return (
+      <div className="max-w-md mx-auto">
+        <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-8 text-center">
+          <div className="text-5xl mb-4">✅</div>
+          <h2 className="text-2xl font-bold text-green-400 mb-2">Request Submitted!</h2>
+          <p className="text-gray-300 mb-2">Your daily limit reset request is pending admin approval.</p>
+          <p className="text-gray-500 text-sm mb-6">Once approved, your daily coin counter will be zeroed so you can earn again today.</p>
+          <button
+            onClick={() => { setStep("info"); setUtr(""); }}
+            className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors text-sm"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-md mx-auto">
+      <div className="text-center mb-8">
+        <div className="text-6xl mb-4">🔄</div>
+        <h2 className="text-2xl font-bold text-white mb-2">Daily Limit Reset</h2>
+        <p className="text-gray-400">Hit your daily coin cap? Reset it instantly for ₹{DAILY_RESET_AMOUNT_INR}.</p>
+      </div>
+
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6 space-y-3">
+        <div className="flex items-start gap-3">
+          <span className="text-green-400 mt-0.5 shrink-0">✓</span>
+          <p className="text-sm text-gray-300">Resets your daily coin counter to zero — so you can earn your full daily limit again today</p>
+        </div>
+        <div className="flex items-start gap-3">
+          <span className="text-green-400 mt-0.5 shrink-0">✓</span>
+          <p className="text-sm text-gray-300">One-time payment — not a subscription</p>
+        </div>
+        <div className="flex items-start gap-3">
+          <span className="text-yellow-400 mt-0.5 shrink-0">⚡</span>
+          <p className="text-sm text-gray-300">Activated by admin — usually within a few hours</p>
+        </div>
+      </div>
+
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6 flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-400">One-time fee</p>
+          <p className="text-3xl font-bold text-white">₹{DAILY_RESET_AMOUNT_INR}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm text-gray-400">You get</p>
+          <p className="text-lg font-semibold text-green-400">Full day reset</p>
+        </div>
+      </div>
+
+      {step === "info" && (
+        <button
+          onClick={() => { setStep("pay"); setError(""); }}
+          className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-lg rounded-xl transition-all"
+        >
+          Pay ₹{DAILY_RESET_AMOUNT_INR} via UPI →
+        </button>
+      )}
+
+      {step === "pay" && (
+        <>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="bg-white p-3 rounded-xl inline-block">
+                <QRCodeSVG value={upiLink} size={180} />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">Scan with any UPI app (GPay, PhonePe, Paytm, etc.)</p>
+            <p className="text-sm text-gray-400 mb-1">UPI ID</p>
+            <p className="text-white font-mono font-bold text-lg mb-1">{UPI_ID || "merchant@upi"}</p>
+            <p className="text-gray-500 text-xs mb-4">{UPI_NAME} · ₹{DAILY_RESET_AMOUNT_INR}</p>
+            <a
+              href={upiLink}
+              className="inline-block px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-90 text-white text-sm font-semibold rounded-xl transition-all"
+            >
+              Open UPI App
+            </a>
+            <p className="text-xs text-gray-600 mt-2">Opens GPay / PhonePe / Paytm</p>
+          </div>
+
+          <div className="mb-4">
+            <label className="text-sm text-gray-300 font-medium mb-2 block">Enter UTR / Transaction Reference</label>
+            <input
+              type="text"
+              placeholder="e.g. 123456789012"
+              value={utr}
+              onChange={(e) => setUtr(e.target.value.slice(0, 30))}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-cyan-500 text-sm"
+            />
+            {utr && !utrValid && <p className="text-xs text-red-400 mt-1">UTR must be 8–30 alphanumeric characters.</p>}
+          </div>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-4 text-red-400 text-sm text-center">{error}</div>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={!utrValid || loading}
+            className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-lg rounded-xl transition-all mb-3"
+          >
+            {loading ? "Submitting..." : "Submit for Approval"}
+          </button>
+          <button
+            onClick={() => { setStep("info"); setError(""); }}
+            className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 text-sm rounded-xl transition-colors"
+          >
+            ← Back
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-type ShopTab = "membership" | "coins";
+type ShopTab = "membership" | "coins" | "reset";
 
 export default function ShopPage() {
   const { data: session } = useSession();
@@ -492,10 +648,21 @@ export default function ShopPage() {
         >
           🪙 Buy Coins
         </button>
+        <button
+          onClick={() => setTab("reset")}
+          className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            tab === "reset"
+              ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          🔄 Daily Reset
+        </button>
       </div>
 
       {tab === "membership" && <MembershipTab isPro={isPro} isMax={isMax} />}
       {tab === "coins" && <BuyCoinsTab />}
+      {tab === "reset" && <DailyResetTab />}
     </div>
   );
 }

@@ -57,6 +57,8 @@ export const MEMBERSHIP_DURATION_DAYS = 30; // Duration of a membership period
 
 // ─── Buy Coins ────────────────────────────────────────────────────────────────
 
+export const DAILY_RESET_AMOUNT_INR = 100;  // One-time fee to reset today's daily coin limit
+
 export const BUY_COINS_MIN = 10;
 export const BUY_COINS_MAX = 10000;
 export const BUY_COINS_QUICK_AMOUNTS = [50, 100, 250, 500, 1000] as const;

@@ -75,6 +75,17 @@ export async function PATCH(
         data: { status: "approved" },
       }),
     ]);
+  } else if (payment.type === "reset") {
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: payment.userId },
+        data: { dailyCoinsEarned: 0, dailyCoinsReset: new Date() },
+      }),
+      prisma.paymentRequest.update({
+        where: { id },
+        data: { status: "approved" },
+      }),
+    ]);
   } else if (payment.type === "max") {
     const base =
       payment.user.isMax && payment.user.maxExpiresAt && payment.user.maxExpiresAt > new Date()
