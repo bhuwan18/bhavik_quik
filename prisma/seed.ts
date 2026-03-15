@@ -1346,6 +1346,81 @@ const QUIZZES = [
       { text: "What is the function of a bird's syrinx?", options: ["Digesting hard seeds", "Producing vocalisations", "Filtering saltwater", "Regulating body temperature"], correctIndex: 1, explanation: "The syrinx is the vocal organ of birds, located at the base of the trachea. Unlike the human larynx, the syrinx can produce two independent sounds simultaneously, enabling birds to create complex songs." },
     ],
   },
+
+  // ── ANIME ──────────────────────────────────────────────────────
+  {
+    title: "Anime Basics",
+    description: "Start your anime journey with these beginner questions.",
+    category: "anime",
+    difficulty: 1,
+    questions: [
+      { text: "What is the Japanese word for 'animation' that is used worldwide to describe the art form?", options: ["Manga", "Anime", "Otaku", "Cosplay"], correctIndex: 1 },
+      { text: "Which anime features a boy named Naruto Uzumaki who dreams of becoming Hokage?", options: ["Dragon Ball Z", "Bleach", "One Piece", "Naruto"], correctIndex: 3 },
+      { text: "What is the name of the main Saiyan hero in Dragon Ball Z?", options: ["Vegeta", "Goku", "Gohan", "Piccolo"], correctIndex: 1 },
+      { text: "In One Piece, what is Monkey D. Luffy's ultimate dream?", options: ["To become the greatest swordsman", "To find the One Piece and become King of the Pirates", "To defeat every marine", "To sail every ocean"], correctIndex: 1 },
+      { text: "What type of Pokémon is Pikachu?", options: ["Fire-type", "Normal-type", "Electric-type", "Thunder-type"], correctIndex: 2 },
+    ],
+  },
+  {
+    title: "Spot the Character",
+    description: "Can you identify these iconic anime and Pokémon characters from their images?",
+    category: "anime",
+    difficulty: 2,
+    questions: [
+      { text: "Which Pokémon is this?", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png", options: ["Clefairy", "Pikachu", "Raichu", "Jigglypuff"], correctIndex: 1 },
+      { text: "Which Pokémon is this?", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png", options: ["Dragonite", "Salamence", "Charizard", "Aerodactyl"], correctIndex: 2 },
+      { text: "Which Pokémon is this?", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png", options: ["Mew", "Mewtwo", "Celebi", "Lugia"], correctIndex: 1 },
+      { text: "Which Pokémon is this?", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png", options: ["Haunter", "Gastly", "Gengar", "Misdreavus"], correctIndex: 2 },
+      { text: "Which Pokémon is this?", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png", options: ["Vulpix", "Eevee", "Furret", "Minccino"], correctIndex: 1 },
+    ],
+  },
+  {
+    title: "Power Levels & Ranks",
+    description: "Test your knowledge of power systems across popular anime.",
+    category: "anime",
+    difficulty: 3,
+    questions: [
+      { text: "In Dragon Ball Z, what does Vegeta famously exclaim after reading Goku's power level on his scouter?", options: ["'It's impossible!'", "'It's over 9,000!'", "'His power level is massive!'", "'There must be an error!'"], correctIndex: 1, explanation: "The iconic 'It's over 9,000!' meme originates from the Saiyan Saga English dub. In the Japanese original the line is 'over 8,000'." },
+      { text: "By how much does a Super Saiyan transformation multiply the user's base power level?", options: ["10x", "25x", "50x", "100x"], correctIndex: 2, explanation: "Official Dragon Ball lore states the Super Saiyan form multiplies base power by 50x." },
+      { text: "In Naruto, what are the five basic chakra natures?", options: ["Fire, Water, Wind, Earth, Lightning", "Fire, Ice, Wind, Earth, Darkness", "Fire, Water, Wind, Stone, Thunder", "Light, Fire, Water, Wind, Earth"], correctIndex: 0 },
+      { text: "In One Piece, which of the three Haki types is said to be possessed only by one in a million people?", options: ["Observation Haki", "Armament Haki", "Conqueror's Haki", "Supreme Haki"], correctIndex: 2, explanation: "Conqueror's Haki (Haoshoku Haki) is the rarest type and cannot be taught — only born with it." },
+      { text: "In Attack on Titan, which Titan is considered the most powerful of the Nine Titans due to its unique inherited ability?", options: ["Armored Titan", "Colossal Titan", "Founding Titan", "War Hammer Titan"], correctIndex: 2, explanation: "The Founding Titan can control all other Titans and alter the memories of Subjects of Ymir." },
+      { text: "In My Hero Academia, at what percentage of One For All does Izuku Midoriya first manage to move without destroying his own body?", options: ["5%", "8%", "20%", "45%"], correctIndex: 2, explanation: "Midoriya develops his Shoot Style at 20%, redirecting force through his legs to reduce arm damage." },
+      { text: "In Demon Slayer, what is the highest rank a Demon Slayer Corps member can officially achieve?", options: ["Kinoe", "Tsuchinokami", "Hashira (Pillar)", "Oyakata-sama"], correctIndex: 2 },
+      { text: "In Hunter x Hunter, which of the six Nen types is considered the rarest and grants abilities that defy the rules of other types?", options: ["Enhancement", "Emission", "Manipulation", "Specialization"], correctIndex: 3, explanation: "Specialization is the rarest Nen type. Users like Kurapika and Neferpitou possess unique abilities that do not fit any other category." },
+    ],
+  },
+  {
+    title: "Anime Universes",
+    description: "Deep dive into the lore and secrets of legendary anime worlds.",
+    category: "anime",
+    difficulty: 4,
+    questions: [
+      { text: "This Pokémon is said to have created the entire universe. Which one is it?", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/493.png", options: ["Giratina", "Palkia", "Dialga", "Arceus"], correctIndex: 3, explanation: "Arceus is known as 'The Original One' and is said to have shaped the universe from chaos." },
+      { text: "In Fullmetal Alchemist: Brotherhood, what is the fundamental rule of Alchemy?", options: ["Only State Alchemists may transmute living matter", "Equivalent Exchange — something of equal value must be given to gain something", "You must draw a transmutation circle for any reaction", "Gold can never be created under any circumstance"], correctIndex: 1 },
+      { text: "What is the name of Light Yagami's shinigami in Death Note?", options: ["Rem", "Ryuk", "Sidoh", "Gelus"], correctIndex: 1 },
+      { text: "In Naruto, what is the true name of the Nine-Tailed Fox sealed inside Naruto?", options: ["Shirogane", "Kurama", "Hachibi", "Kyuubi"], correctIndex: 1 },
+      { text: "In One Piece, what is the true name of the Devil Fruit Luffy ate, hidden under the alias 'Gomu Gomu no Mi'?", options: ["Mera Mera no Mi", "Hito Hito no Mi, Model: Nika", "Zoan Gomu no Mi", "Nika Nika no Mi"], correctIndex: 1, explanation: "The World Government hid its true identity as the Hito Hito no Mi, Model: Nika — a Mythical Zoan tied to the Sun God Nika." },
+      { text: "In Bleach, what is the name of Ichigo Kurosaki's zanpakuto?", options: ["Zangetsu", "Senbonzakura", "Ryujin Jakka", "Tobiume"], correctIndex: 0 },
+      { text: "In Neon Genesis Evangelion, what does 'NERV' literally mean?", options: ["It's an acronym for National Emergency Robotics Volunteer", "It is the German word for 'nerve'", "Neural Energy Research Vehicles", "It is never explained in the series"], correctIndex: 1, explanation: "NERV comes from the German word 'Nerv', meaning 'nerve'. It has no in-universe acronym expansion." },
+    ],
+  },
+  {
+    title: "Ultimate Anime Master",
+    description: "Only true anime connoisseurs will ace this gauntlet.",
+    category: "anime",
+    difficulty: 5,
+    questions: [
+      { text: "What year did Astro Boy (Tetsuwan Atom) first air, widely regarded as the first serialised anime TV series?", options: ["1958", "1963", "1967", "1972"], correctIndex: 1, explanation: "Astro Boy premiered on Fuji TV on January 1, 1963, produced by Osamu Tezuka's Mushi Production." },
+      { text: "In Dragon Ball Super, what is the Japanese name for Goku's Ultra Instinct technique?", options: ["Migatte no Goku'i", "Goku no Chikara", "Shinkai no Majin", "Kaio-ken Burst"], correctIndex: 0, explanation: "Migatte no Goku'i literally translates to 'Secret of the Selfish' or 'Mastery of Self-Movement'." },
+      { text: "In Attack on Titan, what unique power does the Attack Titan possess that sets it apart from all other Titans?", options: ["It can see the memories of future inheritors", "It can harden its body into crystal", "It can control mindless titans at will", "It can copy the powers of other Titans"], correctIndex: 0, explanation: "The Attack Titan uniquely receives the memories of its future holders, allowing its wielders to act toward future freedom across generations." },
+      { text: "How many episodes did the 2011 Hunter x Hunter anime adaptation produce in total?", options: ["135", "148", "150", "162"], correctIndex: 1, explanation: "The 2011 Madhouse adaptation aired 148 episodes, covering arcs up to the Chimera Ant arc and the 13th Hunter Chairman arc." },
+      { text: "Which animation studio produced both the 2003 Fullmetal Alchemist series AND its 2009 Brotherhood remake?", options: ["MAPPA", "Madhouse", "Bones", "Sunrise"], correctIndex: 2, explanation: "Bones animated both FMA (2003) and FMA: Brotherhood (2009). The studio is also known for My Hero Academia and Mob Psycho 100." },
+      { text: "In One Piece, which Ancient Weapon is housed within a living person — specifically, a mermaid princess?", options: ["Pluton", "Uranus", "Poseidon", "Neptune"], correctIndex: 2, explanation: "Poseidon refers to Shirahoshi, the mermaid princess of Fishman Island, who has the ability to communicate with and command the Sea Kings." },
+      { text: "In Jujutsu Kaisen, what is the highest grade officially assigned to a sorcerer?", options: ["Grade 1", "Semi-Special Grade", "Special Grade", "Grade S"], correctIndex: 2, explanation: "Special Grade is the highest official sorcerer rank. Current Special Grade sorcerers include Satoru Gojo, Yuta Okkotsu, and Suguru Geto." },
+      { text: "In Cowboy Bebop, Spike Spiegel's fighting style is based on a blend of which two martial arts?", options: ["Muay Thai and Judo", "Jeet Kune Do and Capoeira", "Wing Chun and Brazilian Jiu-Jitsu", "Taekwondo and Capoeira"], correctIndex: 1, explanation: "Spike's style blends Bruce Lee's Jeet Kune Do (practicality and adaptability) with Capoeira (unpredictable, dance-like footwork)." },
+    ],
+  },
 ];
 
 async function main() {

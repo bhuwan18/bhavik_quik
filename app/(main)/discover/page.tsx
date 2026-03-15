@@ -55,7 +55,7 @@ export default async function DiscoverPage({
       </div>
 
       {/* Category Filter */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
+      <div className="flex gap-2 flex-nowrap overflow-x-auto md:flex-wrap pb-2 mb-6 scrollbar-hide">
         <Link
           href="/discover"
           className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
@@ -99,7 +99,7 @@ export default async function DiscoverPage({
       )}
 
       {/* Quiz Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
         {quizzes.map((quiz: any) => {
           const cat = CATEGORIES.find((c) => c.slug === quiz.category);
           const isCompleted = completedQuizIds.has(quiz.id);
