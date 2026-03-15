@@ -95,18 +95,18 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
     const isPerfect = result.score === result.total;
     const emoji = isPerfect ? "🏆" : pct >= 80 ? "🎉" : pct >= 60 ? "👍" : pct >= 40 ? "😐" : "😬";
     return (
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-        <div className="text-6xl mb-4">{emoji}</div>
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 text-center max-w-lg mx-auto">
+        <div className="text-6xl md:text-7xl mb-4">{emoji}</div>
         {isPerfect && (
           <div className="inline-flex items-center gap-2 bg-green-500/20 border border-green-500/40 text-green-400 px-4 py-1.5 rounded-full text-sm font-bold mb-3">
             ✓ Perfect Score — Quiz Completed!
           </div>
         )}
-        <h2 className="text-2xl font-bold text-white mb-2">Quiz Complete!</h2>
-        <p className="text-gray-400 mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Quiz Complete!</h2>
+        <p className="text-gray-400 mb-6 md:text-lg">
           You scored <span className="text-white font-bold">{result.score}/{result.total}</span> ({pct}%)
         </p>
-        <div className="inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-4 py-2 rounded-xl mb-8 text-lg font-bold">
+        <div className="inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-5 py-2.5 rounded-xl mb-8 text-lg font-bold">
           🪙 +{result.coinsEarned} coins earned
         </div>
         <div className="flex gap-3 justify-center flex-wrap">
@@ -147,26 +147,26 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
       </div>
 
       {/* Question card */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8 mb-6 select-none">
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-7 mb-6 select-none">
         {question.imageUrl && (
           <div className="mb-5 flex justify-center">
-            <div className="bg-white rounded-2xl p-5 shadow-lg inline-flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-4 md:p-6 shadow-lg inline-flex items-center justify-center">
               <Image
                 src={question.imageUrl}
                 alt="Question image"
-                width={240}
-                height={160}
-                className="object-contain max-h-40"
+                width={300}
+                height={200}
+                className="object-contain max-h-48 md:max-h-60"
                 unoptimized
               />
             </div>
           </div>
         )}
-        <p className="text-xl font-semibold text-white leading-relaxed">{question.text}</p>
+        <p className="text-xl md:text-2xl font-semibold text-white leading-relaxed">{question.text}</p>
       </div>
 
       {/* Options — rendered in shuffled visual order */}
-      <div className="space-y-3 mb-6 select-none">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 select-none">
         {order.map((originalIdx, visualIdx) => {
           const option = question.options[originalIdx];
           let style = "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-indigo-500/50";
