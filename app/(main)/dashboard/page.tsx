@@ -52,6 +52,21 @@ export default async function DashboardPage() {
     now.getUTCDate() !== resetDate.getUTCDate();
   const dailyEarned = isNewDay ? 0 : (user?.dailyCoinsEarned ?? 0);
 
+  // Find categories that have new quizzes the user hasn't attempted
+  const newQuizzes = await prisma.quiz.findMany({
+    where: { isNew: true },
+    select: { id: true, category: true },
+  });
+  const userAttemptedIds = new Set(
+    (await prisma.quizAttempt.findMany({
+      where: { userId: session.user.id },
+      select: { quizId: true },
+    })).map((a) => a.quizId)
+  );
+  const categoriesWithNew = new Set(
+    newQuizzes.filter((q) => !userAttemptedIds.has(q.id)).map((q) => q.category)
+  );
+
   const firstName = session.user.name?.split(" ")[0] ?? "Player";
 
   const stats = [
@@ -128,8 +143,13 @@ export default async function DashboardPage() {
             <Link
               key={slug}
               href={`/discover?category=${slug}`}
-              className="flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-gradient-to-br hover:from-purple-600/20 hover:to-pink-600/10 border border-white/10 hover:border-purple-500/50 rounded-2xl transition-all group"
+              className="relative flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-gradient-to-br hover:from-purple-600/20 hover:to-pink-600/10 border border-white/10 hover:border-purple-500/50 rounded-2xl transition-all group"
             >
+              {categoriesWithNew.has(slug) && (
+                <span className="absolute top-2 right-2 flex items-center gap-0.5 bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                  New
+                </span>
+              )}
               <span className="text-4xl group-hover:scale-110 transition-transform">{icon}</span>
               <span className="text-xs text-gray-400 group-hover:text-purple-300 text-center font-medium leading-tight">{label}</span>
             </Link>

@@ -83,6 +83,7 @@ model Quiz {
   category    String
   difficulty  Int
   isOfficial  Boolean       @default(false)
+  isNew       Boolean       @default(false)
   authorId    String
   author      User          @relation("QuizAuthor", fields: [authorId], references: [id])
   questions   Question[]

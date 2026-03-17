@@ -24,16 +24,18 @@ export default async function DiscoverPage({
     take: 60,
   });
 
-  // Fetch quizzes the current user has completed with a perfect score
+  // Fetch quizzes the current user has attempted (any score) and completed (perfect score)
   let completedQuizIds = new Set<string>();
+  let attemptedQuizIds = new Set<string>();
   if (session?.user?.id) {
-    const perfectAttempts = await prisma.quizAttempt.findMany({
+    const allAttempts = await prisma.quizAttempt.findMany({
       where: { userId: session.user.id },
       select: { quizId: true, score: true, total: true },
     });
     completedQuizIds = new Set(
-      perfectAttempts.filter((a) => a.score === a.total).map((a) => a.quizId)
+      allAttempts.filter((a) => a.score === a.total).map((a) => a.quizId)
     );
+    attemptedQuizIds = new Set(allAttempts.map((a) => a.quizId));
   }
 
   const difficultyLabel = (d: number) => {
@@ -103,6 +105,7 @@ export default async function DiscoverPage({
         {quizzes.map((quiz: any) => {
           const cat = CATEGORIES.find((c) => c.slug === quiz.category);
           const isCompleted = completedQuizIds.has(quiz.id);
+          const isNew = quiz.isNew && !attemptedQuizIds.has(quiz.id);
           return (
             <Link
               key={quiz.id}
@@ -110,6 +113,8 @@ export default async function DiscoverPage({
               className={`relative bg-white/5 hover:bg-white/8 border rounded-2xl p-5 transition-all hover:shadow-lg group ${
                 isCompleted
                   ? "border-green-500/40 hover:border-green-500/60 hover:shadow-green-500/10"
+                  : isNew
+                  ? "border-amber-500/30 hover:border-amber-500/50 hover:shadow-amber-500/10"
                   : "border-white/10 hover:border-indigo-500/50 hover:shadow-indigo-500/10"
               }`}
             >
@@ -120,18 +125,23 @@ export default async function DiscoverPage({
               )}
               <div className="flex items-start justify-between mb-3">
                 <span className="text-2xl">{cat?.icon ?? "📝"}</span>
-                {!isCompleted && (
-                  <div className="flex items-center gap-2">
-                    {quiz.isOfficial && (
-                      <span className="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full">
-                        Official
-                      </span>
-                    )}
+                <div className="flex items-center gap-2">
+                  {isNew && (
+                    <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold animate-pulse">
+                      ✨ New
+                    </span>
+                  )}
+                  {!isCompleted && !isNew && quiz.isOfficial && (
+                    <span className="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full">
+                      Official
+                    </span>
+                  )}
+                  {!isCompleted && (
                     <span className={`text-xs font-medium ${difficultyColor(quiz.difficulty)}`}>
                       {difficultyLabel(quiz.difficulty)}
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
               <h3 className={`font-semibold transition-colors mb-1 ${isCompleted ? "text-green-300 group-hover:text-green-200" : "text-white group-hover:text-indigo-300"}`}>
                 {quiz.title}

@@ -61,7 +61,8 @@
       "Bash(npx dotenv -e .env -- node -e \":*)",
       "Bash(npx tsx --tsconfig tsconfig.json -e \":*)",
       "Bash(pkill -f \"next dev\")",
-      "Bash(pkill -f \"next-server\")"
+      "Bash(pkill -f \"next-server\")",
+      "Bash(cmd /c \"taskkill /F /IM node.exe & echo Done\")"
     ]
   }
 }
