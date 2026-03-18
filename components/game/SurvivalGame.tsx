@@ -115,7 +115,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
 
   if (phase === "intro") {
     return (
-      <div className="p-8 max-w-xl mx-auto">
+      <div className="p-4 md:p-8 max-w-xl mx-auto">
         <button onClick={onBack} className="text-gray-400 hover:text-white mb-6 text-sm">
           ← Back
         </button>
@@ -153,7 +153,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
 
   if (phase === "done") {
     return (
-      <div className="p-8 max-w-xl mx-auto text-center">
+      <div className="p-4 md:p-8 max-w-xl mx-auto text-center">
         <div className="text-6xl mb-4">{streak === 0 ? "💔" : streak >= 5 ? "🔥" : "❤️"}</div>
         <h2 className="text-3xl font-bold text-white mb-2">
           {streak === 0 ? "Game Over!" : streak >= 10 ? "Incredible!" : "Well Played!"}
@@ -189,7 +189,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
 
   if (questions.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-400">
+      <div className="p-4 md:p-8 text-center text-gray-400">
         No questions found.{" "}
         <button onClick={onBack} className="text-red-400 hover:underline">
           Go back

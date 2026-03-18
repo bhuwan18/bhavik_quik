@@ -63,7 +63,7 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
 
   if (phase === "intro") {
     return (
-      <div className="p-8 max-w-xl mx-auto text-center">
+      <div className="p-4 md:p-8 max-w-xl mx-auto text-center">
         <button onClick={onBack} className="text-gray-400 hover:text-white mb-6 text-sm block text-left">← Back</button>
         <div className="text-6xl mb-4">⚡</div>
         <h1 className="text-3xl font-bold text-white mb-3">Speed Blitz</h1>
@@ -82,7 +82,7 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
   if (phase === "done") {
     const pct = Math.round((score / Math.max(current, 1)) * 100);
     return (
-      <div className="p-8 max-w-xl mx-auto text-center">
+      <div className="p-4 md:p-8 max-w-xl mx-auto text-center">
         <div className="text-6xl mb-4">⚡</div>
         <h2 className="text-2xl font-bold text-white mb-2">Blitz Complete!</h2>
         <p className="text-gray-400 mb-4">{score}/{current} correct ({pct}%)</p>
@@ -101,7 +101,7 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
   const q = questions[current];
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
+    <div className="p-4 md:p-8 max-w-xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <span className="text-gray-400 text-sm">{current + 1}/{SPEEDBLITZ_QUESTION_COUNT} • Score: {score}</span>
         <div className={`text-xl font-bold px-4 py-1.5 rounded-xl border ${timeLeft <= SPEEDBLITZ_TIMER_WARNING_S ? "text-red-400 border-red-500/50 bg-red-500/10 animate-pulse" : "text-yellow-400 border-yellow-500/30 bg-yellow-500/10"}`}>

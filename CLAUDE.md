@@ -109,11 +109,11 @@ app/
 │   ├── discover/page.tsx         Browse quizzes — shows ✓ Completed badge on perfect-score quizzes
 │   ├── quiz/[id]/page.tsx        Quiz player — checks isLocked + school hours before rendering
 │   ├── marketplace/page.tsx      Buy packs with coins
-│   ├── quizlets/page.tsx         View/sell owned Quizlet characters (+ Hidden section)
+│   ├── quizlets/page.tsx         View/sell owned Quizlets (My Collection) + full dex view (All Quizlets) with toggle
 │   ├── quiz-maker/page.tsx       Create and publish custom quizzes
 │   ├── leaderboard/page.tsx      Top 50 players — Pro/Max badges, green online dot, quizlet/attempt counts
 │   ├── feedback/page.tsx         User feedback form → saves to DB (no email)
-│   ├── info/page.tsx             All quizlets directory with rarity guide
+│   ├── info/page.tsx             Redirects to /quizlets (deprecated)
 │   ├── game/page.tsx             Game mode selection hub
 │   ├── buy-coins/page.tsx        UPI payment flow for coins
 │   ├── shop/page.tsx             Buy Pro (₹250/mo) or Max (₹500/mo) via UPI
@@ -153,7 +153,7 @@ components/
 ├── marketplace/
 │   ├── MarketplaceClient.tsx     Pack browsing + purchase
 │   └── PackOpeningModal.tsx      Animated pack reveal (tap cards)
-├── quizlets/QuizletsClient.tsx   Collection grid + sell + filters + Hidden section
+├── quizlets/QuizletsClient.tsx   Toggle: "My Collection" (owned, sell, Hidden section) + "All Quizlets" dex view (all non-hidden, owned highlighted)
 └── game/
     ├── GameModesClient.tsx       Mode selection (HackDev, DinoRex, SpeedBlitz, Survival, Daily, Classic)
     ├── HackDevGame.tsx           60-second tech quiz sprint
@@ -188,7 +188,7 @@ prisma/
 - 55 total: spread across 7 packs + 3 global uniques
 - Each has: name, rarity, pack, icon (emoji), color gradient, description
 - Rarities: `common` | `uncommon` | `rare` | `epic` | `legendary` | `secret` | `unique` | `impossible`
-- Secret/Unique/Impossible have `isHidden: true` — shown in a separate "Hidden" section in the Quizlets tab, not in Info tab or pack descriptions
+- Secret/Unique/Impossible have `isHidden: true` — shown in a separate "Hidden" section in the Quizlets tab (My Collection view only), not in the All Quizlets dex view or pack descriptions
 
 ### Rarity Visual System
 Defined in `lib/utils.ts → RARITY_COLORS`:
@@ -302,7 +302,8 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 
 ### Mobile Navigation
 - Desktop: full `Sidebar` (hidden on mobile via `hidden md:flex`)
-- Mobile: `MobileNav` bottom tab bar with 5 items (Home, Discover, Shop, Quizlets, Feedback)
+- Mobile: `MobileNav` — bottom tab bar (Home, Discover, Packs, Quizlets) + "More" drawer with (Leaderboard, Game Modes, Feedback, Upgrade, Notifications)
+- `/marketplace` is labelled "Packs"; `/shop` (Pro/Max) is labelled "Upgrade" — keep these distinct to avoid confusion
 - Main content has `pb-20 md:pb-0` to clear the mobile nav bar
 
 ### Dark/Light Theme

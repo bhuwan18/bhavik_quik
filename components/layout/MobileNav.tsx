@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 const PRIMARY_NAV = [
   { href: "/dashboard", icon: "📊", label: "Home" },
   { href: "/discover", icon: "🔍", label: "Discover" },
-  { href: "/marketplace", icon: "🛒", label: "Shop" },
+  { href: "/marketplace", icon: "🛒", label: "Packs" },
   { href: "/quizlets", icon: "🎴", label: "Quizlets" },
 ];
 
@@ -19,8 +19,7 @@ const MORE_NAV = [
   { href: "/leaderboard", icon: "🏆", label: "Leaderboard" },
   { href: "/game", icon: "🎮", label: "Game Modes" },
   { href: "/feedback", icon: "💬", label: "Feedback" },
-  { href: "/info", icon: "ℹ️", label: "Info" },
-  { href: "/shop", icon: "🏪", label: "Shop" },
+  { href: "/shop", icon: "🏪", label: "Upgrade" },
   { href: "/notifications", icon: "🔔", label: "Notifications" },
 ];
 

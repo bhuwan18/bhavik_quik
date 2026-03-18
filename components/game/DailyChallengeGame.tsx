@@ -117,7 +117,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
 
   if (phase === "intro") {
     return (
-      <div className="p-8 max-w-xl mx-auto">
+      <div className="p-4 md:p-8 max-w-xl mx-auto">
         <button onClick={onBack} className="text-gray-400 hover:text-white mb-6 text-sm">
           ← Back
         </button>
@@ -159,7 +159,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
   if (phase === "done") {
     const pct = Math.round((score / questions.length) * 100);
     return (
-      <div className="p-8 max-w-xl mx-auto text-center">
+      <div className="p-4 md:p-8 max-w-xl mx-auto text-center">
         <div className="text-6xl mb-4">{pct === 100 ? "🏆" : pct >= DAILY_SCORE_GOOD_THRESHOLD ? "⭐" : "📅"}</div>
         <h2 className="text-3xl font-bold text-white mb-2">Challenge Complete!</h2>
         <p className="text-gray-400 mb-1">
@@ -181,7 +181,7 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
 
   if (questions.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-400">
+      <div className="p-4 md:p-8 text-center text-gray-400">
         No questions found.{" "}
         <button onClick={onBack} className="text-teal-400 hover:underline">
           Go back

@@ -15,7 +15,6 @@ const NAV_ITEMS = [
   { href: "/marketplace", icon: "🛒", label: "Marketplace" },
   { href: "/quizlets", icon: "🎴", label: "Quizlets" },
   { href: "/game", icon: "🎮", label: "Game Modes" },
-  { href: "/info", icon: "ℹ️", label: "Info" },
   { href: "/feedback", icon: "💬", label: "Feedback" },
   { href: "/shop", icon: "🏪", label: "Shop" },
 ];

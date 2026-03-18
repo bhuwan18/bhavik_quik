@@ -97,7 +97,7 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
 
   if (phase === "intro") {
     return (
-      <div className="p-8 max-w-xl mx-auto">
+      <div className="p-4 md:p-8 max-w-xl mx-auto">
         <button onClick={onBack} className="text-gray-400 hover:text-white mb-6 text-sm">← Back</button>
         <div className="text-center">
           <div className="text-6xl mb-4">💻</div>
@@ -130,7 +130,7 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
 
   if (phase === "done") {
     return (
-      <div className="p-8 max-w-xl mx-auto text-center">
+      <div className="p-4 md:p-8 max-w-xl mx-auto text-center">
         <div className="text-6xl mb-4">🎯</div>
         <h2 className="text-3xl font-bold text-white mb-2">Time&apos;s Up!</h2>
         <p className="text-gray-400 mb-4">You answered <span className="text-white font-bold">{score}/{answers.length}</span> correctly</p>
@@ -150,7 +150,7 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
   }
 
   if (questions.length === 0) {
-    return <div className="p-8 text-center text-gray-400">No tech questions found. <button onClick={onBack} className="text-indigo-400 hover:underline">Go back</button></div>;
+    return <div className="p-4 md:p-8 text-center text-gray-400">No tech questions found. <button onClick={onBack} className="text-indigo-400 hover:underline">Go back</button></div>;
   }
 
   const q = questions[current];

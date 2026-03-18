@@ -20,6 +20,7 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Quantrix", rarity: "epic", pack: "tech-pack", icon: "⚡", colorFrom: "#a78bfa", colorTo: "#7c3aed", description: "A quantum processor that exists in superposition.", isHidden: false, sellValue: 150 },
   { name: "Cypher X", rarity: "legendary", pack: "tech-pack", icon: "🔐", colorFrom: "#fbbf24", colorTo: "#d97706", description: "The legendary unbreakable cipher from the future net.", isHidden: false, sellValue: 400 },
   { name: "GlitchGod", rarity: "secret", pack: "tech-pack", icon: "👾", colorFrom: "#1f2937", colorTo: "#111827", description: "A being born from the most catastrophic system error ever recorded.", isHidden: true, sellValue: 1000 },
+  { name: "Loopix", rarity: "uncommon", pack: "tech-pack", icon: "🔄", colorFrom: "#2dd4bf", colorTo: "#0d9488", description: "An infinite loop that somehow terminates at exactly the right moment.", isHidden: false, sellValue: 25 },
 
   // ── SPORTS PACK ────────────────────────────────────────────────
   { name: "Kicksy", rarity: "common", pack: "sports-pack", icon: "⚽", colorFrom: "#bbf7d0", colorTo: "#86efac", description: "A spirited football that scores on its own.", isHidden: false, sellValue: 10 },
@@ -30,6 +31,7 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Centurion", rarity: "epic", pack: "sports-pack", icon: "💯", colorFrom: "#c084fc", colorTo: "#9333ea", description: "A legendary batsman who never gets out before a century.", isHidden: false, sellValue: 150 },
   { name: "The Captain", rarity: "legendary", pack: "sports-pack", icon: "👑", colorFrom: "#fcd34d", colorTo: "#f59e0b", description: "The eternal captain who has led every championship team.", isHidden: false, sellValue: 400 },
   { name: "OffsideGhost", rarity: "secret", pack: "sports-pack", icon: "👻", colorFrom: "#1e293b", colorTo: "#0f172a", description: "A specter that appears just behind the defensive line, invisible to referees.", isHidden: true, sellValue: 1000 },
+  { name: "SwiftKick", rarity: "common", pack: "sports-pack", icon: "🦵", colorFrom: "#fef9c3", colorTo: "#fde047", description: "The fastest kick in the spirit realm — blink and you'll miss it.", isHidden: false, sellValue: 10 },
 
   // ── MAGIC PACK ─────────────────────────────────────────────────
   { name: "Spellette", rarity: "common", pack: "magic-pack", icon: "✨", colorFrom: "#ddd6fe", colorTo: "#c4b5fd", description: "A tiny spell in the shape of a sparkling star.", isHidden: false, sellValue: 10 },
@@ -40,6 +42,7 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Horcruxus", rarity: "epic", pack: "magic-pack", icon: "💀", colorFrom: "#7c3aed", colorTo: "#4c1d95", description: "A fractured soul vessel containing unimaginable power.", isHidden: false, sellValue: 150 },
   { name: "The Chosen One", rarity: "legendary", pack: "magic-pack", icon: "⚡", colorFrom: "#f59e0b", colorTo: "#d97706", description: "The destined hero whose lightning scar holds the secret of victory.", isHidden: false, sellValue: 400 },
   { name: "DeathlyHollow", rarity: "secret", pack: "magic-pack", icon: "☠️", colorFrom: "#111827", colorTo: "#030712", description: "A being that has mastered all three Deathly Hallows and conquered death itself.", isHidden: true, sellValue: 1000 },
+  { name: "Grimoire", rarity: "rare", pack: "magic-pack", icon: "📖", colorFrom: "#818cf8", colorTo: "#4338ca", description: "A self-writing spellbook that updates with forbidden knowledge each night.", isHidden: false, sellValue: 60 },
 
   // ── HERO PACK ──────────────────────────────────────────────────
   { name: "Shieldlet", rarity: "common", pack: "hero-pack", icon: "🛡️", colorFrom: "#bfdbfe", colorTo: "#93c5fd", description: "A tiny vibranium shield that blocks all incoming attacks.", isHidden: false, sellValue: 10 },
@@ -50,6 +53,7 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Starkbot", rarity: "epic", pack: "hero-pack", icon: "🤖", colorFrom: "#f97316", colorTo: "#dc2626", description: "An ultra-smart AI suit built by the greatest genius in the universe.", isHidden: false, sellValue: 150 },
   { name: "Infinity Quizlet", rarity: "legendary", pack: "hero-pack", icon: "💎", colorFrom: "#f59e0b", colorTo: "#7c3aed", description: "Born from all six infinity stones. Reality bends to its will.", isHidden: false, sellValue: 400 },
   { name: "The Snap", rarity: "secret", pack: "hero-pack", icon: "👆", colorFrom: "#1f2937", colorTo: "#030712", description: "A snap that erases half of anything. Handle with extreme care.", isHidden: true, sellValue: 1000 },
+  { name: "CloakDagger", rarity: "uncommon", pack: "hero-pack", icon: "🗡️", colorFrom: "#4d7c0f", colorTo: "#1a2e05", description: "A shadow hero who operates from the darkness and never takes credit.", isHidden: false, sellValue: 25 },
 
   // ── MUSIC PACK ─────────────────────────────────────────────────
   { name: "Noteling", rarity: "common", pack: "music-pack", icon: "🎵", colorFrom: "#fca5a5", colorTo: "#f87171", description: "A cheerful musical note that hums itself to sleep.", isHidden: false, sellValue: 10 },
@@ -60,6 +64,7 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "VinylGod", rarity: "epic", pack: "music-pack", icon: "💿", colorFrom: "#a78bfa", colorTo: "#6d28d9", description: "An ancient vinyl disc containing the universe's first song.", isHidden: false, sellValue: 150 },
   { name: "The Muse", rarity: "legendary", pack: "music-pack", icon: "🌟", colorFrom: "#fbbf24", colorTo: "#f59e0b", description: "The eternal source of all artistic inspiration since the dawn of creation.", isHidden: false, sellValue: 400 },
   { name: "SilentNote", rarity: "secret", pack: "music-pack", icon: "🔇", colorFrom: "#1e293b", colorTo: "#0f172a", description: "A note so powerful it cannot be heard — only felt in the soul.", isHidden: true, sellValue: 1000 },
+  { name: "Beatdrop", rarity: "common", pack: "music-pack", icon: "🥁", colorFrom: "#f9a8d4", colorTo: "#db2777", description: "A drumbeat spirit that arrives exactly one second before the bass drops.", isHidden: false, sellValue: 10 },
 
   // ── SCIENCE PACK ───────────────────────────────────────────────
   { name: "Atomlet", rarity: "common", pack: "science-pack", icon: "⚛️", colorFrom: "#bae6fd", colorTo: "#7dd3fc", description: "The friendliest atom in the periodic table.", isHidden: false, sellValue: 10 },
@@ -70,17 +75,27 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Singulara", rarity: "epic", pack: "science-pack", icon: "🌀", colorFrom: "#7c3aed", colorTo: "#4c1d95", description: "A miniature black hole that bends space around your equations.", isHidden: false, sellValue: 150 },
   { name: "Einstein's Ghost", rarity: "legendary", pack: "science-pack", icon: "👨‍🔬", colorFrom: "#f59e0b", colorTo: "#b45309", description: "The spirit of relativity itself, still working on the unified theory.", isHidden: false, sellValue: 400 },
   { name: "Dark Matter", rarity: "secret", pack: "science-pack", icon: "🌑", colorFrom: "#030712", colorTo: "#111827", description: "Comprises 27% of the universe. You have somehow collected it.", isHidden: true, sellValue: 1000 },
+  { name: "Polymere", rarity: "rare", pack: "science-pack", icon: "🧬", colorFrom: "#6ee7b7", colorTo: "#059669", description: "A long-chain molecular being that can fold into any shape imaginable.", isHidden: false, sellValue: 60 },
 
   // ── RAINBOW PACK ───────────────────────────────────────────────
   { name: "Spectrox", rarity: "rare", pack: "rainbow-pack", icon: "🌈", colorFrom: "#f87171", colorTo: "#818cf8", description: "A prismatic spirit born from seven simultaneous rainbows.", isHidden: false, sellValue: 60 },
   { name: "Chromara", rarity: "epic", pack: "rainbow-pack", icon: "🎆", colorFrom: "#c084fc", colorTo: "#38bdf8", description: "A chromatic entity that shifts colour every millisecond.", isHidden: false, sellValue: 150 },
   { name: "Aurorex", rarity: "legendary", pack: "rainbow-pack", icon: "🌌", colorFrom: "#fbbf24", colorTo: "#a78bfa", description: "The spirit of the northern lights, wandering the cosmos.", isHidden: false, sellValue: 400 },
   { name: "The Impossible One", rarity: "impossible", pack: "rainbow-pack", icon: "🌟", colorFrom: "#f43f5e", colorTo: "#3b82f6", description: "A being so rare it should not exist. 0.001% chance. You defied all odds.", isHidden: true, sellValue: 99999 },
+  { name: "Prismixa", rarity: "epic", pack: "rainbow-pack", icon: "💠", colorFrom: "#f0abfc", colorTo: "#a855f7", description: "A chromatic entity that splits pure white light into an infinite spectrum of colour.", isHidden: false, sellValue: 150 },
 
   // ── GLOBAL UNIQUE QUIZLETS (3 total, hidden, cross-pack) ───────
   { name: "Omnivex", rarity: "unique", pack: "rainbow-pack", icon: "🔮", colorFrom: "#ec4899", colorTo: "#8b5cf6", description: "One of three unique beings. Omnivex knows the answer before the question is asked.", isHidden: true, sellValue: 5000 },
   { name: "Voidheart", rarity: "unique", pack: "tech-pack", icon: "🫀", colorFrom: "#1d4ed8", colorTo: "#6d28d9", description: "One of three unique beings. Voidheart beats with pure digital emotion.", isHidden: true, sellValue: 5000 },
   { name: "Eternia", rarity: "unique", pack: "magic-pack", icon: "♾️", colorFrom: "#d97706", colorTo: "#dc2626", description: "One of three unique beings. Eternia has existed since before the universe.", isHidden: true, sellValue: 5000 },
+
+  // ── FESTIVAL PACK QUIZLETS ─────────────────────────────────────
+  { name: "Fireworksy", rarity: "rare", pack: "newyear-pack", icon: "🎇", colorFrom: "#fbbf24", colorTo: "#7c3aed", description: "Born at midnight every new year — explodes with joy and fades into stardust.", isHidden: false, sellValue: 60 },
+  { name: "Lovette", rarity: "uncommon", pack: "love-pack", icon: "💝", colorFrom: "#fda4af", colorTo: "#be123c", description: "A love-struck spirit that makes everything it touches a little warmer.", isHidden: false, sellValue: 25 },
+  { name: "Gulalia", rarity: "uncommon", pack: "holi-pack", icon: "🌺", colorFrom: "#f472b6", colorTo: "#be185d", description: "A colour-drenched spirit born from the most vibrant Holi celebration ever played.", isHidden: false, sellValue: 25 },
+  { name: "Spooklet", rarity: "rare", pack: "spooky-pack", icon: "🕯️", colorFrom: "#c2410c", colorTo: "#431407", description: "A flickering candle spirit that appears in haunted houses at the stroke of midnight.", isHidden: false, sellValue: 60 },
+  { name: "Diyaling", rarity: "uncommon", pack: "diwali-pack", icon: "🌠", colorFrom: "#fcd34d", colorTo: "#b45309", description: "A tiny earthen lamp spirit that drives away darkness with its eternal golden warmth.", isHidden: false, sellValue: 25 },
+  { name: "Jinglix", rarity: "rare", pack: "xmas-pack", icon: "🔔", colorFrom: "#fcd34d", colorTo: "#15803d", description: "A golden bell that rings once a year — its sound brings good fortune to all who hear it.", isHidden: false, sellValue: 60 },
 ];
 
 export const PACK_QUIZLETS = (packSlug: string) =>

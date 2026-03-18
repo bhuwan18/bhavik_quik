@@ -78,7 +78,7 @@ export default function GameModesClient() {
   if (mode === "daily") return <DailyChallengeGame onBack={() => setMode("select")} />;
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">🎮 Game Modes</h1>
         <p className="text-gray-400 mt-1">Choose your battle style — earn coins for every correct answer</p>

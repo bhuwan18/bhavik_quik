@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Pack } from "@prisma/client";
 import type { Festival } from "@/lib/festivals";
+import { QUIZLETS_DATA } from "@/lib/quizlets-data";
 import PackOpeningModal from "./PackOpeningModal";
 
 type Props = {
@@ -10,6 +11,47 @@ type Props = {
   userCoins: number;
   festival: Festival | null;
 };
+
+const DROP_WEIGHTS: Record<string, number> = {
+  common: 6000,
+  uncommon: 2500,
+  rare: 1000,
+  epic: 400,
+  legendary: 100,
+  secret: 10,
+};
+
+const RARITY_DOT: Record<string, string> = {
+  common: "bg-gray-400",
+  uncommon: "bg-green-400",
+  rare: "bg-blue-400",
+  epic: "bg-purple-500",
+  legendary: "bg-yellow-400",
+};
+
+const RARITY_LABEL: Record<string, string> = {
+  common: "Common",
+  uncommon: "Uncommon",
+  rare: "Rare",
+  epic: "Epic",
+  legendary: "Legendary",
+};
+
+function computeDropRates(packSlug: string): { rarity: string; pct: number }[] {
+  const pool = QUIZLETS_DATA.filter((q) => q.pack === packSlug && !q.isHidden);
+  const totalWeight = pool.reduce((sum, q) => sum + (DROP_WEIGHTS[q.rarity] ?? 0), 0);
+  if (totalWeight === 0) return [];
+
+  const byRarity: Record<string, number> = {};
+  for (const q of pool) {
+    byRarity[q.rarity] = (byRarity[q.rarity] ?? 0) + (DROP_WEIGHTS[q.rarity] ?? 0);
+  }
+
+  const order = ["common", "uncommon", "rare", "epic", "legendary"];
+  return order
+    .filter((r) => byRarity[r])
+    .map((r) => ({ rarity: r, pct: (byRarity[r] / totalWeight) * 100 }));
+}
 
 export default function MarketplaceClient({ packs, userCoins: initialCoins, festival }: Props) {
   const [coins, setCoins] = useState(initialCoins);
@@ -52,7 +94,7 @@ export default function MarketplaceClient({ packs, userCoins: initialCoins, fest
   const festivalPacks = packs.filter((p) => p.isFestival);
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -125,6 +167,9 @@ function PackCard({
   isFestival?: boolean;
 }) {
   const canAfford = coins >= pack.cost;
+  const dropRates = computeDropRates(pack.slug);
+  const isRainbow = pack.slug === "rainbow-pack";
+
   return (
     <div
       className={`relative rounded-2xl border overflow-hidden ${
@@ -140,19 +185,30 @@ function PackCard({
       <div className="p-6">
         <div className="text-4xl mb-3">{pack.icon}</div>
         <h3 className="text-xl font-bold text-white mb-1">{pack.name}</h3>
-        <p className="text-white/70 text-sm mb-5">{pack.description}</p>
+        <p className="text-white/70 text-sm mb-4">{pack.description}</p>
 
-        {/* Rarity preview */}
-        <div className="flex gap-1 mb-5">
-          {["common", "uncommon", "rare", "epic", "legendary"].map((r) => (
-            <div key={r} className={`h-1.5 flex-1 rounded-full ${
-              r === "common" ? "bg-gray-400" :
-              r === "uncommon" ? "bg-green-400" :
-              r === "rare" ? "bg-blue-400" :
-              r === "epic" ? "bg-purple-500" : "bg-yellow-400"
-            } opacity-70`} />
-          ))}
-        </div>
+        {/* Drop Rates */}
+        {dropRates.length > 0 && (
+          <div className="mb-4">
+            <p className="text-white/40 text-xs font-medium mb-2 uppercase tracking-wide">Drop Rates</p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+              {dropRates.map(({ rarity, pct }) => (
+                <div key={rarity} className="flex items-center gap-1">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${RARITY_DOT[rarity]}`} />
+                  <span className="text-xs text-white/60">
+                    {RARITY_LABEL[rarity]} {pct < 5 ? pct.toFixed(1) : Math.round(pct)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5">
+              {isRainbow && (
+                <span className="text-xs text-white/40">✦ 0.001% Impossible</span>
+              )}
+              <span className="text-xs text-white/40">✦ 0.01% Unique (any pack)</span>
+            </div>
+          </div>
+        )}
 
         <button
           onClick={() => onOpen(pack)}

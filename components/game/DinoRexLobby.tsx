@@ -91,7 +91,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
 
   if (gameState === "lobby") {
     return (
-      <div className="p-8 max-w-xl mx-auto">
+      <div className="p-4 md:p-8 max-w-xl mx-auto">
         <button onClick={onBack} className="text-gray-400 hover:text-white mb-6 text-sm">← Back</button>
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🦖</div>
@@ -133,7 +133,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
 
   if (gameState === "eliminated") {
     return (
-      <div className="p-8 max-w-xl mx-auto text-center">
+      <div className="p-4 md:p-8 max-w-xl mx-auto text-center">
         <div className="text-6xl mb-4">💀</div>
         <h2 className="text-2xl font-bold text-white mb-2">You&apos;re Out!</h2>
         <p className="text-gray-400 mb-4">Eliminated on round {round}</p>
@@ -150,7 +150,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
 
   if (gameState === "won") {
     return (
-      <div className="p-8 max-w-xl mx-auto text-center">
+      <div className="p-4 md:p-8 max-w-xl mx-auto text-center">
         <div className="text-6xl mb-4">🏆</div>
         <h2 className="text-2xl font-bold text-white mb-2">You Won DinoRex!</h2>
         <p className="text-gray-400 mb-4">Survived all {round} rounds!</p>
@@ -166,7 +166,7 @@ export default function DinoRexLobby({ onBack }: { onBack: () => void }) {
   }
 
   const q = simQuestions[simIdx];
-  if (!q) return <div className="p-8 text-gray-400 text-center">Loading...</div>;
+  if (!q) return <div className="p-4 md:p-8 text-gray-400 text-center">Loading...</div>;
 
   return (
     <div className="p-8 max-w-xl mx-auto">

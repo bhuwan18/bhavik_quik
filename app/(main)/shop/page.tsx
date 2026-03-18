@@ -629,7 +629,7 @@ export default function ShopPage() {
       </div>
 
       {/* Tab switcher */}
-      <div className="flex gap-2 mb-8 bg-white/5 border border-white/10 rounded-2xl p-1.5 w-fit">
+      <div className="flex flex-wrap gap-2 mb-8 bg-white/5 border border-white/10 rounded-2xl p-1.5">
         <button
           onClick={() => setTab("membership")}
           className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${

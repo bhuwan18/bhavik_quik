@@ -20,7 +20,7 @@ export default async function AdminQuizzesPage() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white mb-1">Edit Quizzes</h1>
         <p className="text-gray-400 text-sm">{quizzes.length} quizzes total — click Edit to modify any quiz.</p>
