@@ -14,6 +14,7 @@ const TYPE_META: Record<string, { icon: string; label: string; color: string }> 
   overtaken: { icon: "⬆️", label: "Overtaken", color: "bg-red-500/15 border-red-500/30" },
   top3_join: { icon: "🏆", label: "Top 3", color: "bg-yellow-500/15 border-yellow-500/30" },
   feedback_reply: { icon: "💬", label: "Admin Reply", color: "bg-purple-500/15 border-purple-500/30" },
+  admin_message: { icon: "📣", label: "Admin", color: "bg-blue-500/15 border-blue-500/30" },
 };
 
 export default function NotificationsPage() {

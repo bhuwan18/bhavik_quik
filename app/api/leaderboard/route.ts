@@ -8,8 +8,8 @@ export async function GET() {
 
   const users = await prisma.user.findMany({
     where: {
-      // exclude the internal admin account from leaderboard
-      NOT: { email: process.env.ADMIN_EMAIL ?? "admin@quizlet.internal" },
+      // exclude internal accounts (admin + test user) from leaderboard
+      NOT: { email: { in: [process.env.ADMIN_EMAIL ?? "admin@quizlet.internal", "test@bittsquiz.internal"] } },
     },
     select: {
       id: true,

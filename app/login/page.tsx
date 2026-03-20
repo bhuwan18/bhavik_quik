@@ -8,9 +8,11 @@ export default function LoginPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showTest, setShowTest] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [adminError, setAdminError] = useState("");
+  const [testError, setTestError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -29,6 +31,23 @@ export default function LoginPage() {
     setLoading(false);
     if (result?.error) {
       setAdminError("Invalid username or password.");
+    } else {
+      router.replace("/dashboard");
+    }
+  };
+
+  const handleTestLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setTestError("");
+    const result = await signIn("test-credentials", {
+      username,
+      password,
+      redirect: false,
+    });
+    setLoading(false);
+    if (result?.error) {
+      setTestError("Invalid test credentials.");
     } else {
       router.replace("/dashboard");
     }
@@ -74,7 +93,7 @@ export default function LoginPage() {
           ))}
         </div>
 
-        {!showAdmin ? (
+        {!showAdmin && !showTest ? (
           <>
             {/* Google Sign in */}
             <button
@@ -90,13 +109,60 @@ export default function LoginPage() {
               Sign in with Google
             </button>
 
-            <button
-              onClick={() => setShowAdmin(true)}
-              className="text-xs text-gray-700 hover:text-purple-400 transition-colors"
-            >
-              Admin login
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={() => { setShowTest(true); setUsername(""); setPassword(""); }}
+                className="text-xs text-gray-700 hover:text-blue-400 transition-colors"
+              >
+                Test login
+              </button>
+              <span className="text-xs text-gray-800">·</span>
+              <button
+                onClick={() => { setShowAdmin(true); setUsername(""); setPassword(""); }}
+                className="text-xs text-gray-700 hover:text-purple-400 transition-colors"
+              >
+                Admin login
+              </button>
+            </div>
           </>
+        ) : showTest ? (
+          /* Test User Login Form */
+          <form onSubmit={handleTestLogin} className="w-full space-y-4">
+            <div className="text-center mb-2">
+              <span className="text-sm font-semibold text-blue-400">Test User Login</span>
+            </div>
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-xl border border-blue-500/30 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 bg-blue-500/10"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-xl border border-blue-500/30 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 bg-blue-500/10"
+            />
+            {testError && <p className="text-red-400 text-sm text-center">{testError}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold rounded-xl transition-all disabled:opacity-50"
+            >
+              {loading ? "Signing in..." : "Sign in as Test User"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowTest(false); setTestError(""); }}
+              className="w-full text-xs text-gray-600 hover:text-gray-400 transition-colors"
+            >
+              ← Back to Google login
+            </button>
+          </form>
         ) : (
           /* Admin Login Form */
           <form onSubmit={handleAdminLogin} className="w-full space-y-4">

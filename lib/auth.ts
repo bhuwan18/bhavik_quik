@@ -31,6 +31,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
+      id: "test-credentials",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (
+          credentials?.username === process.env.TEST_USERNAME &&
+          credentials?.password === process.env.TEST_PASSWORD
+        ) {
+          const testEmail = "test@bittsquiz.internal";
+          let user = await prisma.user.findUnique({ where: { email: testEmail } });
+          if (!user) {
+            user = await prisma.user.create({
+              data: { email: testEmail, name: "Test User", emailVerified: new Date(), isAdmin: false },
+            });
+          }
+          return { id: user.id, email: user.email, name: user.name ?? "Test User", isAdmin: false, isPro: false, isMax: false, isLocked: false };
+        }
+        return null;
+      },
+    }),
+    CredentialsProvider({
       id: "admin-credentials",
       credentials: {
         username: { label: "Username", type: "text" },

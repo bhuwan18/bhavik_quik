@@ -33,11 +33,16 @@ export async function POST(
   });
   if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const result = await sendPushToUser(id, title, body, url);
+  // Save to DB so it shows in the notifications tab (regardless of push subscription)
+  await prisma.notification.create({
+    data: {
+      userId: id,
+      type: "admin_message",
+      message: body ? `${title}: ${body}` : title,
+    },
+  });
 
-  if (result.total === 0) {
-    return NextResponse.json({ error: "User has no push subscriptions registered" }, { status: 400 });
-  }
+  const result = await sendPushToUser(id, title, body, url);
 
   return NextResponse.json({ success: true, subscriptions: result.sent, failed: result.failed, total: result.total });
 }
