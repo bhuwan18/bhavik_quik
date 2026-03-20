@@ -199,6 +199,17 @@ export async function POST(req: NextRequest) {
 
     if (notificationsToCreate.length > 0) {
       await prisma.notification.createMany({ data: notificationsToCreate });
+
+      // Fire-and-forget push notifications — do not block the response
+      import("@/lib/push").then(({ sendPushToUser }) => {
+        for (const n of notificationsToCreate) {
+          const title =
+            n.type === "overtaken"
+              ? "You've been overtaken! 😱"
+              : "Someone joined the Top 3! 🏆";
+          sendPushToUser(n.userId, title, n.message).catch(() => {});
+        }
+      }).catch(() => {});
     }
   }
 

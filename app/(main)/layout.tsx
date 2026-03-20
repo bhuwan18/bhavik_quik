@@ -5,6 +5,7 @@ import MobileNav from "@/components/layout/MobileNav";
 import OnlinePing from "@/components/layout/OnlinePing";
 import { AudioProvider } from "@/lib/audio-context";
 import AudioPlayer from "@/components/AudioPlayer";
+import PushSubscriptionManager from "@/components/layout/PushSubscriptionManager";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -29,6 +30,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       <MobileNav />
       <OnlinePing />
       <AudioPlayer />
+      <PushSubscriptionManager />
     </AudioProvider>
   );
 }

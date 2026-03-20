@@ -102,7 +102,7 @@ export default async function DiscoverPage({
 
       {/* Quiz Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-        {quizzes.map((quiz: any) => {
+        {quizzes.map((quiz) => {
           const cat = CATEGORIES.find((c) => c.slug === quiz.category);
           const isCompleted = completedQuizIds.has(quiz.id);
           const isNew = quiz.isNew && !attemptedQuizIds.has(quiz.id);

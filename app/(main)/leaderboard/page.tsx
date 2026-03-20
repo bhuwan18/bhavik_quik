@@ -46,6 +46,7 @@ export default async function LeaderboardPage({
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const MEDALS = ["🥇", "🥈", "🥉"];
+  // eslint-disable-next-line react-hooks/purity -- server component, Date.now() is safe here
   const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
   const isOnline = (lastSeen: Date | null) => !!lastSeen && lastSeen > fiveMinsAgo;
 

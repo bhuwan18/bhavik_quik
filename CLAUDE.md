@@ -81,7 +81,7 @@ UPI_NAME="BittsQuiz"
 # Background music URL (publicly accessible MP3 stream)
 NEXT_PUBLIC_MUSIC_URL="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
 
-# Email / SMTP (for feedback form + new user registration alerts)
+# Email / SMTP (for new user registration alerts)
 # Gmail: use App Password from Google Account → Security → App Passwords
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
@@ -89,6 +89,21 @@ SMTP_SECURE="false"
 SMTP_USER="your-gmail@gmail.com"
 SMTP_PASS="your-app-password"
 ADMIN_NOTIFY_EMAIL="your-gmail@gmail.com"   # defaults to SMTP_USER if unset
+
+# Pusher Channels (DinoRex real-time multiplayer)
+# Create free app at pusher.com → Channels; recommended cluster for India: ap2
+PUSHER_APP_ID="..."
+PUSHER_KEY="..."
+PUSHER_SECRET="..."
+PUSHER_CLUSTER="ap2"
+NEXT_PUBLIC_PUSHER_KEY="..."
+NEXT_PUBLIC_PUSHER_CLUSTER="ap2"
+
+# Web Push / VAPID (browser push notifications)
+# Generate keys: npx web-push generate-vapid-keys
+VAPID_EMAIL="mailto:your@email.com"
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="..."
+VAPID_PRIVATE_KEY="..."
 ```
 
 ---
@@ -103,7 +118,7 @@ app/
 ├── certificate/page.tsx          Completion certificate (only if all quizlets owned)
 ├── globals.css                   CSS variables for dark/light theme + Tailwind overrides
 ├── (main)/                       Auth-guarded area (sidebar layout + AudioProvider)
-│   ├── layout.tsx                Auth guard + Sidebar (desktop) + MobileNav + OnlinePing + AudioPlayer
+│   ├── layout.tsx                Auth guard + Sidebar (desktop) + MobileNav + OnlinePing + AudioPlayer + PushSubscriptionManager
 │   ├── loading.tsx               App-level loading screen with rotating game facts
 │   ├── dashboard/page.tsx        Play-first hero + IntroOverlay + category quick-play + stats
 │   ├── discover/page.tsx         Browse quizzes — shows ✓ Completed badge on perfect-score quizzes
@@ -135,16 +150,20 @@ app/
     ├── user/stats/               GET dashboard stats
     ├── user/ping/                POST update lastSeenAt — called every 2 min by OnlinePing
     ├── user/submit-payment/      POST submit UTR number for UPI payment (coins/pro/max)
+    ├── push/subscribe/           POST/DELETE web push subscription (VAPID endpoint + keys)
+    ├── dinorex/                  DinoRex multiplayer: create, join, start, answer, reveal, [code] (GET/DELETE)
     ├── admin/payments/
     │   ├── route.ts              GET list payment requests
     │   └── [id]/route.ts         PATCH approve/reject → credit coins, grant Pro, or grant Max
-    └── admin/feedback/
-        └── route.ts              GET all feedback; PATCH mark isRead
+    ├── admin/feedback/
+    │   └── route.ts              GET all feedback; PATCH mark isRead or reply (creates Notification + push)
+    └── admin/users/[id]/notify/  POST send push notification to a specific user (admin only)
 
 components/
 ├── layout/Sidebar.tsx            Navigation sidebar (desktop only) — theme toggle + admin nav (incl. Feedback)
 ├── layout/MobileNav.tsx          Bottom tab bar (mobile only, md:hidden) — 5 key nav items
 ├── layout/OnlinePing.tsx         Client component — silently POSTs /api/user/ping every 2 min
+├── layout/PushSubscriptionManager.tsx  Registers sw.js, shows push opt-in banner, saves subscription
 ├── ThemeProvider.tsx             next-themes wrapper (class-based, default: dark)
 ├── IntroOverlay.tsx              First-visit onboarding overlay (5 steps, localStorage key bq_intro_seen_v1)
 ├── AudioPlayer.tsx               Floating music player (bottom-right) — volume + on/off
@@ -157,7 +176,7 @@ components/
 └── game/
     ├── GameModesClient.tsx       Mode selection (HackDev, DinoRex, SpeedBlitz, Survival, Daily, Classic)
     ├── HackDevGame.tsx           60-second tech quiz sprint
-    ├── DinoRexLobby.tsx          Elimination game (AI sim mode)
+    ├── DinoRexLobby.tsx          Elimination game — real multiplayer (Pusher + DB rooms) + AI practice mode
     ├── SpeedBlitzGame.tsx        20 questions in 30 seconds
     ├── SurvivalGame.tsx          One wrong answer = game over, 10s timer per question
     └── DailyChallengeGame.tsx    5 deterministic questions per day (date-seeded), 30s per question
@@ -166,6 +185,8 @@ lib/
 ├── auth.ts                       NextAuth config — Google + admin credentials + isMax in session
 ├── db.ts                         Prisma client singleton
 ├── email.ts                      Nodemailer helper — sendEmail() + ADMIN_EMAIL constant
+├── push.ts                       Web Push helper — sendPushToUser(userId, title, body, url)
+├── pusher.ts                     Pusher server instance + DinoRex shared types (DinoRexPlayer, etc.)
 ├── audio-context.tsx             React context for background music state + controls
 ├── quizlets-data.ts              All character definitions
 ├── packs-data.ts                 All pack definitions (prices at ~25% of original)
@@ -174,8 +195,7 @@ lib/
 └── utils.ts                      cn(), CATEGORIES (11 incl. world-languages), RARITY_COLORS, SELL_VALUES
 
 prisma/
-├── schema.prisma                 Full DB schema — User has isMax, maxExpiresAt, schoolAccessOverride;
-│                                 CorrectAnswer model (@@unique userId+questionId); Feedback model
+├── schema.prisma                 Full DB schema — 17 models incl. PushSubscription + DinoRexRoom
 └── seed.ts                       55 official quizzes (11 categories × 5) + all quizlets + packs
 ```
 
@@ -237,7 +257,7 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 
 ### Game Modes
 - **HackDev**: Single player, tech questions, 60-second timer
-- **DinoRex**: Elimination mode (practice vs AI bots; real multiplayer via Socket.io pending)
+- **DinoRex**: Elimination mode — real multiplayer via Pusher Channels (DB-backed rooms, 6 API routes) + AI practice mode vs bots
 - **Speed Blitz**: 20 questions in 30 seconds, all categories
 - **Survival**: Any category, 10s per question — first wrong answer ends the game, score = streak
 - **Daily Challenge**: 5 questions, same for all users on a given day (date-seeded selection), 30s per question
@@ -321,6 +341,23 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - Default track: `NEXT_PUBLIC_MUSIC_URL` env var (SoundHelix-Song-1.mp3 by default)
 - UI: floating button bottom-right via `components/AudioPlayer.tsx`
 
+### DinoRex Real-Time Multiplayer
+- Real-time events delivered via **Pusher Channels** (not Socket.io)
+- Room state persisted in `DinoRexRoom` DB model; each API call updates DB then triggers Pusher
+- Client subscribes to `dinorex-{code}` channel; types defined in `lib/pusher.ts`
+- AI practice mode bypasses all of this — standalone client-only component
+- Room lifecycle: `create → join → start → answer (×N) → reveal → game-ended`
+
+### Web Push Notifications (VAPID)
+- Service worker at `public/sw.js` — handles `push` and `notificationclick` browser events
+- `PushSubscriptionManager` (rendered in main layout) registers the SW and shows opt-in banner
+- Banner is suppressed if dismissed (`bq_push_dismissed` localStorage key) or permission denied
+- Subscriptions stored in `PushSubscription` DB table; `sendPushToUser()` in `lib/push.ts`
+- Currently triggered by: admin feedback reply (`/api/admin/feedback`) — more triggers can be added
+- Requires `VAPID_EMAIL`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` env vars
+- Generate VAPID keys: `npx web-push generate-vapid-keys`
+- Expired/revoked subscriptions (HTTP 410/404) are auto-deleted from DB on send
+
 ### Year Auto-Increment
 The app name is always `BittsQuiz {new Date().getFullYear()}`.
 Never hardcode a year — always use `new Date().getFullYear()`.
@@ -337,7 +374,10 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `lib/festivals.ts` | Add/modify festival dates here |
 | `lib/utils.ts` | RARITY_COLORS, SELL_VALUES, CATEGORIES (11 total incl. world-languages) |
 | `lib/email.ts` | sendEmail() helper — used by auth createUser event (new user alerts); NOT used by feedback |
+| `lib/push.ts` | sendPushToUser() — sends VAPID web push to all of a user's subscriptions; auto-cleans expired |
+| `lib/pusher.ts` | pusherServer instance + DinoRex shared types (DinoRexPlayer, DinoRexQuestion, PusherEvent) |
 | `lib/audio-context.tsx` | Background music context + state |
+| `public/sw.js` | Service worker — receives push events and shows browser notifications |
 | `app/icon.svg` | App favicon — SVG lightning bolt on purple-to-pink gradient (auto-served by Next.js) |
 | `app/globals.css` | Theme CSS variables + font config + light mode Tailwind overrides |
 | `app/(main)/loading.tsx` | App-level loading screen — rotating game facts, shown during route transitions |
@@ -391,7 +431,10 @@ npm run db:seed      # re-seed data (idempotent)
 - **Prisma**: use `prisma.user.update` with `increment` for coin updates (not read-modify-write); after schema changes run both `db:push` AND `prisma generate`
 - **Auth**: all `(main)` routes auto-guard via `app/(main)/layout.tsx`; admin routes additionally check `isAdmin` flag
 - **Theming**: structural backgrounds → CSS variables; Tailwind utility overrides already in `globals.css`
-- **Email**: `lib/email.ts` is only used for new-user signup alerts now; feedback no longer uses email — do not re-add email to the feedback flow
+- **Email**: `lib/email.ts` is only used for new-user signup alerts; feedback replies use push notifications via `lib/push.ts` — do not re-add email to the feedback flow
+- **DinoRex multiplayer**: uses Pusher Channels (not Socket.io); room state in `DinoRexRoom` DB model; types in `lib/pusher.ts`
+- **Web Push**: `sendPushToUser()` is fire-and-forget (errors logged, never thrown); requires VAPID env vars set
+- **Tests**: `npm run test` runs Vitest unit tests — run after touching `lib/` files; E2E via `npm run test:e2e`
 - **Mobile**: pages should use `p-4 md:p-8` responsive padding; sidebar is desktop-only
 - **Fonts**: body = Plus Jakarta Sans (`--font-jakarta`), headings = Space Grotesk (`--font-grotesk`) — do not change font imports in `app/layout.tsx`
 - **Confirm before**: deleting files, dropping DB tables, force-pushing

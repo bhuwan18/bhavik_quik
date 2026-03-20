@@ -22,6 +22,7 @@ type UserRow = {
 };
 
 type Action = "lock" | "unlock" | "reset_daily" | "grant_pro" | "revoke_pro" | "grant_max" | "revoke_max";
+type NotifyTarget = { userId: string; userName: string };
 
 const DAILY_LIMIT_REGULAR = 500;
 const DAILY_LIMIT_PRO = 1000;
@@ -64,6 +65,9 @@ export default function AdminUsersClient() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
+  const [notifyTarget, setNotifyTarget] = useState<NotifyTarget | null>(null);
+  const [notifyForm, setNotifyForm] = useState({ title: "", body: "", url: "" });
+  const [notifyLoading, setNotifyLoading] = useState(false);
 
   const limit = 20;
 
@@ -113,6 +117,31 @@ export default function AdminUsersClient() {
     setConfirm({ userId, userName, action, label });
   };
 
+  const sendNotify = async () => {
+    if (!notifyTarget || !notifyForm.title.trim()) return;
+    setNotifyLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${notifyTarget.userId}/notify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: notifyForm.title.trim(),
+          body: notifyForm.body.trim(),
+          url: notifyForm.url.trim() || "/notifications",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to send");
+      showToast(`Notification sent (${data.subscriptions} device${data.subscriptions !== 1 ? "s" : ""})`, true);
+      setNotifyTarget(null);
+      setNotifyForm({ title: "", body: "", url: "" });
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Error", false);
+    } finally {
+      setNotifyLoading(false);
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput.trim());
@@ -159,6 +188,67 @@ export default function AdminUsersClient() {
               </button>
               <button
                 onClick={() => setConfirm(null)}
+                className="flex-1 py-2 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notify modal */}
+      {notifyTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-[var(--surface)] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 className="text-white font-semibold text-base mb-1">Send Push Notification</h3>
+            <p className="text-gray-400 text-sm mb-4 truncate">To: <span className="text-purple-300">{notifyTarget.userName}</span></p>
+            <div className="space-y-3 mb-5">
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Title <span className="text-red-400">*</span></label>
+                <input
+                  type="text"
+                  maxLength={100}
+                  placeholder="e.g. New quiz available!"
+                  value={notifyForm.title}
+                  onChange={(e) => setNotifyForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Body</label>
+                <textarea
+                  maxLength={300}
+                  rows={3}
+                  placeholder="Optional message body…"
+                  value={notifyForm.body}
+                  onChange={(e) => setNotifyForm((f) => ({ ...f, body: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 text-sm resize-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">URL (optional)</label>
+                <input
+                  type="text"
+                  maxLength={200}
+                  placeholder="/dashboard"
+                  value={notifyForm.url}
+                  onChange={(e) => setNotifyForm((f) => ({ ...f, url: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 text-sm"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={sendNotify}
+                disabled={notifyLoading || !notifyForm.title.trim()}
+                className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                {notifyLoading ? "Sending…" : "Send"}
+              </button>
+              <button
+                onClick={() => { setNotifyTarget(null); setNotifyForm({ title: "", body: "", url: "" }); }}
+                disabled={notifyLoading}
                 className="flex-1 py-2 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-xl transition-colors"
               >
                 Cancel
@@ -341,6 +431,15 @@ export default function AdminUsersClient() {
                             >
                               {actionLoading === `${user.id}-${isMaxActive ? "revoke_max" : "grant_max"}` ? "…" : isMaxActive ? "✖👑" : "👑"}
                             </button>
+
+                            <button
+                              onClick={() => setNotifyTarget({ userId: user.id, userName: user.name ?? user.email })}
+                              disabled={!!actionLoading || notifyLoading}
+                              title="Send push notification"
+                              className="text-xs px-2.5 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 rounded-lg font-semibold transition-colors disabled:opacity-40"
+                            >
+                              🔔
+                            </button>
                           </div>
                         )}
                       </td>
@@ -376,7 +475,7 @@ export default function AdminUsersClient() {
 
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-600">
-        <span>🔒 Lock · 🔄 Reset daily · ⭐ Pro · 👑 Max</span>
+        <span>🔒 Lock · 🔄 Reset daily · ⭐ Pro · 👑 Max · 🔔 Notify</span>
         <span>✖⭐ = revoke Pro · ✖👑 = revoke Max</span>
       </div>
     </div>

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
       tailwindcss: path.resolve(__dirname, "node_modules/tailwindcss"),
     },
   },
-  serverExternalPackages: ["@prisma/client", ".prisma/client"],
+  serverExternalPackages: ["@prisma/client", ".prisma/client", "web-push"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" },

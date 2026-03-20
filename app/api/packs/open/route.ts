@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       where: { userId: session.user.id, quizletId: { in: rolled.map((q) => q.id) } },
       select: { quizletId: true },
     })
-  ).map((r: any) => r.quizletId);
+  ).map((r) => r.quizletId);
 
   let refundCoins = 0;
   const newQuizlets = [];

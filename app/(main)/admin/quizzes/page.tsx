@@ -27,7 +27,7 @@ export default async function AdminQuizzesPage() {
       </div>
 
       <div className="space-y-2">
-        {quizzes.map((q: any) => (
+        {quizzes.map((q) => (
           <div key={q.id} className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 flex items-center gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-0.5">

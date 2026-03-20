@@ -36,6 +36,7 @@ model User {
   feedbacks            Feedback[]
   correctAnswers       CorrectAnswer[]
   notifications        Notification[]
+  pushSubscriptions    PushSubscription[]
 
   @@index([totalCoinsEarned])
   @@index([lastSeenAt])
@@ -207,6 +208,18 @@ model Notification {
   @@index([createdAt])
 }
 
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 model Pack {
   id           String  @id @default(cuid())
   name         String
@@ -225,4 +238,22 @@ model AppSetting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model DinoRexRoom {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  hostId         String
+  status         String    @default("waiting") // waiting | playing | ended
+  players        Json      // DinoRexPlayer[]
+  questions      Json      @default("[]") // QuestionData[]
+  currentQ       Int       @default(0)
+  currentAnswers Json      @default("{}") // { [userId]: number }
+  roundStartedAt DateTime?
+  winner         String?   // userId of winner
+  createdAt      DateTime  @default(now())
+
+  @@index([code])
+  @@index([status])
+  @@index([createdAt])
 }

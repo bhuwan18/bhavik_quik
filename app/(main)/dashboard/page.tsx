@@ -230,7 +230,7 @@ export default async function DashboardPage() {
             <Link href="/discover" className="text-sm text-purple-400 hover:text-purple-300 transition-colors">Play more →</Link>
           </div>
           <div className="space-y-3">
-            {recentAttempts.map((attempt: any) => {
+            {recentAttempts.map((attempt) => {
               const pct = Math.round((attempt.score / attempt.total) * 100);
               const cat = CATEGORIES.find((c) => c.slug === attempt.quiz.category);
               return (

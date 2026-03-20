@@ -56,6 +56,16 @@ export async function PATCH(req: Request) {
         message: `Admin replied to your feedback: "${truncatedReply}"`,
       },
     });
+
+    // Fire-and-forget push notification
+    import("@/lib/push").then(({ sendPushToUser }) => {
+      sendPushToUser(
+        feedback.userId,
+        "Admin replied to your feedback 💬",
+        `"${truncatedReply}"`,
+      ).catch(() => {});
+    }).catch(() => {});
+
     // Auto-mark as read when replied
     await prisma.feedback.update({ where: { id }, data: { isRead: true } });
     return NextResponse.json({ ok: true });

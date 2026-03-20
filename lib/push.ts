@@ -1,0 +1,59 @@
+import webPush from "web-push";
+import { prisma } from "@/lib/db";
+
+webPush.setVapidDetails(
+  process.env.VAPID_EMAIL!,
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+  process.env.VAPID_PRIVATE_KEY!,
+);
+
+/**
+ * Sends a web push notification to all of a user's active browser subscriptions.
+ * Expired/invalid subscriptions (HTTP 410 or 404) are automatically removed from the DB.
+ * Safe to fire-and-forget — errors are caught and logged, never thrown.
+ */
+export async function sendPushToUser(
+  userId: string,
+  title: string,
+  body: string,
+  url = "/notifications",
+): Promise<void> {
+  let subs;
+  try {
+    subs = await prisma.pushSubscription.findMany({ where: { userId } });
+  } catch (err) {
+    console.error("[push] DB fetch error:", err);
+    return;
+  }
+
+  if (subs.length === 0) return;
+
+  const payload = JSON.stringify({ title, body, url });
+
+  const results = await Promise.allSettled(
+    subs.map((sub) =>
+      webPush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        payload,
+      ),
+    ),
+  );
+
+  const toDelete: string[] = [];
+  results.forEach((result, i) => {
+    if (result.status === "rejected") {
+      const err = result.reason as { statusCode?: number };
+      if (err?.statusCode === 410 || err?.statusCode === 404) {
+        toDelete.push(subs[i].endpoint);
+      } else {
+        console.error("[push] Send failed:", subs[i].endpoint, err);
+      }
+    }
+  });
+
+  if (toDelete.length > 0) {
+    await prisma.pushSubscription
+      .deleteMany({ where: { endpoint: { in: toDelete } } })
+      .catch((e) => console.error("[push] Failed to delete expired subs:", e));
+  }
+}
