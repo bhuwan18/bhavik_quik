@@ -132,7 +132,10 @@ export default function AdminUsersClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to send");
-      showToast(`Notification sent (${data.subscriptions} device${data.subscriptions !== 1 ? "s" : ""})`, true);
+      const msg = data.failed > 0
+        ? `Sent to ${data.subscriptions}/${data.total} device${data.total !== 1 ? "s" : ""} (${data.failed} failed)`
+        : `Notification sent (${data.subscriptions} device${data.subscriptions !== 1 ? "s" : ""})`;
+      showToast(msg, data.subscriptions > 0);
       setNotifyTarget(null);
       setNotifyForm({ title: "", body: "", url: "" });
     } catch (e: unknown) {

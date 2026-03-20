@@ -12,21 +12,22 @@ webPush.setVapidDetails(
  * Expired/invalid subscriptions (HTTP 410 or 404) are automatically removed from the DB.
  * Safe to fire-and-forget — errors are caught and logged, never thrown.
  */
+/** Returns { sent, failed, total } counts. Safe to fire-and-forget — errors never thrown. */
 export async function sendPushToUser(
   userId: string,
   title: string,
   body: string,
   url = "/notifications",
-): Promise<void> {
+): Promise<{ sent: number; failed: number; total: number }> {
   let subs;
   try {
     subs = await prisma.pushSubscription.findMany({ where: { userId } });
   } catch (err) {
     console.error("[push] DB fetch error:", err);
-    return;
+    return { sent: 0, failed: 0, total: 0 };
   }
 
-  if (subs.length === 0) return;
+  if (subs.length === 0) return { sent: 0, failed: 0, total: 0 };
 
   const payload = JSON.stringify({ title, body, url });
 
@@ -40,14 +41,20 @@ export async function sendPushToUser(
   );
 
   const toDelete: string[] = [];
+  let sent = 0;
+  let failed = 0;
+
   results.forEach((result, i) => {
-    if (result.status === "rejected") {
+    if (result.status === "fulfilled") {
+      sent++;
+    } else {
       const err = result.reason as { statusCode?: number };
       if (err?.statusCode === 410 || err?.statusCode === 404) {
         toDelete.push(subs[i].endpoint);
       } else {
         console.error("[push] Send failed:", subs[i].endpoint, err);
       }
+      failed++;
     }
   });
 
@@ -56,4 +63,6 @@ export async function sendPushToUser(
       .deleteMany({ where: { endpoint: { in: toDelete } } })
       .catch((e) => console.error("[push] Failed to delete expired subs:", e));
   }
+
+  return { sent, failed, total: subs.length };
 }

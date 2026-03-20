@@ -33,9 +33,11 @@ export async function POST(
   });
   if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const subCount = await prisma.pushSubscription.count({ where: { userId: id } });
+  const result = await sendPushToUser(id, title, body, url);
 
-  await sendPushToUser(id, title, body, url);
+  if (result.total === 0) {
+    return NextResponse.json({ error: "User has no push subscriptions registered" }, { status: 400 });
+  }
 
-  return NextResponse.json({ success: true, subscriptions: subCount });
+  return NextResponse.json({ success: true, subscriptions: result.sent, failed: result.failed, total: result.total });
 }
