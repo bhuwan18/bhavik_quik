@@ -111,8 +111,8 @@ export default function QuizMakerForm() {
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
               >
-                {CATEGORIES.map(({ slug, label, icon }) => (
-                  <option key={slug} value={slug}>{icon} {label}</option>
+                {CATEGORIES.map(({ slug, label }) => (
+                  <option key={slug} value={slug}>{label}</option>
                 ))}
               </select>
             </div>

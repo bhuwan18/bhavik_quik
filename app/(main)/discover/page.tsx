@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import { CATEGORIES } from "@/lib/utils";
+import { CATEGORIES, cn } from "@/lib/utils";
 
 export default async function DiscoverPage({
   searchParams,
@@ -48,6 +48,7 @@ export default async function DiscoverPage({
   };
 
   const activeCat = CATEGORIES.find((c) => c.slug === category);
+  const ActiveCatIcon = activeCat?.icon;
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
@@ -66,7 +67,7 @@ export default async function DiscoverPage({
         >
           All
         </Link>
-        {CATEGORIES.map(({ slug, label, icon }) => (
+        {CATEGORIES.map(({ slug, label, icon: Icon, color }) => (
           <Link
             key={slug}
             href={`/discover?category=${slug}`}
@@ -74,7 +75,7 @@ export default async function DiscoverPage({
               category === slug ? "bg-indigo-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
             }`}
           >
-            {icon} {label}
+            <Icon size={14} className={category === slug ? "text-white" : color} /> {label}
           </Link>
         ))}
       </div>
@@ -90,9 +91,9 @@ export default async function DiscoverPage({
         />
       </form>
 
-      {activeCat && (
+      {activeCat && ActiveCatIcon && (
         <div className="mb-6 flex items-center gap-3">
-          <span className="text-4xl">{activeCat.icon}</span>
+          <ActiveCatIcon size={36} className={activeCat.color} />
           <div>
             <h2 className="text-xl font-bold text-white">{activeCat.label}</h2>
             <p className="text-gray-400 text-sm">{quizzes.length} quizzes available</p>
@@ -104,6 +105,7 @@ export default async function DiscoverPage({
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
         {quizzes.map((quiz) => {
           const cat = CATEGORIES.find((c) => c.slug === quiz.category);
+          const QuizIcon = cat?.icon;
           const isCompleted = completedQuizIds.has(quiz.id);
           const isNew = quiz.isNew && !attemptedQuizIds.has(quiz.id);
           return (
@@ -124,7 +126,7 @@ export default async function DiscoverPage({
                 </div>
               )}
               <div className="flex items-start justify-between mb-3">
-                <span className="text-2xl">{cat?.icon ?? "📝"}</span>
+                {QuizIcon ? <QuizIcon size={22} className={cn("shrink-0 mt-0.5", cat!.color)} /> : <span className="text-2xl">📝</span>}
                 <div className="flex items-center gap-2">
                   {isNew && (
                     <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold animate-pulse">

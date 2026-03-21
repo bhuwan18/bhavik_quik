@@ -1,26 +1,33 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import {
+  Wand2, Cpu, Shield, Palette, Music,
+  Calculator, FlaskConical, Atom, Globe, Flag, Tag, PawPrint, Tv, Swords,
+} from "lucide-react";
+import SoccerBallIcon from "@/components/icons/SoccerBallIcon";
+import CricketWicketIcon from "@/components/icons/CricketWicketIcon";
+import AvengersIcon from "@/components/icons/AvengersIcon";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export const CATEGORIES = [
-  { slug: "football", label: "Football", icon: "⚽" },
-  { slug: "cricket", label: "Cricket", icon: "🏏" },
-  { slug: "harry-potter", label: "Harry Potter", icon: "⚡" },
-  { slug: "technology", label: "Technology", icon: "💻" },
-  { slug: "avengers", label: "Avengers", icon: "🦸" },
-  { slug: "artists", label: "Artists", icon: "🎨" },
-  { slug: "musicians", label: "Musicians", icon: "🎵" },
-  { slug: "math", label: "Math", icon: "🔢" },
-  { slug: "science", label: "Science", icon: "🔬" },
-  { slug: "physics", label: "Physics", icon: "⚛️" },
-  { slug: "world-languages", label: "World Languages", icon: "🌍" },
-  { slug: "flags", label: "Flags", icon: "🚩" },
-  { slug: "brand-logos", label: "Brand Logos", icon: "🏷️" },
-  { slug: "animals", label: "Animals", icon: "🐾" },
-  { slug: "anime", label: "Anime", icon: "⛩️" },
+  { slug: "football",        label: "Football",        icon: SoccerBallIcon, color: "text-green-400"   },
+  { slug: "cricket",         label: "Cricket",         icon: CricketWicketIcon, color: "text-orange-400"  },
+  { slug: "harry-potter",    label: "Harry Potter",    icon: Wand2,        color: "text-purple-400"  },
+  { slug: "technology",      label: "Technology",      icon: Cpu,          color: "text-blue-400"    },
+  { slug: "avengers",        label: "Avengers",        icon: AvengersIcon, color: "text-red-400"     },
+  { slug: "artists",         label: "Artists",         icon: Palette,      color: "text-pink-400"    },
+  { slug: "musicians",       label: "Musicians",       icon: Music,        color: "text-violet-400"  },
+  { slug: "math",            label: "Math",            icon: Calculator,   color: "text-cyan-400"    },
+  { slug: "science",         label: "Science",         icon: FlaskConical, color: "text-emerald-400" },
+  { slug: "physics",         label: "Physics",         icon: Atom,         color: "text-sky-400"     },
+  { slug: "world-languages", label: "World Languages", icon: Globe,        color: "text-amber-400"   },
+  { slug: "flags",           label: "Flags",           icon: Flag,         color: "text-rose-400"    },
+  { slug: "brand-logos",     label: "Brand Logos",     icon: Tag,          color: "text-lime-400"    },
+  { slug: "animals",         label: "Animals",         icon: PawPrint,     color: "text-yellow-400"  },
+  { slug: "anime",           label: "Anime",           icon: Swords,       color: "text-fuchsia-400" },
 ] as const;
 
 export type CategorySlug = (typeof CATEGORIES)[number]["slug"];

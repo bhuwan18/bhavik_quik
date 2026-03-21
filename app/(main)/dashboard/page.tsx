@@ -139,7 +139,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {CATEGORIES.map(({ slug, label, icon }) => (
+          {CATEGORIES.map(({ slug, label, icon: Icon, color }) => (
             <Link
               key={slug}
               href={`/discover?category=${slug}`}
@@ -150,7 +150,7 @@ export default async function DashboardPage() {
                   New
                 </span>
               )}
-              <span className="text-4xl group-hover:scale-110 transition-transform">{icon}</span>
+              <Icon size={36} className={`group-hover:scale-110 transition-transform ${color}`} />
               <span className="text-xs text-gray-400 group-hover:text-purple-300 text-center font-medium leading-tight">{label}</span>
             </Link>
           ))}
@@ -233,10 +233,11 @@ export default async function DashboardPage() {
             {recentAttempts.map((attempt) => {
               const pct = Math.round((attempt.score / attempt.total) * 100);
               const cat = CATEGORIES.find((c) => c.slug === attempt.quiz.category);
+              const AttemptIcon = cat?.icon;
               return (
                 <div key={attempt.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">{cat?.icon ?? "📝"}</span>
+                    {AttemptIcon ? <AttemptIcon size={20} className={cat!.color} /> : <span className="text-xl">📝</span>}
                     <div>
                       <p className="text-sm text-white font-medium">{attempt.quiz.title}</p>
                       <p className="text-xs text-gray-500">{new Date(attempt.completedAt).toLocaleDateString()}</p>

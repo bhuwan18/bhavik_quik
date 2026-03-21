@@ -60,12 +60,13 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
   if (!quiz) notFound();
 
   const cat = CATEGORIES.find((c) => c.slug === quiz.category);
+  const CatIcon = cat?.icon;
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-3xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-3xl">{cat?.icon ?? "📝"}</span>
+          {CatIcon ? <CatIcon size={28} className={cat!.color} /> : <span className="text-3xl">📝</span>}
           <div>
             <h1 className="text-2xl font-bold text-white">{quiz.title}</h1>
             <p className="text-gray-400 text-sm">
