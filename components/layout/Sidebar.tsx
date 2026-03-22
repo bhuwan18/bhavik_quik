@@ -110,22 +110,13 @@ export default function Sidebar() {
         collapsed ? "justify-center p-3 flex-col gap-2" : "px-4 py-4 justify-between"
       )}>
         <Link href="/dashboard" className="flex items-center gap-2.5 group min-w-0" title={collapsed ? "BittsQuiz" : undefined}>
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 group-hover:scale-110 transition-transform">
-            <defs>
-              <linearGradient id="slg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#5b21b6"/>
-                <stop offset="50%" stopColor="#7c3aed"/>
-                <stop offset="100%" stopColor="#be185d"/>
-              </linearGradient>
-              <linearGradient id="sbolt" x1="0" y1="0" x2="0" y2="32" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#fef3c7"/>
-                <stop offset="100%" stopColor="#f59e0b"/>
-              </linearGradient>
-            </defs>
-            <rect width="32" height="32" rx="8" fill="url(#slg)"/>
-            <path d="M20 3 L11 18 H17 L12 29 L21 14 H15 Z" fill="url(#sbolt)"/>
-            <polygon points="27,5 28,7.5 30.5,7.5 28.5,9 29.5,11.5 27,10 24.5,11.5 25.5,9 23.5,7.5 26,7.5" fill="#fde68a" opacity="0.85"/>
-          </svg>
+          <Image
+            src="/icon.svg"
+            alt="BittsQuiz"
+            width={32}
+            height={32}
+            className="shrink-0 group-hover:scale-110 transition-transform rounded-md"
+          />
           {!collapsed && (
             <span className="text-lg font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent whitespace-nowrap">
               BittsQuiz

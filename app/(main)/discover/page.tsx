@@ -51,9 +51,9 @@ export default async function DiscoverPage({
   const ActiveCatIcon = activeCat?.icon;
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 pb-24 md:p-8 md:pb-8 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Discover Quizzes</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-white">Discover Quizzes</h1>
         <p className="text-gray-400 mt-1">Browse official and community quizzes</p>
       </div>
 
@@ -93,7 +93,7 @@ export default async function DiscoverPage({
 
       {activeCat && ActiveCatIcon && (
         <div className="mb-6 flex items-center gap-3">
-          <ActiveCatIcon size={36} className={activeCat.color} />
+          <ActiveCatIcon size={28} className={activeCat.color} />
           <div>
             <h2 className="text-xl font-bold text-white">{activeCat.label}</h2>
             <p className="text-gray-400 text-sm">{quizzes.length} quizzes available</p>
@@ -127,7 +127,7 @@ export default async function DiscoverPage({
               )}
               <div className="flex items-start justify-between mb-3">
                 {QuizIcon ? <QuizIcon size={22} className={cn("shrink-0 mt-0.5", cat!.color)} /> : <span className="text-2xl">📝</span>}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
                   {isNew && (
                     <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold animate-pulse">
                       ✨ New
