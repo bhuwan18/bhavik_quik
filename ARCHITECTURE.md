@@ -1,6 +1,6 @@
 # BittsQuiz — Architecture Documentation
 
-> **Last Updated:** 2026-03-20 (rev 2)
+> **Last Updated:** 2026-03-22 (rev 3)
 > **Project:** BittsQuiz (auto-increments year via `new Date().getFullYear()`)
 > **Repository:** `d:\VS_WS\bhavik_quik`
 > **Primary Contact / Team:** Bhavik Lodha, G5MB
@@ -52,8 +52,8 @@ bhavik_quik/
 │       ├── leaderboard/page.tsx           # Top 50 players — badges, online dot, stats
 │       ├── feedback/page.tsx              # User feedback form → DB
 │       ├── game/page.tsx                  # Game mode selection hub
-│       ├── buy-coins/page.tsx             # UPI payment flow for coins
-│       ├── shop/page.tsx                  # Pro/Max membership purchase (UPI)
+│       ├── buy-coins/page.tsx             # Redirects to /shop
+│       ├── shop/page.tsx                  # Pro/Max membership + coin purchase + daily limit reset (UPI)
 │       ├── notifications/page.tsx         # In-app notifications (overtaken, feedback replies)
 │       ├── info/page.tsx                  # Deprecated → redirects to /quizlets
 │       │
@@ -103,7 +103,7 @@ bhavik_quik/
 │
 ├── components/                            # Reusable React components
 │   ├── layout/
-│   │   ├── Sidebar.tsx                    # Desktop nav + theme toggle + admin links
+│   │   ├── Sidebar.tsx                    # Collapsible desktop nav + theme toggle + admin links (state in localStorage `bq_sidebar_collapsed`)
 │   │   ├── MobileNav.tsx                  # Bottom tab bar (mobile only, md:hidden)
 │   │   ├── OnlinePing.tsx                 # Client component — POSTs /api/user/ping every 2 min
 │   │   └── PushSubscriptionManager.tsx    # Registers service worker; shows push opt-in banner
@@ -127,17 +127,17 @@ bhavik_quik/
 │       └── DailyChallengeGame.tsx         # 5 deterministic questions per day
 │
 ├── lib/                                   # Shared server/client utilities
-│   ├── auth.ts                            # NextAuth config (Google + admin credentials)
+│   ├── auth.ts                            # NextAuth config (Google + admin credentials + test user)
 │   ├── db.ts                              # Prisma client singleton
 │   ├── email.ts                           # Nodemailer helper — sendEmail() + ADMIN_EMAIL
 │   ├── push.ts                            # Web Push helper — sendPushToUser() via VAPID
 │   ├── pusher.ts                          # Pusher server instance + DinoRex shared types/events
 │   ├── audio-context.tsx                  # React context for background music state
-│   ├── quizlets-data.ts                   # All 55 quizlet character definitions
+│   ├── quizlets-data.ts                   # All 99 quizlet character definitions
 │   ├── packs-data.ts                      # All 13 pack definitions (7 std + 6 festival)
 │   ├── festivals.ts                       # Festival calendar (6 festivals by MM-DD)
 │   ├── roll.ts                            # Pack opening RNG — drop rates live here
-│   ├── utils.ts                           # cn(), CATEGORIES (15), RARITY_COLORS, SELL_VALUES
+│   ├── utils.ts                           # cn(), CATEGORIES (16), RARITY_COLORS, SELL_VALUES
 │   ├── app-settings.ts                    # AppSetting DB read/write helpers
 │   ├── game-config.ts                     # Game mode configuration constants
 │   └── time.ts                            # IST timezone helpers
@@ -290,7 +290,7 @@ app/layout.tsx              ← ThemeProvider + SessionProvider + Vercel Analyti
 | `/api/packs/open` | POST | RNG pack roll (`lib/roll.ts`); refund duplicates |
 | `/api/quizlets/sell` | POST | Sell a quizlet back for coins (`SELL_VALUES`) |
 | `/api/user/submit-payment` | POST | Create pending `PaymentRequest` with UTR |
-| `/api/admin/payments/[id]` | PATCH | Approve/reject → credit coins or grant Pro/Max |
+| `/api/admin/payments/[id]` | PATCH | Approve/reject → credit coins, grant Pro/Max, or reset daily limit |
 | `/api/user/ping` | POST | Heartbeat — updates `lastSeenAt` for online status |
 | `/api/auth/[...nextauth]` | GET/POST | NextAuth handlers (session, callback, signout) |
 
@@ -325,9 +325,12 @@ app/layout.tsx              ← ThemeProvider + SessionProvider + Vercel Analyti
 - Approve/reject UPI payment requests (coins, Pro, Max memberships)
 - Lock/unlock user accounts
 - Toggle `isAdmin` and `schoolAccessOverride` flags
-- Edit any quiz's title, description, category, difficulty, and questions
-- View and filter all user feedback; mark as read/unread
-- Configure global app settings via key-value `AppSetting` store
+- Grant/revoke Pro and Max membership tiers (30-day increments)
+- Reset a user's daily coin limit counter
+- Send web push notifications to individual users
+- Edit any quiz's title, description, category, difficulty, and questions (incl. `imageUrl`)
+- View and filter all user feedback; mark as read/unread; send admin replies
+- Configure global app settings via key-value `AppSetting` store (e.g. school hours toggle)
 - Send test emails
 
 ---
@@ -355,9 +358,9 @@ app/layout.tsx              ← ThemeProvider + SessionProvider + Vercel Analyti
 | `UserQuizlet` | Player ↔ quizlet ownership | `@@unique([userId, quizletId])` |
 | `Pack` | Pack definitions | `name`, `cost`, `slug`, `isFestival`, `festivalDate`, `isActive` |
 | `CorrectAnswer` | Dedup coin-earning per question | `@@unique([userId, questionId])` |
-| `PaymentRequest` | UPI payment submissions | `type` (coins/pro/max), `amountInr`, `utrNumber`, `status` |
+| `PaymentRequest` | UPI payment submissions | `type` (coins/pro/max/reset), `amountInr`, `utrNumber`, `status` |
 | `Feedback` | User-submitted feedback | `type`, `message`, `isRead` |
-| `Notification` | In-app notifications | `type` (overtaken/top3_join/feedback_reply), `message`, `isRead` |
+| `Notification` | In-app notifications | `type` (overtaken/top3_join/feedback_reply/admin), `message`, `isRead` |
 | `AppSetting` | Admin-controlled key-value config | `key` (PK), `value` |
 | `PushSubscription` | Browser push subscriptions (VAPID) | `endpoint` (unique), `p256dh`, `auth`, `userId` |
 | `DinoRexRoom` | Live multiplayer game rooms | `code` (unique), `hostId`, `status`, `players` (JSON), `questions` (JSON), `currentQ`, `currentAnswers` (JSON), `winner` |
@@ -381,6 +384,7 @@ app/layout.tsx              ← ThemeProvider + SessionProvider + Vercel Analyti
 | `bq_music_enabled` | User's background music toggle preference |
 | `bq_music_volume` | User's saved volume level (0–1) |
 | `bq_push_dismissed` | Set when user dismisses the push notification opt-in banner |
+| `bq_sidebar_collapsed` | Sidebar collapsed/expanded state (desktop) |
 
 ---
 
@@ -639,13 +643,13 @@ npm run db:seed      # re-seed if new quizlets/packs added
 - **`/info/page.tsx`:** Deprecated page (redirects to `/quizlets`); can be removed.
 - **Manual UPI verification:** Payment approval is entirely manual. Scaling will require webhook-based payment verification (Razorpay, PhonePe Business API, etc.).
 - **E2E test coverage:** Playwright is set up but only auth flows are covered. Critical user paths (quiz attempt, pack opening, DinoRex game) need E2E tests.
-- **DinoRexRoom cleanup:** Old/ended rooms accumulate in the DB. A cron or TTL strategy is needed for cleanup.
+- **DinoRexRoom cleanup:** Handled via piggyback deletion — `POST /api/dinorex/create` deletes all rooms older than 2 hours on every room creation. No separate cron needed; games are short-lived so this keeps the table clean in practice.
 
 ### 9.2 Planned Migrations / Improvements
 
 - **Automated payment verification:** Integrate a real UPI payment gateway with webhooks to eliminate manual UTR review.
 - **CI/CD pipeline:** Add GitHub Actions for lint checks, type-checks, Prisma schema validation, and unit tests on PRs.
-- **Category expansion:** `CATEGORIES` array already has 15 entries (including flags, brand-logos, animals, anime) — corresponding quiz content and seeds need to be added.
+- **Category expansion:** `CATEGORIES` array has 16 entries (including flags, brand-logos, animals, anime, grade-6) — corresponding quiz content and seeds need to be added for the 5 extra categories.
 - **DinoRex room TTL:** Add a scheduled cleanup (or createdAt-based filter) for ended/abandoned DinoRex rooms.
 
 ### 9.3 Scalability Notes
@@ -659,7 +663,7 @@ npm run db:seed      # re-seed if new quizlets/packs added
 
 | Term | Definition |
 |------|-----------|
-| **Quizlet** | A collectible character in BittsQuiz; 55 total across 8 rarity tiers |
+| **Quizlet** | A collectible character in BittsQuiz; 99 total across 8 rarity tiers |
 | **Pack** | A bundle of random Quizlets purchasable with coins; 7 standard + 6 festival packs |
 | **Rarity** | Tier system for Quizlets: Common → Uncommon → Rare → Epic → Legendary → Secret → Unique → Impossible |
 | **Coins** | In-game currency earned by answering questions correctly; used to buy packs |
@@ -675,7 +679,7 @@ npm run db:seed      # re-seed if new quizlets/packs added
 | **Festival Pack** | Time-limited pack available only on specific calendar dates (6 festivals defined) |
 | **AppSetting** | Admin-managed key-value configuration stored in DB; configurable without code deploy |
 | **isHidden** | Flag on Quizlet marking it as Secret/Unique/Impossible — shown only in "Hidden" section, not in public dex |
-| **DinoRex** | Elimination game mode; supports AI simulation now, real multiplayer via Socket.io planned |
+| **DinoRex** | Elimination game mode; real multiplayer via Pusher Channels + AI practice mode |
 | **HackDev** | 60-second tech-question sprint game mode |
 | **SpeedBlitz** | 20 questions in 30 seconds game mode |
 | **Survival** | One-wrong-answer-ends-game mode with 10-second per-question timer |
@@ -699,5 +703,5 @@ npm run db:seed      # re-seed if new quizlets/packs added
 | **Runtime** | Node.js 18+ |
 | **Database** | Neon PostgreSQL (Serverless) |
 | **Deployment** | Vercel |
-| **Document Date** | 2026-03-20 |
+| **Document Date** | 2026-03-22 |
 | **AI Guide** | See `CLAUDE.md` for AI assistant rules and project conventions |
