@@ -145,7 +145,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Pick a Category ── */}
-      <CategoryGrid categoriesWithNew={[...categoriesWithNew]} />
+      <CategoryGrid categoriesWithNew={[...categoriesWithNew]} totalCoinsEarned={user?.totalCoinsEarned ?? 0} />
 
       {/* ── Stats Grid ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

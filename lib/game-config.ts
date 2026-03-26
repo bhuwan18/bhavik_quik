@@ -70,6 +70,22 @@ export const STREAK_FREEZE_COST_2 = 2500;   // cost when owning 1 freeze
 export const STREAK_FREEZE_MAX = 2;
 export const STREAK_MILESTONES = [5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 90, 100, 150, 200, 365] as const;
 
+// ─── Premium Categories ───────────────────────────────────────────────────────
+
+/** Display names for each premium category tier */
+export const PREMIUM_TIER_NAMES: Record<1 | 2 | 3, string> = {
+  1: "🎓 Scholar",
+  2: "🧠 Expert",
+  3: "🏆 Master",
+};
+
+/** totalCoinsEarned required to unlock each premium category tier */
+export const PREMIUM_TIER_UNLOCK_COINS: Record<1 | 2 | 3, number> = {
+  1: 3000,
+  2: 6000,
+  3: 11000,
+};
+
 // ─── Online Presence ──────────────────────────────────────────────────────────
 
 export const ONLINE_PING_INTERVAL_MS = 2 * 60 * 1000; // Ping every 2 minutes

@@ -5,6 +5,7 @@ import QuizPlayer from "@/components/quiz/QuizPlayer";
 import { CATEGORIES } from "@/lib/utils";
 import { SCHOOL_EMAIL_DOMAIN, isSchoolHours } from "@/lib/time";
 import { getSchoolHoursEnabled } from "@/lib/app-settings";
+import { PREMIUM_TIER_NAMES, PREMIUM_TIER_UNLOCK_COINS } from "@/lib/game-config";
 
 export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -46,6 +47,41 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
         );
+    }
+  }
+
+  // Premium category check
+  const quizCategorySlug = (await prisma.quiz.findUnique({ where: { id }, select: { category: true } }))?.category;
+  const quizCat = CATEGORIES.find((c) => c.slug === quizCategorySlug);
+  if (quizCat && "premiumTier" in quizCat && session?.user?.id) {
+    const premiumTier = quizCat.premiumTier as 1 | 2 | 3;
+    const userData = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { totalCoinsEarned: true },
+    });
+    const totalCoinsEarned = userData?.totalCoinsEarned ?? 0;
+    if (totalCoinsEarned < PREMIUM_TIER_UNLOCK_COINS[premiumTier]) {
+      const tierName = PREMIUM_TIER_NAMES[premiumTier];
+      const required = PREMIUM_TIER_UNLOCK_COINS[premiumTier];
+      return (
+        <div className="p-8 max-w-2xl mx-auto">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center">
+            <div className="text-5xl mb-4">🔒</div>
+            <h2 className="text-2xl font-bold text-amber-300 mb-2">{tierName} Category</h2>
+            <p className="text-gray-300 mb-4">
+              This quiz belongs to a premium category. Earn{" "}
+              <span className="text-amber-400 font-semibold">{required.toLocaleString()} total coins</span> to unlock it.
+            </p>
+            <div className="bg-white/5 rounded-xl px-6 py-3 inline-block">
+              <p className="text-sm text-gray-400">
+                Your progress:{" "}
+                <span className="text-white font-semibold">{totalCoinsEarned.toLocaleString()}</span>{" "}
+                / {required.toLocaleString()} coins
+              </p>
+            </div>
+          </div>
+        </div>
+      );
     }
   }
 

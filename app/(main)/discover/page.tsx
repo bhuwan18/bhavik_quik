@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { CATEGORIES, cn } from "@/lib/utils";
+import { PREMIUM_TIER_NAMES, PREMIUM_TIER_UNLOCK_COINS } from "@/lib/game-config";
 
 export default async function DiscoverPage({
   searchParams,
@@ -27,16 +28,28 @@ export default async function DiscoverPage({
   // Fetch quizzes the current user has attempted (any score) and completed (perfect score)
   let completedQuizIds = new Set<string>();
   let attemptedQuizIds = new Set<string>();
+  let totalCoinsEarned = 0;
   if (session?.user?.id) {
-    const allAttempts = await prisma.quizAttempt.findMany({
-      where: { userId: session.user.id },
-      select: { quizId: true, score: true, total: true },
-    });
+    const [allAttempts, userData] = await Promise.all([
+      prisma.quizAttempt.findMany({
+        where: { userId: session.user.id },
+        select: { quizId: true, score: true, total: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { totalCoinsEarned: true },
+      }),
+    ]);
     completedQuizIds = new Set(
       allAttempts.filter((a) => a.score === a.total).map((a) => a.quizId)
     );
     attemptedQuizIds = new Set(allAttempts.map((a) => a.quizId));
+    totalCoinsEarned = userData?.totalCoinsEarned ?? 0;
   }
+
+  /** Returns true if the user has unlocked the given premium tier */
+  const isTierUnlocked = (tier: 1 | 2 | 3) =>
+    totalCoinsEarned >= PREMIUM_TIER_UNLOCK_COINS[tier];
 
   const difficultyLabel = (d: number) => {
     const labels = ["", "Beginner", "Easy", "Medium", "Hard", "Expert"];
@@ -67,17 +80,35 @@ export default async function DiscoverPage({
         >
           All
         </Link>
-        {CATEGORIES.map(({ slug, label, icon: Icon, color }) => (
-          <Link
-            key={slug}
-            href={`/discover?category=${slug}`}
-            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
-              category === slug ? "bg-indigo-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
-            }`}
-          >
-            <Icon size={14} className={category === slug ? "text-white" : color} /> {label}
-          </Link>
-        ))}
+        {CATEGORIES.map((cat) => {
+          const { slug, label, icon: Icon, color } = cat;
+          const premiumTier = "premiumTier" in cat ? (cat.premiumTier as 1 | 2 | 3) : undefined;
+          const locked = premiumTier !== undefined && !isTierUnlocked(premiumTier);
+          return (
+            <Link
+              key={slug}
+              href={`/discover?category=${slug}`}
+              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                category === slug
+                  ? "bg-indigo-600 text-white"
+                  : locked
+                  ? "bg-white/5 text-gray-600 cursor-pointer"
+                  : "bg-white/5 text-gray-400 hover:bg-white/10"
+              }`}
+            >
+              {locked ? (
+                <>
+                  <span className="text-xs">🔒</span>
+                  <span>{label}</span>
+                </>
+              ) : (
+                <>
+                  <Icon size={14} className={category === slug ? "text-white" : color} /> {label}
+                </>
+              )}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Search form */}
@@ -93,11 +124,26 @@ export default async function DiscoverPage({
 
       {activeCat && ActiveCatIcon && (
         <div className="mb-6 flex items-center gap-3">
-          <ActiveCatIcon size={28} className={activeCat.color} />
-          <div>
-            <h2 className="text-xl font-bold text-white">{activeCat.label}</h2>
-            <p className="text-gray-400 text-sm">{quizzes.length} quizzes available</p>
-          </div>
+          {"premiumTier" in activeCat && !isTierUnlocked(activeCat.premiumTier as 1 | 2 | 3) ? (
+            <>
+              <span className="text-3xl">🔒</span>
+              <div>
+                <h2 className="text-xl font-bold text-white">{activeCat.label}</h2>
+                <p className="text-gray-400 text-sm">
+                  {PREMIUM_TIER_NAMES[activeCat.premiumTier as 1 | 2 | 3]} category —{" "}
+                  unlock at {PREMIUM_TIER_UNLOCK_COINS[activeCat.premiumTier as 1 | 2 | 3].toLocaleString()} total coins earned
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <ActiveCatIcon size={28} className={activeCat.color} />
+              <div>
+                <h2 className="text-xl font-bold text-white">{activeCat.label}</h2>
+                <p className="text-gray-400 text-sm">{quizzes.length} quizzes available</p>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -106,8 +152,47 @@ export default async function DiscoverPage({
         {quizzes.map((quiz) => {
           const cat = CATEGORIES.find((c) => c.slug === quiz.category);
           const QuizIcon = cat?.icon;
+          const premiumTier = cat && "premiumTier" in cat ? (cat.premiumTier as 1 | 2 | 3) : undefined;
+          const isPremiumLocked = premiumTier !== undefined && !isTierUnlocked(premiumTier);
           const isCompleted = completedQuizIds.has(quiz.id);
           const isNew = quiz.isNew && !attemptedQuizIds.has(quiz.id);
+
+          if (isPremiumLocked) {
+            const tierName = PREMIUM_TIER_NAMES[premiumTier];
+            const requiredCoins = PREMIUM_TIER_UNLOCK_COINS[premiumTier];
+            return (
+              <div
+                key={quiz.id}
+                className="relative bg-white/3 border border-white/5 rounded-2xl p-5 opacity-60 select-none"
+              >
+                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-black/40 backdrop-blur-sm gap-2 z-10">
+                  <span className="text-3xl">🔒</span>
+                  <span className="text-sm font-semibold text-white">{tierName}</span>
+                  <span className="text-xs text-gray-400 text-center px-4">
+                    Earn {requiredCoins.toLocaleString()} coins to unlock
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    You have {totalCoinsEarned.toLocaleString()} coins
+                  </span>
+                </div>
+                {/* Blurred background content */}
+                <div className="blur-sm pointer-events-none">
+                  <div className="flex items-start justify-between mb-3">
+                    {QuizIcon ? <QuizIcon size={22} className={cn("shrink-0 mt-0.5", cat!.color)} /> : <span className="text-2xl">📝</span>}
+                  </div>
+                  <h3 className="font-semibold text-white mb-1">{quiz.title}</h3>
+                  {quiz.description && (
+                    <p className="text-sm text-gray-500 mb-3 line-clamp-2">{quiz.description}</p>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{quiz._count.questions} questions</span>
+                    <span>{quiz._count.attempts.toLocaleString()} plays</span>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <Link
               key={quiz.id}
