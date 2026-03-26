@@ -13,32 +13,44 @@ export async function GET() {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const setting = await prisma.appSetting.findUnique({
-    where: { key: "schoolHoursEnabled" },
+  const settings = await prisma.appSetting.findMany({
+    where: { key: { in: ["schoolHoursEnabled", "retakeCoinsEnabled"] } },
   });
-  const schoolHoursEnabled = setting ? setting.value === "true" : true;
+  const map = Object.fromEntries(settings.map((s) => [s.key, s.value]));
+  const schoolHoursEnabled = map.schoolHoursEnabled !== undefined ? map.schoolHoursEnabled === "true" : true;
+  const retakeCoinsEnabled = map.retakeCoinsEnabled !== undefined ? map.retakeCoinsEnabled === "true" : true;
 
-  return NextResponse.json({ schoolHoursEnabled });
+  return NextResponse.json({ schoolHoursEnabled, retakeCoinsEnabled });
 }
 
 export async function PATCH(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  let schoolHoursEnabled: boolean;
+  const ALLOWED_KEYS = ["schoolHoursEnabled", "retakeCoinsEnabled"] as const;
+  type AllowedKey = (typeof ALLOWED_KEYS)[number];
+
+  let body: Record<string, unknown>;
   try {
-    const body = await req.json();
-    if (typeof body.schoolHoursEnabled !== "boolean") throw new Error();
-    schoolHoursEnabled = body.schoolHoursEnabled;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  await prisma.appSetting.upsert({
-    where: { key: "schoolHoursEnabled" },
-    update: { value: schoolHoursEnabled ? "true" : "false" },
-    create: { key: "schoolHoursEnabled", value: schoolHoursEnabled ? "true" : "false" },
-  });
+  const updates = ALLOWED_KEYS.filter((k) => typeof body[k] === "boolean") as AllowedKey[];
+  if (updates.length === 0) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
-  return NextResponse.json({ schoolHoursEnabled });
+  await Promise.all(
+    updates.map((key) =>
+      prisma.appSetting.upsert({
+        where: { key },
+        update: { value: body[key] ? "true" : "false" },
+        create: { key, value: body[key] ? "true" : "false" },
+      })
+    )
+  );
+
+  return NextResponse.json(Object.fromEntries(updates.map((k) => [k, body[k]])));
 }

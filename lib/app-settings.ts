@@ -10,3 +10,15 @@ export async function getSchoolHoursEnabled(): Promise<boolean> {
   });
   return setting ? setting.value === "true" : true;
 }
+
+/**
+ * Returns true if users can earn coins when retaking a quiz (re-answering
+ * questions they have already answered correctly before).
+ * Defaults to true if the setting has never been saved.
+ */
+export async function getRetakeCoinsEnabled(): Promise<boolean> {
+  const setting = await prisma.appSetting.findUnique({
+    where: { key: "retakeCoinsEnabled" },
+  });
+  return setting ? setting.value === "true" : true;
+}

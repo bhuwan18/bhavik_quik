@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SCHOOL_EMAIL_DOMAIN, isSchoolHours } from "@/lib/time";
-import { getSchoolHoursEnabled } from "@/lib/app-settings";
+import { getSchoolHoursEnabled, getRetakeCoinsEnabled } from "@/lib/app-settings";
 import {
   COINS_BY_DIFFICULTY,
   DAILY_LIMIT_REGULAR,
@@ -107,8 +107,10 @@ export async function POST(req: NextRequest) {
   const existingIds = new Set(existing.map((e) => e.questionId));
   const newCorrectIds = correctQuestionIds.filter((id) => !existingIds.has(id));
 
-  // rawCoinsEarned based on new correct answers only
-  const rawCoinsEarned = Math.round(newCorrectIds.length * coinsPerCorrect * multiplier);
+  // Award coins for all correct answers or only new ones, depending on admin setting
+  const retakeCoinsEnabled = await getRetakeCoinsEnabled();
+  const coinsBase = retakeCoinsEnabled ? correctQuestionIds.length : newCorrectIds.length;
+  const rawCoinsEarned = Math.round(coinsBase * coinsPerCorrect * multiplier);
 
   // Reset daily counter if it's a new day (UTC)
   const now = new Date();
