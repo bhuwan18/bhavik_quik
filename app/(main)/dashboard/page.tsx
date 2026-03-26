@@ -5,6 +5,8 @@ import { CATEGORIES } from "@/lib/utils";
 import { DAILY_LIMIT_REGULAR, DAILY_LIMIT_PRO, DAILY_LIMIT_MAX } from "@/lib/game-config";
 import IntroOverlay from "@/components/IntroOverlay";
 import { MILESTONES, TIER_COLORS, getMilestoneByThreshold } from "@/lib/milestones-data";
+import { STREAK_MILESTONES } from "@/lib/game-config";
+import CategoryGrid from "@/components/dashboard/CategoryGrid";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -24,6 +26,9 @@ export default async function DashboardPage() {
       dailyCoinsEarned: true,
       dailyCoinsReset: true,
       totalCoinsEarned: true,
+      currentStreak: true,
+      longestStreak: true,
+      streakFreezes: true,
     },
   });
 
@@ -140,31 +145,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Pick a Category ── */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-white">Pick a Category</h2>
-          <Link href="/discover" className="text-sm text-purple-400 hover:text-purple-300 transition-colors">
-            All quizzes →
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {CATEGORIES.map(({ slug, label, icon: Icon, color }) => (
-            <Link
-              key={slug}
-              href={`/discover?category=${slug}`}
-              className="relative flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-gradient-to-br hover:from-purple-600/20 hover:to-pink-600/10 border border-white/10 hover:border-purple-500/50 rounded-2xl transition-all group"
-            >
-              {categoriesWithNew.has(slug) && (
-                <span className="absolute top-2 right-2 flex items-center gap-0.5 bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
-                  New
-                </span>
-              )}
-              <Icon size={36} className={`group-hover:scale-110 transition-transform ${color}`} />
-              <span className="text-xs text-gray-400 group-hover:text-purple-300 text-center font-medium leading-tight">{label}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
+      <CategoryGrid categoriesWithNew={[...categoriesWithNew]} />
 
       {/* ── Stats Grid ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -184,69 +165,127 @@ export default async function DashboardPage() {
         })}
       </div>
 
-      {/* ── Milestone Progress ── */}
-      {(() => {
-        const totalCoinsEarned = user?.totalCoinsEarned ?? 0;
-        const latestBadge = latestMilestone ? getMilestoneByThreshold(latestMilestone.threshold) : null;
-        const nextMilestone = MILESTONES.find((m) => m.threshold > (latestMilestone?.threshold ?? 0));
-        const progressPct = nextMilestone
-          ? Math.min(100, Math.round((totalCoinsEarned / nextMilestone.threshold) * 100))
-          : 100;
-        return (
-          <div className="mb-6 p-5 bg-white/5 border border-white/10 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-4">
-            {/* Latest badge */}
-            <div className="flex items-center gap-3 min-w-0">
-              {latestBadge ? (
-                <div
-                  className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center text-2xl shrink-0 ${TIER_COLORS[latestBadge.tier].border} ${latestBadge.animationClass ?? ""}`}
-                  style={{ background: `linear-gradient(135deg, ${latestBadge.colorFrom}, ${latestBadge.colorTo})` }}
-                >
-                  {latestBadge.emoji}
+      {/* ── Milestone + Streak (side-by-side) ── */}
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        {/* Milestone Progress */}
+        {(() => {
+          const totalCoinsEarned = user?.totalCoinsEarned ?? 0;
+          const latestBadge = latestMilestone ? getMilestoneByThreshold(latestMilestone.threshold) : null;
+          const nextMilestone = MILESTONES.find((m) => m.threshold > (latestMilestone?.threshold ?? 0));
+          const progressPct = nextMilestone
+            ? Math.min(100, Math.round((totalCoinsEarned / nextMilestone.threshold) * 100))
+            : 100;
+          return (
+            <div className="p-5 bg-white/5 border border-white/10 rounded-2xl flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                {latestBadge ? (
+                  <div
+                    className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center text-xl shrink-0 ${TIER_COLORS[latestBadge.tier].border} ${latestBadge.animationClass ?? ""}`}
+                    style={{ background: `linear-gradient(135deg, ${latestBadge.colorFrom}, ${latestBadge.colorTo})` }}
+                  >
+                    {latestBadge.emoji}
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-xl border-2 border-white/10 bg-white/5 flex items-center justify-center text-xl shrink-0">
+                    🔒
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-white font-semibold text-sm truncate">
+                    {latestBadge ? latestBadge.name : "No milestones yet"}
+                  </p>
+                  <p className={`text-xs ${latestBadge ? TIER_COLORS[latestBadge.tier].text : "text-gray-500"}`}>
+                    {latestBadge ? `${TIER_COLORS[latestBadge.tier].label} milestone` : "Play to earn your first!"}
+                  </p>
                 </div>
-              ) : (
-                <div className="w-14 h-14 rounded-2xl border-2 border-white/10 bg-white/5 flex items-center justify-center text-2xl shrink-0">
-                  🔒
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-white font-semibold text-sm truncate">
-                  {latestBadge ? latestBadge.name : "No milestones yet"}
-                </p>
-                <p className={`text-xs ${latestBadge ? TIER_COLORS[latestBadge.tier].text : "text-gray-500"}`}>
-                  {latestBadge ? `${TIER_COLORS[latestBadge.tier].label} milestone` : "Play to earn your first!"}
-                </p>
               </div>
-            </div>
 
-            {/* Progress to next */}
-            <div className="flex-1">
-              {nextMilestone ? (
-                <>
-                  <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-                    <span>Next: <span className="text-white">{nextMilestone.name}</span></span>
-                    <span>{totalCoinsEarned.toLocaleString()} / {nextMilestone.threshold.toLocaleString()}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all"
-                      style={{ width: `${progressPct}%` }}
-                    />
-                  </div>
-                </>
-              ) : (
-                <p className="text-yellow-400 font-semibold text-sm">All 50 milestones unlocked! 🏆</p>
-              )}
-            </div>
+              <div className="flex-1">
+                {nextMilestone ? (
+                  <>
+                    <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+                      <span>Next: <span className="text-white">{nextMilestone.name}</span></span>
+                      <span>{totalCoinsEarned.toLocaleString()} / {nextMilestone.threshold.toLocaleString()}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-yellow-400 font-semibold text-sm">All 50 milestones unlocked!</p>
+                )}
+              </div>
 
-            <Link
-              href="/milestones"
-              className="shrink-0 px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white text-sm font-semibold rounded-xl transition-colors"
-            >
-              View all →
-            </Link>
-          </div>
-        );
-      })()}
+              <Link
+                href="/milestones"
+                className="mt-auto self-start px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                View all &rarr;
+              </Link>
+            </div>
+          );
+        })()}
+
+        {/* Streak */}
+        {(() => {
+          const streak = user?.currentStreak ?? 0;
+          const longest = user?.longestStreak ?? 0;
+          const freezes = user?.streakFreezes ?? 0;
+          const nextStreakMilestone = STREAK_MILESTONES.find((t) => t > streak) ?? null;
+          const prevMilestone = [...STREAK_MILESTONES].reverse().find((t) => t <= streak) ?? 0;
+          const progressPct = nextStreakMilestone
+            ? Math.min(100, Math.round(((streak - prevMilestone) / (nextStreakMilestone - prevMilestone)) * 100))
+            : 100;
+          return (
+            <div className="p-5 bg-white/5 border border-white/10 rounded-2xl flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl border-2 border-orange-500/50 bg-gradient-to-br from-orange-500/20 to-red-500/10 flex items-center justify-center text-2xl shrink-0">
+                  🔥
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-white font-bold text-xl leading-none">{streak} <span className="text-sm font-normal text-gray-400">day streak</span></p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {longest > streak ? <>Best: {longest}</> : null}
+                    {longest > streak && freezes > 0 ? " · " : null}
+                    {freezes > 0 ? <>🧊 {freezes} freeze{freezes !== 1 ? "s" : ""}</> : null}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex-1">
+                {streak === 0 ? (
+                  <p className="text-sm text-gray-400">Play a quiz today to start your streak!</p>
+                ) : nextStreakMilestone ? (
+                  <>
+                    <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+                      <span>Next: <span className="text-white">{nextStreakMilestone} days</span></span>
+                      <span>{streak} / {nextStreakMilestone}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-orange-500 to-red-400 transition-all"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-orange-400 font-semibold text-sm">All streak milestones reached!</p>
+                )}
+              </div>
+
+              <Link
+                href="/shop"
+                className="mt-auto self-start px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                Buy freezes &rarr;
+              </Link>
+            </div>
+          );
+        })()}
+      </div>
 
       {/* ── Daily Coins + Collection Progress ── */}
       <div className="grid md:grid-cols-2 gap-4 mb-8">

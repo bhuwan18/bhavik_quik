@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { SCHOOL_EMAIL_DOMAIN, isSchoolHours } from "@/lib/time";
+import { SCHOOL_EMAIL_DOMAIN, isSchoolHours, getISTDateString } from "@/lib/time";
 import { getSchoolHoursEnabled, getRetakeCoinsEnabled } from "@/lib/app-settings";
 import {
   COINS_BY_DIFFICULTY,
@@ -11,6 +11,7 @@ import {
   MULTIPLIER_REGULAR,
   MULTIPLIER_PRO,
   MULTIPLIER_MAX,
+  STREAK_MILESTONES,
 } from "@/lib/game-config";
 import { MILESTONE_THRESHOLDS, getMilestoneByThreshold } from "@/lib/milestones-data";
 
@@ -35,6 +36,10 @@ export async function POST(req: NextRequest) {
       dailyCoinsReset: true,
       totalCoinsEarned: true,
       name: true,
+      currentStreak: true,
+      longestStreak: true,
+      lastStreakDate: true,
+      streakFreezes: true,
     },
   });
 
@@ -149,6 +154,76 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // ── Streak update ──────────────────────────────────────────────────────────
+  const todayIST = getISTDateString(now);
+  const oldStreak = dbUser.currentStreak;
+  let newStreak = oldStreak;
+  let newLongest = dbUser.longestStreak;
+  let newFreezes = dbUser.streakFreezes;
+  let streakFreezeUsed = false;
+  let streakUpdated = false;
+
+  if (!dbUser.lastStreakDate) {
+    // First ever quiz completion
+    newStreak = 1;
+    streakUpdated = true;
+  } else {
+    const lastDateIST = getISTDateString(dbUser.lastStreakDate);
+    if (lastDateIST !== todayIST) {
+      streakUpdated = true;
+      const last = new Date(lastDateIST);
+      const today = new Date(todayIST);
+      const diffDays = Math.round((today.getTime() - last.getTime()) / (24 * 60 * 60 * 1000));
+
+      if (diffDays === 1) {
+        newStreak = oldStreak + 1;
+      } else {
+        // Missed at least one day
+        if (dbUser.streakFreezes > 0) {
+          // Auto-apply one freeze
+          newFreezes = dbUser.streakFreezes - 1;
+          streakFreezeUsed = true;
+          // Streak count unchanged
+        } else {
+          // Streak broken
+          newStreak = 1;
+        }
+      }
+    }
+  }
+
+  if (newStreak > newLongest) newLongest = newStreak;
+
+  if (streakUpdated) {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        currentStreak: newStreak,
+        longestStreak: newLongest,
+        lastStreakDate: now,
+        ...(streakFreezeUsed ? { streakFreezes: newFreezes } : {}),
+      },
+    });
+
+    // Streak milestone notifications
+    const crossedStreakMilestones = STREAK_MILESTONES.filter(
+      (t) => t > oldStreak && t <= newStreak
+    );
+    if (crossedStreakMilestones.length > 0) {
+      const highest = Math.max(...crossedStreakMilestones);
+      await prisma.notification.create({
+        data: {
+          userId: session.user.id,
+          type: "streak_milestone",
+          message: `🔥 ${highest}-day streak! You've been playing every day for ${highest} days!`,
+        },
+      });
+      import("@/lib/push").then(({ sendPushToUser }) => {
+        sendPushToUser(session.user.id, `🔥 ${highest}-Day Streak!`, `You've kept your streak alive for ${highest} days!`, "/dashboard").catch(() => {});
+      }).catch(() => {});
+    }
+  }
+
   // Record new correct answers
   if (newCorrectIds.length > 0) {
     await prisma.correctAnswer.createMany({
@@ -249,5 +324,7 @@ export async function POST(req: NextRequest) {
     dailyLimitReached: coinsEarned < rawCoinsEarned,
     dailyLimit,
     dailyEarned: currentDailyEarned + coinsEarned,
+    currentStreak: newStreak,
+    streakFreezeUsed,
   });
 }

@@ -6,6 +6,12 @@ export const SCHOOL_EMAIL_DOMAIN = "@oberoi-is.net";
 export const SCHOOL_HOURS_START = 8;  // 8:00 AM IST
 export const SCHOOL_HOURS_END = 15;   // 3:00 PM IST
 
+/** Returns YYYY-MM-DD string for a given date in IST timezone */
+export function getISTDateString(date: Date): string {
+  const istTime = new Date(date.getTime() + IST_OFFSET_MS);
+  return istTime.toISOString().split("T")[0];
+}
+
 /** Returns true if the current IST time falls within school hours (Mon–Fri 8–15) */
 export function isSchoolHours(): boolean {
   const now = new Date();

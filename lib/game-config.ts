@@ -63,6 +63,13 @@ export const BUY_COINS_MIN = 10;
 export const BUY_COINS_MAX = 10000;
 export const BUY_COINS_QUICK_AMOUNTS = [50, 100, 250, 500, 1000] as const;
 
+// ─── Streak System ────────────────────────────────────────────────────────────
+
+export const STREAK_FREEZE_COST_1 = 1000;   // cost when owning 0 freezes
+export const STREAK_FREEZE_COST_2 = 2500;   // cost when owning 1 freeze
+export const STREAK_FREEZE_MAX = 2;
+export const STREAK_MILESTONES = [5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 90, 100, 150, 200, 365] as const;
+
 // ─── Online Presence ──────────────────────────────────────────────────────────
 
 export const ONLINE_PING_INTERVAL_MS = 2 * 60 * 1000; // Ping every 2 minutes

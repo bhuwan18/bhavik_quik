@@ -1,6 +1,6 @@
 # BittsQuiz — Architecture Documentation
 
-> **Last Updated:** 2026-03-22 (rev 3)
+> **Last Updated:** 2026-03-26 (rev 4)
 > **Project:** BittsQuiz (auto-increments year via `new Date().getFullYear()`)
 > **Repository:** `d:\VS_WS\bhavik_quik`
 > **Primary Contact / Team:** Bhavik Lodha, G5MB
@@ -54,6 +54,7 @@ bhavik_quik/
 │       ├── game/page.tsx                  # Game mode selection hub
 │       ├── buy-coins/page.tsx             # Redirects to /shop
 │       ├── shop/page.tsx                  # Pro/Max membership + coin purchase + daily limit reset (UPI)
+│       ├── milestones/page.tsx            # Coin milestone badges — earned milestones + progress to next
 │       ├── notifications/page.tsx         # In-app notifications (overtaken, feedback replies)
 │       ├── info/page.tsx                  # Deprecated → redirects to /quizlets
 │       │
@@ -87,6 +88,7 @@ bhavik_quik/
 │   │   ├── answer/route.ts                # POST submit answer + advance round via Pusher
 │   │   ├── reveal/route.ts                # POST force-reveal round (timeout fallback)
 │   │   └── [code]/route.ts                # GET room state / DELETE leave room
+│   ├── milestones/route.ts                # GET user's earned milestones
 │   ├── user/
 │   │   ├── ping/route.ts                  # POST update lastSeenAt (every 2 min)
 │   │   ├── stats/route.ts                 # GET dashboard stats
@@ -98,6 +100,7 @@ bhavik_quik/
 │       ├── users/route.ts                 # GET users list
 │       ├── users/[id]/route.ts            # PATCH user (lock, isAdmin, override)
 │       ├── users/[id]/notify/route.ts     # POST send push notification to a user (admin)
+│       ├── grant-milestones/route.ts      # POST backfill milestones for all existing users (admin)
 │       ├── settings/route.ts              # GET/POST AppSetting key-value store
 │       └── test-email/route.ts            # POST send test email
 │
@@ -118,6 +121,8 @@ bhavik_quik/
 │   │   └── PackOpeningModal.tsx           # Animated pack reveal (tap cards)
 │   ├── quizlets/
 │   │   └── QuizletsClient.tsx             # My Collection / All Quizlets toggle
+│   ├── milestones/
+│   │   └── MilestonesClient.tsx           # Milestone grid — earned badges + progress bar to next tier
 │   └── game/
 │       ├── GameModesClient.tsx            # Mode selection grid
 │       ├── HackDevGame.tsx                # 60-second tech quiz sprint
@@ -140,10 +145,11 @@ bhavik_quik/
 │   ├── utils.ts                           # cn(), CATEGORIES (16), RARITY_COLORS, SELL_VALUES
 │   ├── app-settings.ts                    # AppSetting DB read/write helpers
 │   ├── game-config.ts                     # Game mode configuration constants
+│   ├── milestones-data.ts                 # 50 milestone definitions (bronze→diamond, 1K–50K coins)
 │   └── time.ts                            # IST timezone helpers
 │
 ├── prisma/
-│   ├── schema.prisma                      # Full DB schema (17 models)
+│   ├── schema.prisma                      # Full DB schema (18 models)
 │   ├── seed.ts                            # Seeds 55 quizzes + all quizlets + packs
 │   └── seed-explanations.ts              # Secondary script — generates question explanations
 │
@@ -212,6 +218,7 @@ bhavik_quik/
 │  │              SHARED LIBRARIES (lib/)                     │   │
 │  │  auth · db (Prisma) · email · quizlets-data · packs-data │   │
 │  │  roll (RNG) · festivals · utils · audio-context · time   │   │
+│  │  milestones-data                                         │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └───────────┬───────────────────────────────────┬─────────────────┘
             │                                   │
@@ -221,7 +228,7 @@ bhavik_quik/
 │  via Prisma v7 ORM   │          │  Google OAuth 2.0             │
 │  + @prisma/adapter-pg│          │  Gmail SMTP (Nodemailer)      │
 │                      │          │  UPI Payment Gateway          │
-│  17 Models:          │          │  (manual UTR verification)    │
+│  18 Models:          │          │  (manual UTR verification)    │
 │  User, Quiz,         │          │  Vercel Analytics             │
 │  Question,           │          │  Vercel Speed Insights        │
 │  QuizAttempt,        │          │  SoundHelix (default music)   │
@@ -233,6 +240,7 @@ bhavik_quik/
 │  CorrectAnswer,      │
 │  Notification,       │
 │  PushSubscription,   │
+│  UserMilestone,      │
 │  DinoRexRoom,        │
 │  Account, Session,   │
 │  VerificationToken   │
@@ -286,7 +294,9 @@ app/layout.tsx              ← ThemeProvider + SessionProvider + Vercel Analyti
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/api/attempt` | POST | Record quiz attempt; award coins with multiplier + daily cap; dedup via CorrectAnswer |
+| `/api/attempt` | POST | Record quiz attempt; award coins with multiplier + daily cap; dedup via CorrectAnswer; auto-grant milestones |
+| `/api/milestones` | GET | Return user's earned `UserMilestone` records |
+| `/api/admin/grant-milestones` | POST | Backfill milestones for all existing users based on `totalCoinsEarned` (admin only) |
 | `/api/packs/open` | POST | RNG pack roll (`lib/roll.ts`); refund duplicates |
 | `/api/quizlets/sell` | POST | Sell a quizlet back for coins (`SELL_VALUES`) |
 | `/api/user/submit-payment` | POST | Create pending `PaymentRequest` with UTR |
@@ -343,7 +353,7 @@ app/layout.tsx              ← ThemeProvider + SessionProvider + Vercel Analyti
 **ORM:** Prisma v7 with `@prisma/adapter-pg` (connection pooling)
 **Connection:** `DATABASE_URL` env var (Neon connection string)
 
-**Schema — All 17 Models:**
+**Schema — All 18 Models:**
 
 | Model | Purpose | Key Fields |
 |-------|---------|------------|
@@ -360,9 +370,10 @@ app/layout.tsx              ← ThemeProvider + SessionProvider + Vercel Analyti
 | `CorrectAnswer` | Dedup coin-earning per question | `@@unique([userId, questionId])` |
 | `PaymentRequest` | UPI payment submissions | `type` (coins/pro/max/reset), `amountInr`, `utrNumber`, `status` |
 | `Feedback` | User-submitted feedback | `type`, `message`, `isRead` |
-| `Notification` | In-app notifications | `type` (overtaken/top3_join/feedback_reply/admin), `message`, `isRead` |
+| `Notification` | In-app notifications | `type` (overtaken/top3_join/feedback_reply/admin/milestone), `message`, `isRead` |
 | `AppSetting` | Admin-controlled key-value config | `key` (PK), `value` |
 | `PushSubscription` | Browser push subscriptions (VAPID) | `endpoint` (unique), `p256dh`, `auth`, `userId` |
+| `UserMilestone` | Coin milestone badges earned by users | `@@unique([userId, threshold])`, `threshold` (1K–50K in 1K steps) |
 | `DinoRexRoom` | Live multiplayer game rooms | `code` (unique), `hostId`, `status`, `players` (JSON), `questions` (JSON), `currentQ`, `currentAnswers` (JSON), `winner` |
 
 **Indexes:**
@@ -445,7 +456,7 @@ app/layout.tsx              ← ThemeProvider + SessionProvider + Vercel Analyti
 **Integration:** `web-push` library (`lib/push.ts`) on the server; `PushSubscriptionManager.tsx` registers the service worker and stores subscriptions; `public/sw.js` handles notification display.
 **Flow:**
 1. `PushSubscriptionManager` shows opt-in banner; on grant calls `/api/push/subscribe` to save endpoint+keys to `PushSubscription` table
-2. Server calls `sendPushToUser(userId, title, body)` from `/api/admin/feedback` (reply) or leaderboard overtake logic
+2. Server calls `sendPushToUser(userId, title, body)` from `/api/admin/feedback` (reply), leaderboard overtake logic, or milestone unlock
 3. `sw.js` service worker receives the push event and shows the browser notification
 4. Clicking notification navigates to `/notifications`
 5. Expired subscriptions (HTTP 410/404) are automatically cleaned from DB

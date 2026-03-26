@@ -132,7 +132,8 @@ app/
 │   ├── game/page.tsx             Game mode selection hub
 │   ├── notifications/page.tsx    View in-app notifications (feedback replies, leaderboard events)
 │   ├── buy-coins/page.tsx        Redirects to /shop
-│   ├── shop/page.tsx             Buy Pro (₹250/mo) or Max (₹500/mo) via UPI + coin purchase + daily reset
+│   ├── shop/page.tsx             Buy Pro (₹250/mo) or Max (₹500/mo) via UPI + coin purchase + daily reset + streak freeze (coin-based)
+│   ├── milestones/page.tsx       Coin milestone badges (50 total, 1K–50K) — earned grid + progress to next
 │   └── admin/
 │       ├── layout.tsx            Admin auth guard
 │       ├── quizzes/page.tsx      List all quizzes with Edit links
@@ -146,13 +147,15 @@ app/
     ├── feedback/                 POST — saves feedback to DB (Feedback model)
     ├── quizzes/                  GET quizzes list, POST create quiz
     ├── quizzes/[id]/             GET single quiz; PATCH (admin) update quiz + questions
-    ├── attempt/                  POST quiz attempt — awards coins with multiplier, daily cap, dedup
+    ├── attempt/                  POST quiz attempt — awards coins with multiplier, daily cap, dedup; auto-grants milestones; updates streak
+    ├── milestones/               GET user's earned milestones
     ├── packs/                    GET active packs (incl. festival packs)
     ├── packs/open/               POST open pack, roll characters
     ├── quizlets/                 GET owned quizlets
     ├── quizlets/sell/            POST sell a quizlet for coins
     ├── user/stats/               GET dashboard stats
     ├── user/ping/                POST update lastSeenAt — called every 2 min by OnlinePing
+    ├── user/buy-streak-freeze/   GET streak info; POST purchase streak freeze with coins (1K or 2.5K coins, max 2)
     ├── user/submit-payment/      POST submit UTR number for UPI payment (coins/pro/max/reset)
     ├── push/subscribe/           POST/DELETE web push subscription (VAPID endpoint + keys)
     ├── notifications/            GET user in-app notifications
@@ -167,6 +170,7 @@ app/
     │   ├── route.ts              GET paginated + searchable user list
     │   └── [id]/route.ts         PATCH user actions: lock, unlock, reset_daily, grant/revoke Pro/Max
     ├── admin/users/[id]/notify/  POST send push notification to a specific user (admin only)
+    ├── admin/grant-milestones/   POST backfill milestones for all existing users (admin only)
     └── admin/settings/           PATCH global settings (e.g. schoolHoursEnabled toggle)
 
 components/
@@ -187,6 +191,7 @@ components/
 │   ├── MarketplaceClient.tsx     Pack browsing + purchase
 │   └── PackOpeningModal.tsx      Animated pack reveal (tap cards)
 ├── quizlets/QuizletsClient.tsx   Toggle: "My Collection" (owned, sell, Hidden section) + "All Quizlets" dex view (all non-hidden, owned highlighted)
+├── milestones/MilestonesClient.tsx  Milestone grid — earned badges with tier colors + progress bar to next unlock
 └── game/
     ├── GameModesClient.tsx       Mode selection (HackDev, DinoRex, SpeedBlitz, Survival, Daily, Classic)
     ├── HackDevGame.tsx           60-second tech quiz sprint
@@ -196,6 +201,7 @@ components/
     └── DailyChallengeGame.tsx    5 deterministic questions per day (date-seeded), 30s per question
 
 lib/
+├── milestones-data.ts            50 milestone definitions (1K–50K in 1K steps), tiers: bronze→silver→gold→platinum→diamond
 ├── auth.ts                       NextAuth config — Google + admin credentials + test user + isMax in session
 ├── db.ts                         Prisma client singleton
 ├── email.ts                      Nodemailer helper — sendEmail() + ADMIN_EMAIL constant
@@ -206,13 +212,13 @@ lib/
 ├── packs-data.ts                 All 13 pack definitions (7 standard + 6 festival)
 ├── festivals.ts                  Festival calendar (6 festivals)
 ├── roll.ts                       Pack opening RNG logic
-├── time.ts                       Time utilities — isSchoolHours(), IST offset helpers
-├── game-config.ts                Game timing constants, coin economy values, membership pricing
+├── time.ts                       Time utilities — isSchoolHours(), getISTDateString(), IST offset helpers
+├── game-config.ts                Game timing constants, coin economy values, membership pricing, streak config (STREAK_MILESTONES, freeze costs)
 ├── app-settings.ts               AppSetting model helpers — getSchoolHoursEnabled(), etc.
 └── utils.ts                      cn(), CATEGORIES (16 total), RARITY_COLORS, SELL_VALUES, CategorySlug
 
 prisma/
-├── schema.prisma                 Full DB schema — 17 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification
+├── schema.prisma                 Full DB schema — 18 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification, UserMilestone
 └── seed.ts                       55 official quizzes (11 categories × 5) + all quizlets + packs
 ```
 
@@ -340,10 +346,10 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - Test user is non-admin; school hours and account locks still apply
 
 ### Notifications
-- `Notification` model: `id`, `userId`, `type` (`overtaken` | `top3_join` | `feedback_reply` | `admin`), `message`, `isRead`, `createdAt`
+- `Notification` model: `id`, `userId`, `type` (`overtaken` | `top3_join` | `feedback_reply` | `admin` | `milestone` | `streak_milestone`), `message`, `isRead`, `createdAt`
 - `/notifications` page shows all of a user's notifications
 - `GET /api/notifications` returns unread count + list
-- Currently created by: admin feedback reply, admin direct message (admin/users), leaderboard events
+- Currently created by: admin feedback reply, admin direct message (admin/users), leaderboard events, milestone unlock, streak milestone
 - MobileNav "More" drawer shows red dot on Notifications if unread count > 0
 
 ### Global Settings (AppSetting)
@@ -357,6 +363,30 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - `@@unique([userId, questionId])` prevents double-recording
 - `/api/attempt` only awards coins for questions NOT already in this table
 - New correct answers are inserted via `prisma.correctAnswer.createMany({ skipDuplicates: true })`
+
+### Milestone System
+- 50 milestones at 1K–50K `totalCoinsEarned` thresholds (every 1,000 coins)
+- 5 tiers: **bronze** (1K–5K) · **silver** (6K–10K) · **gold** (11K–20K) · **platinum** (21K–35K) · **diamond** (36K–50K)
+- Gold and diamond milestones have CSS animation classes (`legendary-card`, `rainbow-card`)
+- Defined in `lib/milestones-data.ts` — `MILESTONES`, `MILESTONE_THRESHOLDS`, `TIER_COLORS`
+- Auto-granted in `/api/attempt` when a quiz completion crosses a threshold
+- Stored in `UserMilestone` model: `@@unique([userId, threshold])`
+- On unlock: creates an in-app `Notification` (type `milestone`) + fires a web push
+- Existing users can be backfilled via `POST /api/admin/grant-milestones` (admin only)
+- `/milestones` page shows earned badges + progress bar toward next unlock
+- Dashboard shows the user's latest earned milestone badge and links to `/milestones`
+
+### Daily Streaks
+- Tracked on `User` model: `currentStreak`, `longestStreak`, `lastStreakDate` (UTC DateTime), `streakFreezes` (0–2)
+- Streak increments each IST calendar day a user completes at least one quiz
+- Date comparison uses `getISTDateString()` from `lib/time.ts` (IST = UTC+5:30)
+- Gap of exactly 1 day → streak increments; gap >1 day → freeze auto-consumed if available, else streak resets to 1
+- Streak milestone thresholds: `STREAK_MILESTONES` in `lib/game-config.ts` — [5,10,15,20,25,30,40,50,60,75,90,100,150,200,365] days
+- On crossing a streak milestone: creates `Notification` (type `streak_milestone`) + fire-and-forget push
+- Streak update only writes to DB when the IST date has changed (skips same-day plays)
+- Dashboard shows 🔥 streak card with progress bar to next milestone and freeze count
+- Streak freezes are coin-purchased (not UPI): 1st freeze = 1,000 coins, 2nd freeze = 2,500 coins, max 2 owned
+- Purchase endpoint: `GET/POST /api/user/buy-streak-freeze`; shop has a "🧊 Streak Freeze" tab
 
 ### New User Email Notification
 - NextAuth `events.createUser` fires when a brand-new Google account signs up
@@ -399,7 +429,7 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - `PushSubscriptionManager` (rendered in main layout) registers the SW and shows opt-in banner
 - Banner is suppressed if dismissed (`bq_push_dismissed` localStorage key) or permission denied
 - Subscriptions stored in `PushSubscription` DB table; `sendPushToUser()` in `lib/push.ts`
-- Currently triggered by: admin feedback reply (`/api/admin/feedback`) — more triggers can be added
+- Currently triggered by: admin feedback reply (`/api/admin/feedback`), leaderboard overtake (`/api/attempt`), milestone unlock (`/api/attempt`), streak milestone (`/api/attempt`)
 - Requires `VAPID_EMAIL`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` env vars
 - Generate VAPID keys: `npx web-push generate-vapid-keys`
 - Expired/revoked subscriptions (HTTP 410/404) are auto-deleted from DB on send
@@ -414,13 +444,14 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 
 | File | Purpose |
 |------|---------|
+| `lib/milestones-data.ts` | 50 milestone definitions + `MILESTONE_THRESHOLDS` + `TIER_COLORS` — edit names/tiers here |
 | `lib/quizlets-data.ts` | All 99 quizlet definitions (7 standard packs + 3 global uniques + 6 festival) |
 | `lib/packs-data.ts` | All 13 pack definitions (7 standard + 6 festival) — prices at ~25% of original |
 | `lib/roll.ts` | Pack opening RNG — edit drop rates here |
 | `lib/festivals.ts` | Add/modify festival dates here |
 | `lib/utils.ts` | RARITY_COLORS, SELL_VALUES, CATEGORIES (16 total), CategorySlug type |
-| `lib/time.ts` | isSchoolHours() + IST offset helpers — used by school hours enforcement |
-| `lib/game-config.ts` | Game timing constants, coin earn amounts, membership pricing, daily limits |
+| `lib/time.ts` | isSchoolHours() + getISTDateString() + IST offset helpers |
+| `lib/game-config.ts` | Game timing constants, coin earn amounts, membership pricing, daily limits, streak constants |
 | `lib/app-settings.ts` | getSchoolHoursEnabled() — reads AppSetting from DB |
 | `lib/email.ts` | sendEmail() helper — used by auth createUser event (new user alerts); NOT used by feedback |
 | `lib/push.ts` | sendPushToUser() — sends VAPID web push to all of a user's subscriptions; auto-cleans expired |
@@ -499,4 +530,6 @@ npm run db:seed      # re-seed data (idempotent)
 - **Notifications**: use `Notification` model for in-app messages; use `lib/push.ts → sendPushToUser()` for browser push — these are separate channels
 - **Admin users**: actions go through PATCH `/api/admin/users/[id]` with `action` field (`lock`, `unlock`, `reset_daily`, `grant_pro`, `revoke_pro`, `grant_max`, `revoke_max`)
 - **AppSetting**: read via `lib/app-settings.ts`; write via PATCH `/api/admin/settings`; never hardcode setting keys outside those two files
+- **Milestones**: thresholds are 1K–50K in steps of 1K (`MILESTONE_THRESHOLDS`); always use `skipDuplicates: true` when inserting `UserMilestone`; milestone push is fire-and-forget (dynamic import, errors swallowed)
+- **Streaks**: always use `getISTDateString()` from `lib/time.ts` for IST date comparison — never inline IST math; streak DB write is skipped when `lastDateIST === todayIST`; freeze purchase uses `streakFreezes: { increment: 1 }` (atomic, no read-modify-write)
 - **SVG icons**: custom category icons live in `components/icons/` — import from there, not inline SVG
