@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CATEGORIES } from "@/lib/utils";
 import { DAILY_LIMIT_REGULAR, DAILY_LIMIT_PRO, DAILY_LIMIT_MAX } from "@/lib/game-config";
 import IntroOverlay from "@/components/IntroOverlay";
+import { MILESTONES, TIER_COLORS, getMilestoneByThreshold } from "@/lib/milestones-data";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -22,17 +23,25 @@ export default async function DashboardPage() {
       maxExpiresAt: true,
       dailyCoinsEarned: true,
       dailyCoinsReset: true,
+      totalCoinsEarned: true,
     },
   });
 
-  const totalQuizlets = await prisma.quizlet.count();
-  const ownedQuizlets = await prisma.userQuizlet.count({ where: { userId: session.user.id } });
-  const recentAttempts = await prisma.quizAttempt.findMany({
-    where: { userId: session.user.id },
-    include: { quiz: { select: { title: true, category: true } } },
-    orderBy: { completedAt: "desc" },
-    take: 5,
-  });
+  const [totalQuizlets, ownedQuizlets, latestMilestone, recentAttempts] = await Promise.all([
+    prisma.quizlet.count(),
+    prisma.userQuizlet.count({ where: { userId: session.user.id } }),
+    prisma.userMilestone.findFirst({
+      where: { userId: session.user.id },
+      orderBy: { threshold: "desc" },
+      select: { threshold: true },
+    }),
+    prisma.quizAttempt.findMany({
+      where: { userId: session.user.id },
+      include: { quiz: { select: { title: true, category: true } } },
+      orderBy: { completedAt: "desc" },
+      take: 5,
+    }),
+  ]);
 
   const accuracy =
     user && user.totalAnswered > 0
@@ -174,6 +183,70 @@ export default async function DashboardPage() {
           );
         })}
       </div>
+
+      {/* ── Milestone Progress ── */}
+      {(() => {
+        const totalCoinsEarned = user?.totalCoinsEarned ?? 0;
+        const latestBadge = latestMilestone ? getMilestoneByThreshold(latestMilestone.threshold) : null;
+        const nextMilestone = MILESTONES.find((m) => m.threshold > (latestMilestone?.threshold ?? 0));
+        const progressPct = nextMilestone
+          ? Math.min(100, Math.round((totalCoinsEarned / nextMilestone.threshold) * 100))
+          : 100;
+        return (
+          <div className="mb-6 p-5 bg-white/5 border border-white/10 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-4">
+            {/* Latest badge */}
+            <div className="flex items-center gap-3 min-w-0">
+              {latestBadge ? (
+                <div
+                  className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center text-2xl shrink-0 ${TIER_COLORS[latestBadge.tier].border} ${latestBadge.animationClass ?? ""}`}
+                  style={{ background: `linear-gradient(135deg, ${latestBadge.colorFrom}, ${latestBadge.colorTo})` }}
+                >
+                  {latestBadge.emoji}
+                </div>
+              ) : (
+                <div className="w-14 h-14 rounded-2xl border-2 border-white/10 bg-white/5 flex items-center justify-center text-2xl shrink-0">
+                  🔒
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-white font-semibold text-sm truncate">
+                  {latestBadge ? latestBadge.name : "No milestones yet"}
+                </p>
+                <p className={`text-xs ${latestBadge ? TIER_COLORS[latestBadge.tier].text : "text-gray-500"}`}>
+                  {latestBadge ? `${TIER_COLORS[latestBadge.tier].label} milestone` : "Play to earn your first!"}
+                </p>
+              </div>
+            </div>
+
+            {/* Progress to next */}
+            <div className="flex-1">
+              {nextMilestone ? (
+                <>
+                  <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+                    <span>Next: <span className="text-white">{nextMilestone.name}</span></span>
+                    <span>{totalCoinsEarned.toLocaleString()} / {nextMilestone.threshold.toLocaleString()}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all"
+                      style={{ width: `${progressPct}%` }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <p className="text-yellow-400 font-semibold text-sm">All 50 milestones unlocked! 🏆</p>
+              )}
+            </div>
+
+            <Link
+              href="/milestones"
+              className="shrink-0 px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white text-sm font-semibold rounded-xl transition-colors"
+            >
+              View all →
+            </Link>
+          </div>
+        );
+      })()}
 
       {/* ── Daily Coins + Collection Progress ── */}
       <div className="grid md:grid-cols-2 gap-4 mb-8">

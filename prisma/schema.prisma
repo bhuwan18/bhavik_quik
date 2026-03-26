@@ -37,6 +37,7 @@ model User {
   correctAnswers       CorrectAnswer[]
   notifications        Notification[]
   pushSubscriptions    PushSubscription[]
+  milestones           UserMilestone[]
 
   @@index([totalCoinsEarned])
   @@index([lastSeenAt])
@@ -238,6 +239,17 @@ model AppSetting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model UserMilestone {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  threshold Int      // 1000, 2000, ..., 50000
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, threshold])
+  @@index([userId])
 }
 
 model DinoRexRoom {

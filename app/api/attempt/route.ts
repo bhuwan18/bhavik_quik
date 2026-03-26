@@ -12,6 +12,7 @@ import {
   MULTIPLIER_PRO,
   MULTIPLIER_MAX,
 } from "@/lib/game-config";
+import { MILESTONE_THRESHOLDS, getMilestoneByThreshold } from "@/lib/milestones-data";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -154,6 +155,31 @@ export async function POST(req: NextRequest) {
       data: newCorrectIds.map((questionId) => ({ userId: session.user.id, questionId })),
       skipDuplicates: true,
     });
+  }
+
+  // Milestone rewards: check if any thresholds were crossed
+  if (coinsEarned > 0) {
+    const oldTotal = dbUser.totalCoinsEarned;
+    const newTotal = oldTotal + coinsEarned;
+    const crossed = MILESTONE_THRESHOLDS.filter((t) => t > oldTotal && t <= newTotal);
+    if (crossed.length > 0) {
+      await prisma.userMilestone.createMany({
+        data: crossed.map((t) => ({ userId: session.user.id, threshold: t })),
+        skipDuplicates: true,
+      });
+      const highest = Math.max(...crossed);
+      const badge = getMilestoneByThreshold(highest);
+      await prisma.notification.create({
+        data: {
+          userId: session.user.id,
+          type: "milestone",
+          message: `🏅 Milestone unlocked: ${badge.name}! You've earned ${highest.toLocaleString()} lifetime coins.`,
+        },
+      });
+      import("@/lib/push").then(({ sendPushToUser }) => {
+        sendPushToUser(session.user.id, "Milestone unlocked! 🏅", badge.name, "/milestones").catch(() => {});
+      }).catch(() => {});
+    }
   }
 
   // Leaderboard notifications: fire-and-forget (don't block response)

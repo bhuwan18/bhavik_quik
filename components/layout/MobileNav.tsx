@@ -17,6 +17,7 @@ const PRIMARY_NAV = [
 
 const MORE_NAV = [
   { href: "/leaderboard", icon: "🏆", label: "Leaderboard" },
+  { href: "/milestones", icon: "🏅", label: "Milestones" },
   { href: "/game", icon: "🎮", label: "Game Modes" },
   { href: "/feedback", icon: "💬", label: "Feedback" },
   { href: "/shop", icon: "🏪", label: "Upgrade" },
