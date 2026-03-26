@@ -1,8 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
-  Wand2, Cpu, Shield, Palette, Music,
-  Calculator, FlaskConical, Atom, Globe, Flag, Tag, PawPrint, Tv, Swords, GraduationCap,
+  Wand2, Cpu, Palette, Music,
+  Calculator, FlaskConical, Atom, Globe, Flag, Tag, PawPrint, Swords, GraduationCap, Map,
 } from "lucide-react";
 import SoccerBallIcon from "@/components/icons/SoccerBallIcon";
 import CricketWicketIcon from "@/components/icons/CricketWicketIcon";
@@ -29,6 +29,7 @@ export const CATEGORIES = [
   { slug: "animals",         label: "Animals",         icon: PawPrint,     color: "text-yellow-400"  },
   { slug: "anime",           label: "Anime",           icon: Swords,       color: "text-fuchsia-400" },
   { slug: "grade-6",         label: "Grade 6",         icon: GraduationCap, color: "text-teal-400"   },
+  { slug: "geography",       label: "Geography",       icon: Map,           color: "text-green-600"  },
 ] as const;
 
 export type CategorySlug = (typeof CATEGORIES)[number]["slug"];
