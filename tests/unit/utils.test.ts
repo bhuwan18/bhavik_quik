@@ -16,8 +16,8 @@ describe("cn()", () => {
 });
 
 describe("CATEGORIES", () => {
-  it("has 18 categories", () => {
-    expect(CATEGORIES).toHaveLength(18);
+  it("has 20 categories", () => {
+    expect(CATEGORIES).toHaveLength(20);
   });
 
   it("every category has slug, label, and icon", () => {
