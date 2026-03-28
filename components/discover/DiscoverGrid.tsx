@@ -83,7 +83,7 @@ export default function DiscoverGrid({
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
         {quizzes.map((quiz) => {
           const cat = CATEGORIES.find((c) => c.slug === quiz.category);
           const QuizIcon = cat?.icon;
@@ -98,28 +98,22 @@ export default function DiscoverGrid({
             return (
               <div
                 key={quiz.id}
-                className="relative bg-white/3 border border-white/5 rounded-2xl p-4 md:p-5 opacity-60 select-none"
+                className="relative bg-white/3 border border-white/5 rounded-xl p-3 md:p-5 opacity-60 select-none"
               >
-                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-black/40 backdrop-blur-sm gap-2 z-10">
-                  <span className="text-3xl">🔒</span>
-                  <span className="text-sm font-semibold text-white">{tierName}</span>
-                  <span className="text-xs text-gray-400 text-center px-4">
-                    Earn {requiredCoins.toLocaleString()} coins to unlock
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    You have {totalCoinsEarned.toLocaleString()} coins
+                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-black/40 backdrop-blur-sm gap-1.5 z-10">
+                  <span className="text-2xl">🔒</span>
+                  <span className="text-xs font-semibold text-white">{tierName}</span>
+                  <span className="text-xs text-gray-400 text-center px-2">
+                    {requiredCoins.toLocaleString()} coins
                   </span>
                 </div>
                 <div className="blur-sm pointer-events-none">
-                  <div className="flex items-start justify-between mb-3">
-                    {QuizIcon ? <QuizIcon size={22} className={cn("shrink-0 mt-0.5", cat!.color)} /> : <span className="text-2xl">📝</span>}
+                  <div className="flex items-start justify-between mb-2">
+                    {QuizIcon ? <QuizIcon size={18} className={cn("shrink-0 mt-0.5", cat!.color)} /> : <span className="text-xl">📝</span>}
                   </div>
-                  <h3 className="font-semibold text-white mb-1">{quiz.title}</h3>
-                  {quiz.description && (
-                    <p className="text-sm text-gray-500 mb-3 line-clamp-1 md:line-clamp-2">{quiz.description}</p>
-                  )}
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{quiz._count.questions} questions</span>
+                  <h3 className="font-semibold text-white text-sm mb-1 line-clamp-2">{quiz.title}</h3>
+                  <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-1">
+                    <span>{quiz._count.questions}Q</span>
                     <span>{quiz._count.attempts.toLocaleString()} plays</span>
                   </div>
                 </div>
@@ -131,7 +125,7 @@ export default function DiscoverGrid({
             <Link
               key={quiz.id}
               href={`/quiz/${quiz.id}`}
-              className={`relative flex flex-col bg-white/5 hover:bg-white/8 border rounded-2xl p-4 md:p-5 transition-all hover:shadow-lg group ${
+              className={`relative flex flex-col bg-white/5 hover:bg-white/8 border rounded-xl p-3 md:p-5 transition-all hover:shadow-lg group ${
                 isCompleted
                   ? "border-green-500/40 hover:border-green-500/60 hover:shadow-green-500/10"
                   : isNew
@@ -140,40 +134,40 @@ export default function DiscoverGrid({
               }`}
             >
               {isCompleted && (
-                <div className="absolute top-3 right-3 flex items-center gap-1 bg-green-500/20 border border-green-500/40 text-green-400 text-xs font-bold px-2 py-0.5 rounded-full">
-                  ✓ Completed
+                <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-green-500/20 border border-green-500/40 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  ✓
                 </div>
               )}
-              <div className="flex items-start justify-between mb-3">
-                {QuizIcon ? <QuizIcon size={22} className={cn("shrink-0 mt-0.5", cat!.color)} /> : <span className="text-2xl">📝</span>}
-                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              <div className="flex items-start justify-between mb-2">
+                {QuizIcon ? <QuizIcon size={18} className={cn("shrink-0 mt-0.5", cat!.color)} /> : <span className="text-lg">📝</span>}
+                <div className="flex items-center gap-1 flex-wrap justify-end">
                   {isNew && (
-                    <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold animate-pulse">
-                      ✨ New
+                    <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-1.5 py-0.5 rounded-full font-bold animate-pulse">
+                      New
                     </span>
                   )}
                   {!isCompleted && !isNew && quiz.isOfficial && (
-                    <span className="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full">
+                    <span className="hidden sm:inline text-[10px] bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-1.5 py-0.5 rounded-full">
                       Official
                     </span>
                   )}
                   {!isCompleted && (
-                    <span className={`text-xs font-medium ${difficultyColor(quiz.difficulty)}`}>
+                    <span className={`text-[10px] font-medium ${difficultyColor(quiz.difficulty)}`}>
                       {difficultyLabel(quiz.difficulty)}
                     </span>
                   )}
                 </div>
               </div>
-              <h3 className={`font-semibold transition-colors mb-1 ${isCompleted ? "text-green-300 group-hover:text-green-200" : "text-white group-hover:text-indigo-300"}`}>
+              <h3 className={`text-sm font-semibold transition-colors mb-1 line-clamp-2 ${isCompleted ? "text-green-300 group-hover:text-green-200" : "text-white group-hover:text-indigo-300"}`}>
                 {quiz.title}
               </h3>
               {quiz.description && (
-                <p className="text-sm text-gray-500 mb-2 line-clamp-1 md:line-clamp-2">{quiz.description}</p>
+                <p className="hidden sm:block text-xs text-gray-500 mb-2 line-clamp-2">{quiz.description}</p>
               )}
-              <div className="flex items-center gap-3 text-xs text-gray-500 mt-auto pt-2">
-                <span>{quiz._count.questions} Qs</span>
+              <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-auto pt-1.5">
+                <span>{quiz._count.questions}Q</span>
                 <span>{quiz._count.attempts.toLocaleString()} plays</span>
-                <span className="hidden sm:inline ml-auto">by {quiz.author.name?.split(" ")[0] ?? "Unknown"}</span>
+                <span className="hidden md:inline ml-auto">by {quiz.author.name?.split(" ")[0] ?? "Unknown"}</span>
               </div>
             </Link>
           );

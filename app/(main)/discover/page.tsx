@@ -55,14 +55,14 @@ export default async function DiscoverPage({
     activeCat && "premiumTier" in activeCat && !isTierUnlocked(activeCat.premiumTier as 1 | 2 | 3);
 
   return (
-    <div className="p-4 pb-24 md:p-8 md:pb-8 max-w-6xl mx-auto overflow-x-hidden">
-      <div className="mb-8">
+    <div className="w-full p-4 pb-24 md:p-8 md:pb-8 max-w-6xl mx-auto overflow-x-hidden">
+      <div className="mb-5">
         <h1 className="text-2xl md:text-3xl font-bold text-white">Discover Quizzes</h1>
-        <p className="text-gray-400 mt-1">Browse official and community quizzes</p>
+        <p className="text-gray-400 mt-1 text-sm md:text-base">Browse official and community quizzes</p>
       </div>
 
       {/* Category Filter — scrollable on mobile with edge fade */}
-      <div className="relative mb-6">
+      <div className="relative mb-4">
         <div className="flex gap-2 flex-nowrap overflow-x-auto md:flex-wrap pb-2 scrollbar-hide">
           <Link
             href="/discover"
@@ -107,7 +107,7 @@ export default async function DiscoverPage({
       </div>
 
       {/* Search form */}
-      <form className="mb-6">
+      <form className="mb-4">
         {category && <input type="hidden" name="category" value={category} />}
         <div className="relative max-w-md">
           <input
@@ -128,7 +128,7 @@ export default async function DiscoverPage({
 
       {/* Active category header */}
       {activeCat && ActiveCatIcon && (
-        <div className="mb-6 flex items-center gap-3">
+        <div className="mb-4 flex items-center gap-3">
           {isCategoryLocked ? (
             <>
               <span className="text-3xl">🔒</span>
@@ -162,6 +162,7 @@ export default async function DiscoverPage({
       {/* Quiz grid — client component handles load-more */}
       {!isCategoryLocked && (
         <DiscoverGrid
+          key={`${category ?? "all"}-${search ?? ""}`}
           initialQuizzes={quizzes}
           initialHasMore={hasMore}
           completedQuizIds={completedQuizIds}
