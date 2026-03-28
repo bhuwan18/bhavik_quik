@@ -126,11 +126,12 @@ app/
 │   ├── marketplace/page.tsx      Buy packs with coins
 │   ├── quizlets/page.tsx         View/sell owned Quizlets (My Collection) + full dex view (All Quizlets) with toggle
 │   ├── quiz-maker/page.tsx       Create and publish custom quizzes
-│   ├── leaderboard/page.tsx      Top 50 players — Pro/Max badges, green online dot, quizlet/attempt counts
+│   ├── leaderboard/page.tsx      Top 50 players — sortable columns, follower count, Pro/Max badges, green online dot; podium on default sort only
+│   ├── profile/[userId]/page.tsx Public profile — avatar, online dot, tier badge, stats, follow button, follower/following counts, recent quizlets
 │   ├── feedback/page.tsx         User feedback form → saves to DB (no email)
 │   ├── info/page.tsx             Redirects to /quizlets (deprecated)
 │   ├── game/page.tsx             Game mode selection hub
-│   ├── notifications/page.tsx    View in-app notifications (feedback replies, leaderboard events)
+│   ├── notifications/page.tsx    View in-app notifications (feedback replies, leaderboard events, milestones, follow events)
 │   ├── buy-coins/page.tsx        Redirects to /shop
 │   ├── shop/page.tsx             Buy Pro (₹250/mo) or Max (₹500/mo) via UPI + coin purchase + daily reset + streak freeze (coin-based)
 │   ├── milestones/page.tsx       Coin milestone badges (50 total, 1K–50K) — earned grid + progress to next
@@ -155,6 +156,7 @@ app/
     ├── quizlets/sell/            POST sell a quizlet for coins
     ├── user/stats/               GET dashboard stats
     ├── user/ping/                POST update lastSeenAt — called every 2 min by OnlinePing
+    ├── user/follow/[userId]/     POST follow a user; DELETE unfollow — auth + self-follow + admin guards
     ├── user/buy-streak-freeze/   GET streak info; POST purchase streak freeze with coins (1K or 2.5K coins, max 2)
     ├── user/submit-payment/      POST submit UTR number for UPI payment (coins/pro/max/reset)
     ├── push/subscribe/           POST/DELETE web push subscription (VAPID endpoint + keys)
@@ -192,6 +194,8 @@ components/
 │   └── PackOpeningModal.tsx      Animated pack reveal (tap cards)
 ├── quizlets/QuizletsClient.tsx   Toggle: "My Collection" (owned, sell, Hidden section) + "All Quizlets" dex view (all non-hidden, owned highlighted)
 ├── milestones/MilestonesClient.tsx  Milestone grid — earned badges with tier colors + progress bar to next unlock
+├── profile/
+│   └── FollowButton.tsx          Optimistic follow/unfollow toggle — POST/DELETE /api/user/follow/[id]; rollback on failure
 └── game/
     ├── GameModesClient.tsx       Mode selection (HackDev, DinoRex, SpeedBlitz, Survival, Daily, Classic)
     ├── HackDevGame.tsx           60-second tech quiz sprint
@@ -218,7 +222,7 @@ lib/
 └── utils.ts                      cn(), CATEGORIES (16 total), RARITY_COLORS, SELL_VALUES, CategorySlug
 
 prisma/
-├── schema.prisma                 Full DB schema — 18 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification, UserMilestone
+├── schema.prisma                 Full DB schema — 19 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification, UserMilestone, UserFollow
 └── seed.ts                       55 official quizzes (11 categories × 5) + all quizlets + packs
 ```
 
@@ -311,13 +315,23 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - Has Skip button; final step links directly to `/discover`
 - Rendered in `app/(main)/dashboard/page.tsx`
 
-### Online Status (Leaderboard)
+### Online Status (Leaderboard + Profile)
 - `User.lastSeenAt DateTime?` field updated every 2 minutes by `OnlinePing` client component
-- Leaderboard shows green dot on avatar if `lastSeenAt > now - 5 minutes`
+- Leaderboard and profile page show green dot on avatar if `lastSeenAt > now - 5 minutes`
 - Leaderboard shows ⭐ badge for Pro users, 👑 badge for Max users (Max takes priority)
-- Columns: rank, player, coins, correct answers, accuracy %, quizlets owned, quiz attempts
+- Leaderboard columns: rank, player, coins, correct answers, accuracy %, followers, quizlets owned, quiz attempts — all except accuracy are sortable via URL params (`?sort=coins&dir=desc&page=1`)
+- Podium (top-3 cards) only renders when `sort === "coins" && dir === "desc"` on page 1 — hidden during non-default sort to avoid confusion
 - Admin sees extra column: email + join date
 - `POST /api/user/ping` handles the update
+
+### Follow System
+- `UserFollow` model: `id`, `followerId`, `followingId`, `createdAt` — `@@unique([followerId, followingId])`; cascade deletes
+- `POST /api/user/follow/[userId]` — follow a user; guards: auth, self-follow (400), target non-existent or isAdmin (404); duplicate silently ignored
+- `DELETE /api/user/follow/[userId]` — unfollow
+- `components/profile/FollowButton.tsx` — client component with optimistic toggle and rollback on non-2xx
+- Profile pages hidden for admin users (`lib/profile.ts` returns `null` if `isAdmin === true` → Next.js `notFound()`)
+- Follower notifications fan out in `/api/attempt`: `follow_milestone` when followed user crosses a coin milestone; `follow_streak_milestone` when they hit a streak milestone
+- **No notification on "user comes online"** — the 2-min ping would be unacceptably noisy; online status is display-only on the profile page
 
 ### School Hours Restriction
 - Applies to users whose email ends in `@oberoi-is.net`
@@ -346,10 +360,11 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - Test user is non-admin; school hours and account locks still apply
 
 ### Notifications
-- `Notification` model: `id`, `userId`, `type` (`overtaken` | `top3_join` | `feedback_reply` | `admin` | `milestone` | `streak_milestone`), `message`, `isRead`, `createdAt`
-- `/notifications` page shows all of a user's notifications
+- `Notification` model: `id`, `userId`, `type`, `message`, `isRead`, `createdAt`
+- Notification types: `overtaken` | `top3_join` | `feedback_reply` | `admin_message` | `milestone` | `streak_milestone` | `follow_milestone` | `follow_streak_milestone`
+- `/notifications` page shows all of a user's notifications; `TYPE_META` in the page maps each type to icon + label + color
 - `GET /api/notifications` returns unread count + list
-- Currently created by: admin feedback reply, admin direct message (admin/users), leaderboard events, milestone unlock, streak milestone
+- Created by: admin feedback reply, admin direct message (admin/users), leaderboard overtake/top3 events, milestone unlock, streak milestone, follow fan-out (follow_milestone, follow_streak_milestone)
 - MobileNav "More" drawer shows red dot on Notifications if unread count > 0
 
 ### Global Settings (AppSetting)
@@ -444,6 +459,7 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 
 | File | Purpose |
 |------|---------|
+| `lib/profile.ts` | Server-only profile data fetcher — `getProfileData(userId, viewerUserId)` — returns `null` for admins; parallel queries via `Promise.all` |
 | `lib/milestones-data.ts` | 50 milestone definitions + `MILESTONE_THRESHOLDS` + `TIER_COLORS` — edit names/tiers here |
 | `lib/quizlets-data.ts` | All 99 quizlet definitions (7 standard packs + 3 global uniques + 6 festival) |
 | `lib/packs-data.ts` | All 13 pack definitions (7 standard + 6 festival) — prices at ~25% of original |
@@ -533,3 +549,5 @@ npm run db:seed      # re-seed data (idempotent)
 - **Milestones**: thresholds are 1K–50K in steps of 1K (`MILESTONE_THRESHOLDS`); always use `skipDuplicates: true` when inserting `UserMilestone`; milestone push is fire-and-forget (dynamic import, errors swallowed)
 - **Streaks**: always use `getISTDateString()` from `lib/time.ts` for IST date comparison — never inline IST math; streak DB write is skipped when `lastDateIST === todayIST`; freeze purchase uses `streakFreezes: { increment: 1 }` (atomic, no read-modify-write)
 - **SVG icons**: custom category icons live in `components/icons/` — import from there, not inline SVG
+- **Follow system**: `UserFollow` model with cascade deletes; `lib/profile.ts → getProfileData()` returns `null` for admins (→ `notFound()`); leaderboard sort is URL-param-driven (`sort`/`dir`/`page`); accuracy is computed and NOT sortable (no raw query needed)
+- **Leaderboard sort**: sort state lives in URL params — always preserve `sort`/`dir` when generating pagination links; podium renders only on default sort (coins desc, page 1)
