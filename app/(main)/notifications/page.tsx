@@ -17,8 +17,8 @@ const TYPE_META: Record<string, { icon: string; label: string; color: string }> 
   admin_message:          { icon: "📣", label: "Admin",            color: "bg-blue-500/15 border-blue-500/30" },
   milestone:              { icon: "🏅", label: "Milestone",        color: "bg-amber-500/15 border-amber-500/30" },
   streak_milestone:       { icon: "🔥", label: "Streak",           color: "bg-orange-500/15 border-orange-500/30" },
-  follow_milestone:       { icon: "🏅", label: "Following",        color: "bg-amber-500/15 border-amber-500/30" },
-  follow_streak_milestone:{ icon: "🔥", label: "Following Streak", color: "bg-orange-500/15 border-orange-500/30" },
+  follow_milestone:       { icon: "👥", label: "Following",        color: "bg-amber-500/15 border-amber-500/30" },
+  follow_streak_milestone:{ icon: "✨", label: "Following Streak", color: "bg-orange-500/15 border-orange-500/30" },
 };
 
 export default function NotificationsPage() {
@@ -53,7 +53,7 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-white">🔔 Notifications</h1>

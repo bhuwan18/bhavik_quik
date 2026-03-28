@@ -94,7 +94,7 @@ export default async function LeaderboardPage({
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-white">🏆 Leaderboard</h1>

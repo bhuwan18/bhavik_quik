@@ -768,7 +768,7 @@ export default function ShopPage() {
   const [tab, setTab] = useState<ShopTab>("membership");
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-4xl mx-auto">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-white">🏪 Shop</h1>
         <p className="text-gray-400 mt-1">Upgrade your membership or top up your coins</p>

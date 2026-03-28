@@ -94,7 +94,7 @@ export default function MarketplaceClient({ packs, userCoins: initialCoins, fest
   const festivalPacks = packs.filter((p) => p.isFestival);
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

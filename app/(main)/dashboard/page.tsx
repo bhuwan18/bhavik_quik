@@ -91,7 +91,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-5xl mx-auto">
       <IntroOverlay />
 
       {/* Completion Certificate Banner */}

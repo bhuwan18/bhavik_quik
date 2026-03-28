@@ -31,7 +31,7 @@ export default async function ProfilePage({
   ];
 
   return (
-    <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-3xl mx-auto space-y-6">
       {/* Header card */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -47,7 +47,7 @@ export default async function ProfilePage({
                   className="rounded-full ring-2 ring-white/20"
                 />
               ) : (
-                <div className="w-18 h-18 w-[72px] h-[72px] rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white">
+                <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white">
                   {data.name?.[0] ?? "?"}
                 </div>
               )}

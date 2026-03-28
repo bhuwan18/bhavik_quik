@@ -176,7 +176,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
   const totalOwned = allQuizlets.filter((q) => ownedIds.has(q.id)).length;
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-6xl mx-auto">
       {toast && (
         <div className="fixed top-6 right-6 z-50 bg-green-500/90 text-white px-5 py-3 rounded-xl shadow-lg">
           {toast}

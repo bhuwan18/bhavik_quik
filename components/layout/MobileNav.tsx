@@ -8,21 +8,39 @@ import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  Compass,
+  ShoppingBag,
+  Layers,
+  Trophy,
+  Medal,
+  Gamepad2,
+  MessageSquare,
+  Store,
+  Bell,
+  Moon,
+  Sun,
+  LogOut,
+  Menu,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 
-const PRIMARY_NAV = [
-  { href: "/dashboard", icon: "📊", label: "Home" },
-  { href: "/discover", icon: "🔍", label: "Discover" },
-  { href: "/marketplace", icon: "🛒", label: "Packs" },
-  { href: "/quizlets", icon: "🎴", label: "Quizlets" },
+const PRIMARY_NAV: { href: string; icon: LucideIcon; label: string; color: string }[] = [
+  { href: "/dashboard",   icon: LayoutDashboard, label: "Home",     color: "text-blue-400"   },
+  { href: "/discover",    icon: Compass,         label: "Discover", color: "text-cyan-400"   },
+  { href: "/marketplace", icon: ShoppingBag,     label: "Packs",    color: "text-green-400"  },
+  { href: "/quizlets",    icon: Layers,          label: "Quizlets", color: "text-violet-400" },
 ];
 
-const MORE_NAV = [
-  { href: "/leaderboard", icon: "🏆", label: "Leaderboard" },
-  { href: "/milestones", icon: "🏅", label: "Milestones" },
-  { href: "/game", icon: "🎮", label: "Game Modes" },
-  { href: "/feedback", icon: "💬", label: "Feedback" },
-  { href: "/shop", icon: "🏪", label: "Upgrade" },
-  { href: "/notifications", icon: "🔔", label: "Notifications" },
+const MORE_NAV: { href: string; icon: LucideIcon; label: string; color: string }[] = [
+  { href: "/leaderboard",  icon: Trophy,        label: "Leaderboard", color: "text-amber-400"  },
+  { href: "/milestones",   icon: Medal,         label: "Milestones",  color: "text-yellow-400" },
+  { href: "/game",         icon: Gamepad2,      label: "Game Modes",  color: "text-orange-400" },
+  { href: "/feedback",     icon: MessageSquare, label: "Feedback",    color: "text-pink-400"   },
+  { href: "/shop",         icon: Store,         label: "Upgrade",     color: "text-emerald-400"},
+  { href: "/notifications",icon: Bell,          label: "Notifications",color: "text-red-400"   },
 ];
 
 export default function MobileNav() {
@@ -114,14 +132,17 @@ export default function MobileNav() {
                 onClick={() => setTheme(isLight ? "dark" : "light")}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-white/5 text-gray-300 hover:bg-white/10 transition-colors border border-white/10"
               >
-                <span>{isLight ? "🌙" : "☀️"}</span>
+                {isLight
+                  ? <Moon size={15} className="text-indigo-400" />
+                  : <Sun size={15} className="text-yellow-400" />
+                }
                 <span>{isLight ? "Dark Mode" : "Light Mode"}</span>
               </button>
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors border border-red-500/20"
               >
-                <span>↩</span>
+                <LogOut size={15} />
                 <span>Sign Out</span>
               </button>
             </div>
@@ -132,7 +153,7 @@ export default function MobileNav() {
         <div className="p-3">
           <p className="text-xs font-bold text-purple-400/60 uppercase tracking-widest px-1 mb-2">Pages</p>
           <div className="grid grid-cols-3 gap-1">
-            {MORE_NAV.map(({ href, icon, label }) => {
+            {MORE_NAV.map(({ href, icon: Icon, label, color }) => {
               const active = pathname === href || pathname.startsWith(href + "/");
               const isNotif = href === "/notifications";
               return (
@@ -147,8 +168,8 @@ export default function MobileNav() {
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   )}
                 >
-                  <span className="text-2xl leading-none relative">
-                    {icon}
+                  <span className="relative">
+                    <Icon size={20} className={cn("shrink-0", active ? "opacity-100" : color)} />
                     {isNotif && unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border border-black text-[8px] font-bold text-white flex items-center justify-center leading-none">
                         {unreadCount > 9 ? "9+" : unreadCount}
@@ -172,7 +193,7 @@ export default function MobileNav() {
         }}
       >
         <div className="flex">
-          {PRIMARY_NAV.map(({ href, icon, label }) => {
+          {PRIMARY_NAV.map(({ href, icon: Icon, label, color }) => {
             const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
             return (
               <Link
@@ -184,7 +205,7 @@ export default function MobileNav() {
                   active ? "text-purple-400" : "text-gray-500"
                 )}
               >
-                <span className="text-xl leading-none">{icon}</span>
+                <Icon size={22} className={cn("shrink-0", active ? "opacity-100" : color)} />
                 <span>{label}</span>
               </Link>
             );
@@ -198,8 +219,11 @@ export default function MobileNav() {
               drawerOpen || isMoreActive ? "text-purple-400" : "text-gray-500"
             )}
           >
-            <span className="text-xl leading-none relative">
-              {drawerOpen ? "✕" : "☰"}
+            <span className="relative">
+              {drawerOpen
+                ? <X size={22} />
+                : <Menu size={22} />
+              }
               {!drawerOpen && unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />
               )}

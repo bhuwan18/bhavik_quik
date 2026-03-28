@@ -91,7 +91,7 @@ export default function MilestonesClient({ earned, totalCoinsEarned }: Props) {
     : MILESTONES.filter((m) => m.tier === activeTier);
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">Milestones</h1>

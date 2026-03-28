@@ -31,7 +31,7 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-2xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">💬 Feedback</h1>
         <p className="text-gray-400 mt-1">
