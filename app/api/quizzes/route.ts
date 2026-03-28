@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { CATEGORIES } from "@/lib/utils";
 
-const VALID_CATEGORY_SLUGS = [
-  "football", "cricket", "harry-potter", "technology", "avengers",
-  "artists", "musicians", "math", "science", "physics",
-];
+const VALID_CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug);
+
+const PAGE_SIZE = 20;
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const rawCategory = searchParams.get("category");
   const rawSearch = searchParams.get("search");
   const official = searchParams.get("official");
+  const rawOffset = searchParams.get("offset");
 
   // Validate and sanitize inputs
-  const category = rawCategory && VALID_CATEGORY_SLUGS.includes(rawCategory) ? rawCategory : null;
+  const category = rawCategory && VALID_CATEGORY_SLUGS.includes(rawCategory as (typeof VALID_CATEGORY_SLUGS)[number]) ? rawCategory : null;
   const search = rawSearch ? rawSearch.slice(0, 100) : null;
+  const offset = Math.max(0, parseInt(rawOffset ?? "0", 10) || 0);
 
-  const quizzes = await prisma.quiz.findMany({
+  const rows = await prisma.quiz.findMany({
     where: {
       ...(category ? { category } : {}),
       ...(official === "true" ? { isOfficial: true } : {}),
@@ -28,17 +30,18 @@ export async function GET(req: NextRequest) {
       author: { select: { name: true, image: true } },
       _count: { select: { questions: true, attempts: true } },
     },
-    orderBy: [{ isOfficial: "desc" }, { createdAt: "desc" }],
-    take: 50,
+    orderBy: [{ attempts: { _count: "desc" } }],
+    skip: offset,
+    take: PAGE_SIZE + 1,
   });
 
-  return NextResponse.json(quizzes);
+  const hasMore = rows.length > PAGE_SIZE;
+  const quizzes = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
+
+  return NextResponse.json({ quizzes, hasMore });
 }
 
-const VALID_CATEGORIES = [
-  "football", "cricket", "harry-potter", "technology", "avengers",
-  "artists", "musicians", "math", "science", "physics",
-];
+const VALID_CATEGORIES = CATEGORIES.map((c) => c.slug);
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   if (typeof title !== "string" || title.trim().length < 3 || title.trim().length > 200)
     return NextResponse.json({ error: "Title must be 3–200 characters" }, { status: 400 });
-  if (typeof category !== "string" || !VALID_CATEGORIES.includes(category))
+  if (typeof category !== "string" || !VALID_CATEGORIES.includes(category as (typeof VALID_CATEGORIES)[number]))
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   const diff = Number(difficulty);
   if (!Number.isInteger(diff) || diff < 1 || diff > 5)
