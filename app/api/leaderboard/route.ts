@@ -9,7 +9,7 @@ const EXCLUDED_EMAILS = ["test@bittsquiz.internal"];
 const getCachedLeaderboard = unstable_cache(
   async (adminEmail: string) =>
     prisma.user.findMany({
-      where: { NOT: { email: { in: [...EXCLUDED_EMAILS, adminEmail] } } },
+      where: { isAdmin: false, NOT: { email: { in: [...EXCLUDED_EMAILS, adminEmail] } } },
       select: {
         id: true,
         name: true,
@@ -33,7 +33,7 @@ export async function GET() {
 
   if (isAdmin) {
     const users = await prisma.user.findMany({
-      where: { NOT: { email: { in: [...EXCLUDED_EMAILS, adminEmail] } } },
+      where: { isAdmin: false, NOT: { email: { in: [...EXCLUDED_EMAILS, adminEmail] } } },
       select: {
         id: true,
         name: true,
