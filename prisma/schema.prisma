@@ -42,6 +42,8 @@ model User {
   notifications        Notification[]
   pushSubscriptions    PushSubscription[]
   milestones           UserMilestone[]
+  followers            UserFollow[]  @relation("UserFollowing")
+  following            UserFollow[]  @relation("UserFollowers")
 
   @@index([totalCoinsEarned])
   @@index([lastSeenAt])
@@ -256,6 +258,20 @@ model UserMilestone {
 
   @@unique([userId, threshold])
   @@index([userId])
+}
+
+model UserFollow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower    User @relation("UserFollowers", fields: [followerId],  references: [id], onDelete: Cascade)
+  following   User @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }
 
 model DinoRexRoom {

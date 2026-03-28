@@ -221,6 +221,21 @@ export async function POST(req: NextRequest) {
       import("@/lib/push").then(({ sendPushToUser }) => {
         sendPushToUser(session.user.id, `🔥 ${highest}-Day Streak!`, `You've kept your streak alive for ${highest} days!`, "/dashboard").catch(() => {});
       }).catch(() => {});
+
+      // Notify followers about streak milestone
+      const streakFollowers = await prisma.userFollow.findMany({
+        where: { followingId: session.user.id },
+        select: { followerId: true },
+      });
+      if (streakFollowers.length > 0) {
+        await prisma.notification.createMany({
+          data: streakFollowers.map((f) => ({
+            userId: f.followerId,
+            type: "follow_streak_milestone",
+            message: `🔥 ${dbUser.name ?? "Someone"} just hit a ${highest}-day streak!`,
+          })),
+        });
+      }
     }
   }
 
@@ -254,6 +269,21 @@ export async function POST(req: NextRequest) {
       import("@/lib/push").then(({ sendPushToUser }) => {
         sendPushToUser(session.user.id, "Milestone unlocked! 🏅", badge.name, "/milestones").catch(() => {});
       }).catch(() => {});
+
+      // Notify followers about coin milestone
+      const milestoneFollowers = await prisma.userFollow.findMany({
+        where: { followingId: session.user.id },
+        select: { followerId: true },
+      });
+      if (milestoneFollowers.length > 0) {
+        await prisma.notification.createMany({
+          data: milestoneFollowers.map((f) => ({
+            userId: f.followerId,
+            type: "follow_milestone",
+            message: `🏅 ${dbUser.name ?? "Someone"} just unlocked the "${badge.name}" milestone!`,
+          })),
+        });
+      }
     }
   }
 
