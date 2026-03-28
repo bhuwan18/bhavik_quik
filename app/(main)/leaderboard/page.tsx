@@ -17,7 +17,8 @@ export default async function LeaderboardPage({
   const skip = (page - 1) * PAGE_SIZE;
 
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@bittsquiz.internal";
-  const where = { NOT: { email: adminEmail } };
+  const EXCLUDED_EMAILS = ["test@bittsquiz.internal"];
+  const where = { isAdmin: false, NOT: { email: { in: [...EXCLUDED_EMAILS, adminEmail] } } };
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
