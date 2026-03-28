@@ -263,17 +263,24 @@ export async function POST(req: NextRequest) {
     const newTotal = oldTotal + coinsEarned;
     const userName = dbUser.name ?? "Someone";
 
-    // Single query: fetch users near the current total range (covers both overtaken + top-3 checks)
-    const nearbyUsers = await prisma.user.findMany({
-      where: { id: { not: session.user.id } },
-      orderBy: { totalCoinsEarned: "desc" },
-      select: { id: true, totalCoinsEarned: true },
-    });
-
-    const top3Before = nearbyUsers.slice(0, 3);
-    const overtakenUsers = nearbyUsers.filter(
-      (u) => u.totalCoinsEarned > oldTotal && u.totalCoinsEarned <= newTotal
-    );
+    // Two targeted queries instead of a full table scan:
+    // 1) users whose total was between oldTotal+1 and newTotal (just overtaken)
+    // 2) top 3 users by totalCoinsEarned (for top-3 join notification)
+    const [overtakenUsers, top3Before] = await Promise.all([
+      prisma.user.findMany({
+        where: {
+          id: { not: session.user.id },
+          totalCoinsEarned: { gt: oldTotal, lte: newTotal },
+        },
+        select: { id: true, totalCoinsEarned: true },
+      }),
+      prisma.user.findMany({
+        where: { id: { not: session.user.id } },
+        orderBy: { totalCoinsEarned: "desc" },
+        take: 3,
+        select: { id: true, totalCoinsEarned: true },
+      }),
+    ]);
 
     const notificationsToCreate: { userId: string; type: string; message: string }[] = [];
 

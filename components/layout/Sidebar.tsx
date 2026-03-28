@@ -6,7 +6,8 @@ import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useUnreadCount } from "@/components/layout/NotificationsProvider";
 import {
   LayoutDashboard,
   Compass,
@@ -62,7 +63,7 @@ export default function Sidebar() {
   const isPro = !!user?.isPro;
   const isLight = theme === "light";
 
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useUnreadCount();
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("bq_sidebar_collapsed") === "true";
@@ -73,16 +74,6 @@ export default function Sidebar() {
     setCollapsed(next);
     localStorage.setItem("bq_sidebar_collapsed", String(next));
   };
-
-  useEffect(() => {
-    if (!session?.user) return;
-    fetch("/api/notifications")
-      .then((r) => r.json())
-      .then((data: { isRead: boolean }[]) => {
-        if (Array.isArray(data)) setUnreadCount(data.filter((n) => !n.isRead).length);
-      })
-      .catch(() => {});
-  }, [session, pathname]);
 
   const navItemClass = (active: boolean, adminStyle = false) =>
     cn(

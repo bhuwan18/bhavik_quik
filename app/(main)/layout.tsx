@@ -6,6 +6,7 @@ import OnlinePing from "@/components/layout/OnlinePing";
 import { AudioProvider } from "@/lib/audio-context";
 import AudioPlayer from "@/components/AudioPlayer";
 import PushSubscriptionManager from "@/components/layout/PushSubscriptionManager";
+import { NotificationsProvider } from "@/components/layout/NotificationsProvider";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -13,6 +14,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   return (
     <AudioProvider>
+      <NotificationsProvider>
       <div className="flex min-h-screen">
         {/* Sidebar hidden on mobile */}
         <div className="hidden md:flex sticky top-0 h-screen">
@@ -31,6 +33,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       <OnlinePing />
       <AudioPlayer />
       <PushSubscriptionManager />
+      </NotificationsProvider>
     </AudioProvider>
   );
 }

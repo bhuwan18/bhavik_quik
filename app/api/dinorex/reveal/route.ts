@@ -71,22 +71,28 @@ export async function POST(req: NextRequest) {
   if (winner || isLastQ) {
     await prisma.dinoRexRoom.update({ where: { code }, data: { status: "ended", winner: winner?.userId ?? null } });
 
+    const coinUpdates: Promise<unknown>[] = [];
     if (winner) {
       const coinsWon = winner.score * 5 + DINOREX_WIN_BONUS_COINS;
-      await prisma.user.update({
-        where: { id: winner.userId },
-        data: { coins: { increment: coinsWon }, totalCoinsEarned: { increment: coinsWon } },
-      });
+      coinUpdates.push(
+        prisma.user.update({
+          where: { id: winner.userId },
+          data: { coins: { increment: coinsWon }, totalCoinsEarned: { increment: coinsWon } },
+        })
+      );
     }
     for (const p of alive.filter((p) => p.userId !== winner?.userId)) {
       const coins = p.score * GAME_COINS_PER_CORRECT;
       if (coins > 0) {
-        await prisma.user.update({
-          where: { id: p.userId },
-          data: { coins: { increment: coins }, totalCoinsEarned: { increment: coins } },
-        });
+        coinUpdates.push(
+          prisma.user.update({
+            where: { id: p.userId },
+            data: { coins: { increment: coins }, totalCoinsEarned: { increment: coins } },
+          })
+        );
       }
     }
+    await Promise.all(coinUpdates);
 
     await pusherServer.trigger(`dinorex-${code}`, "game-ended", { winner, scores });
     return NextResponse.json({ ok: true });

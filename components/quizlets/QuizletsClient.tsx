@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { RARITY_COLORS } from "@/lib/utils";
 import { QUIZLETS_DATA } from "@/lib/quizlets-data";
 import { PACKS_DATA } from "@/lib/packs-data";
@@ -40,6 +40,9 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
   const [selling, setSelling] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [view, setView] = useState<"mine" | "all">("mine");
+
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current); }, []);
 
   const ownedIds = useMemo(() => new Set(quizlets.map((q) => q.id)), [quizlets]);
 
@@ -108,8 +111,9 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
   };
 
   const showToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(null), 3000);
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
   };
 
   const QuizletCard = ({ quizlet }: { quizlet: OwnedQuizlet }) => {

@@ -111,31 +111,29 @@ async function advanceRound(
       data: { status: "ended", winner: winner?.userId ?? null },
     });
 
-    // Award coins to winner
+    // Award coins to winner + participation coins to non-winners in parallel
+    const coinUpdates: Promise<unknown>[] = [];
     if (winner) {
       const coinsWon = winner.score * 5 + DINOREX_WIN_BONUS_COINS;
-      await prisma.user.update({
-        where: { id: winner.userId },
-        data: {
-          coins: { increment: coinsWon },
-          totalCoinsEarned: { increment: coinsWon },
-        },
-      });
+      coinUpdates.push(
+        prisma.user.update({
+          where: { id: winner.userId },
+          data: { coins: { increment: coinsWon }, totalCoinsEarned: { increment: coinsWon } },
+        })
+      );
     }
-
-    // Award participation coins to all alive players (non-winner)
     for (const p of alive.filter((p) => p.userId !== winner?.userId)) {
       const coins = p.score * GAME_COINS_PER_CORRECT;
       if (coins > 0) {
-        await prisma.user.update({
-          where: { id: p.userId },
-          data: {
-            coins: { increment: coins },
-            totalCoinsEarned: { increment: coins },
-          },
-        });
+        coinUpdates.push(
+          prisma.user.update({
+            where: { id: p.userId },
+            data: { coins: { increment: coins }, totalCoinsEarned: { increment: coins } },
+          })
+        );
       }
     }
+    await Promise.all(coinUpdates);
 
     await pusherServer.trigger(code ? `dinorex-${code}` : "", "game-ended", {
       winner,

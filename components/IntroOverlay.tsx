@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, startTransition } from "react";
+import { useState, useEffect, useRef, startTransition } from "react";
 import Link from "next/link";
 
 const STEPS = [
@@ -43,11 +43,15 @@ export default function IntroOverlay() {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
   const [fading, setFading] = useState(false);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && !localStorage.getItem(STORAGE_KEY)) {
       startTransition(() => setVisible(true));
     }
+    return () => {
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+    };
   }, []);
 
   const dismiss = () => {
@@ -58,7 +62,7 @@ export default function IntroOverlay() {
   const goTo = (next: number) => {
     if (fading) return;
     setFading(true);
-    setTimeout(() => {
+    fadeTimerRef.current = setTimeout(() => {
       setStep(next);
       setFading(false);
     }, 150);

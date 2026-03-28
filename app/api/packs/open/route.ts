@@ -35,24 +35,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not enough coins" }, { status: 400 });
   }
 
-  const packQuizlets = await prisma.quizlet.findMany({ where: { pack: packSlug } });
-  const allQuizlets = await prisma.quizlet.findMany();
+  const [packQuizlets, allQuizlets] = await Promise.all([
+    prisma.quizlet.findMany({ where: { pack: packSlug } }),
+    prisma.quizlet.findMany(),
+  ]);
 
   const rolled = rollPackOpening(packSlug, packQuizlets, allQuizlets);
 
-  const ownedIds = (
-    await prisma.userQuizlet.findMany({
-      where: { userId: session.user.id, quizletId: { in: rolled.map((q) => q.id) } },
-      select: { quizletId: true },
-    })
-  ).map((r) => r.quizletId);
+  const ownedIds = new Set(
+    (
+      await prisma.userQuizlet.findMany({
+        where: { userId: session.user.id, quizletId: { in: rolled.map((q) => q.id) } },
+        select: { quizletId: true },
+      })
+    ).map((r) => r.quizletId)
+  );
 
   let refundCoins = 0;
   const newQuizlets = [];
   const duplicates = [];
 
   for (const quizlet of rolled) {
-    if (ownedIds.includes(quizlet.id)) {
+    if (ownedIds.has(quizlet.id)) {
       refundCoins += SELL_VALUES[quizlet.rarity] ?? 10;
       duplicates.push({ ...quizlet, isDuplicate: true });
     } else {

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useUnreadCount } from "@/components/layout/NotificationsProvider";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -35,17 +36,7 @@ export default function MobileNav() {
   const isAdmin = !!user?.isAdmin;
   const isPro = !!user?.isPro;
 
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    if (!session?.user) return;
-    fetch("/api/notifications")
-      .then((r) => r.json())
-      .then((data: { isRead: boolean }[]) => {
-        if (Array.isArray(data)) setUnreadCount(data.filter((n) => !n.isRead).length);
-      })
-      .catch(() => {});
-  }, [session, pathname]);
+  const unreadCount = useUnreadCount();
 
   const isMoreActive = MORE_NAV.some(
     ({ href }) => pathname === href || pathname.startsWith(href + "/")

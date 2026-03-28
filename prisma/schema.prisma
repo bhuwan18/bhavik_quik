@@ -113,6 +113,8 @@ model Question {
   explanation  String? @db.Text
   readMoreUrl  String?
   imageUrl     String?
+
+  @@index([quizId])
 }
 
 model QuizAttempt {

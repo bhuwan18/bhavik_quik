@@ -6,21 +6,22 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { coins: true, totalCorrect: true, totalAnswered: true, createdAt: true },
-  });
+  const [user, totalQuizlets, ownedQuizlets, recentAttempts] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { coins: true, totalCorrect: true, totalAnswered: true, createdAt: true },
+    }),
+    prisma.quizlet.count(),
+    prisma.userQuizlet.count({ where: { userId: session.user.id } }),
+    prisma.quizAttempt.findMany({
+      where: { userId: session.user.id },
+      include: { quiz: { select: { title: true, category: true } } },
+      orderBy: { completedAt: "desc" },
+      take: 5,
+    }),
+  ]);
 
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-  const totalQuizlets = await prisma.quizlet.count();
-  const ownedQuizlets = await prisma.userQuizlet.count({ where: { userId: session.user.id } });
-  const recentAttempts = await prisma.quizAttempt.findMany({
-    where: { userId: session.user.id },
-    include: { quiz: { select: { title: true, category: true } } },
-    orderBy: { completedAt: "desc" },
-    take: 5,
-  });
 
   return NextResponse.json({
     coins: user.coins,
