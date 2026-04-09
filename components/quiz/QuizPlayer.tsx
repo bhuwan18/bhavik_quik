@@ -160,10 +160,17 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
             <span>{Math.round(progress)}%</span>
           </span>
         </div>
-        <div className="w-full bg-white/10 rounded-full h-2">
+        <div
+          role="progressbar"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Quiz progress"
+          className="w-full bg-white/10 rounded-full h-2 overflow-hidden"
+        >
           <div
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all"
-            style={{ width: `${progress}%` }}
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-transform duration-300 ease-out"
+            style={{ transform: `scaleX(${progress / 100})`, transformOrigin: "left", willChange: "transform" }}
           />
         </div>
       </div>
@@ -175,11 +182,11 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
             <div className="bg-white rounded-2xl p-4 md:p-6 shadow-lg inline-flex items-center justify-center">
               <Image
                 src={question.imageUrl}
-                alt="Question image"
+                alt={question.text}
                 width={300}
                 height={200}
                 className="object-contain max-h-48 md:max-h-60"
-                unoptimized
+                sizes="(max-width: 768px) 280px, 300px"
               />
             </div>
           </div>

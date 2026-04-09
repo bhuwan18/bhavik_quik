@@ -94,7 +94,7 @@ export default async function LeaderboardPage({
   }
 
   return (
-    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-5xl mx-auto">
+    <div className="p-4 pb-24 md:p-8 md:pb-0 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-white">🏆 Leaderboard</h1>
@@ -128,7 +128,7 @@ export default async function LeaderboardPage({
                       className="rounded-full ring-2 ring-white/20 w-9 h-9 md:w-11 md:h-11"
                     />
                   ) : (
-                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white text-sm md:text-base">
+                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white/10 border border-white/20 flex items-center justify-center font-bold text-white text-sm md:text-base">
                       {user.name?.[0] ?? "?"}
                     </div>
                   )}
@@ -176,14 +176,14 @@ export default async function LeaderboardPage({
                 </th>
 
                 {/* Coins Earned */}
-                <th className={thClass("coins", "")}>
+                <th className={thClass("coins", "")} aria-sort={sort === "coins" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
                   <Link href={sortHref("coins", sort, dir, page)} className="hover:text-white transition-colors">
                     Coins{arrow("coins")}
                   </Link>
                 </th>
 
                 {/* Correct */}
-                <th className={thClass("correct", "hidden sm:table-cell")}>
+                <th className={thClass("correct", "hidden sm:table-cell")} aria-sort={sort === "correct" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
                   <Link href={sortHref("correct", sort, dir, page)} className="hover:text-white transition-colors">
                     Correct{arrow("correct")}
                   </Link>
@@ -195,21 +195,21 @@ export default async function LeaderboardPage({
                 </th>
 
                 {/* Followers */}
-                <th className={thClass("followers", "hidden sm:table-cell")}>
+                <th className={thClass("followers", "hidden sm:table-cell")} aria-sort={sort === "followers" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
                   <Link href={sortHref("followers", sort, dir, page)} className="hover:text-white transition-colors">
                     Followers{arrow("followers")}
                   </Link>
                 </th>
 
                 {/* Quizlets */}
-                <th className={thClass("quizlets", "hidden md:table-cell")}>
+                <th className={thClass("quizlets", "hidden md:table-cell")} aria-sort={sort === "quizlets" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
                   <Link href={sortHref("quizlets", sort, dir, page)} className="hover:text-white transition-colors">
                     Quizlets{arrow("quizlets")}
                   </Link>
                 </th>
 
                 {/* Quizzes */}
-                <th className={thClass("quizzes", "hidden md:table-cell")}>
+                <th className={thClass("quizzes", "hidden md:table-cell")} aria-sort={sort === "quizzes" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
                   <Link href={sortHref("quizzes", sort, dir, page)} className="hover:text-white transition-colors">
                     Quizzes{arrow("quizzes")}
                   </Link>
@@ -260,7 +260,7 @@ export default async function LeaderboardPage({
                               className="rounded-full w-8 h-8 md:w-[34px] md:h-[34px]"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white">
+                            <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs font-bold text-white">
                               {user.name?.[0] ?? "?"}
                             </div>
                           )}
@@ -284,12 +284,12 @@ export default async function LeaderboardPage({
                             <span className="text-xs text-purple-400 shrink-0">(you)</span>
                           )}
                           {user.isMax && (
-                            <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                            <span className="text-xs bg-white/15 text-white border border-white/20 px-1.5 py-0.5 rounded-full font-bold shrink-0">
                               👑
                             </span>
                           )}
                           {!user.isMax && user.isPro && (
-                            <span className="text-xs bg-gradient-to-r from-yellow-500 to-orange-400 text-black px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                            <span className="text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-1.5 py-0.5 rounded-full font-bold shrink-0">
                               ⭐
                             </span>
                           )}
@@ -298,17 +298,17 @@ export default async function LeaderboardPage({
                     </td>
 
                     {/* Coins */}
-                    <td className="px-3 md:px-4 py-3.5 text-sm text-yellow-400 font-bold text-right whitespace-nowrap">
+                    <td className="px-3 md:px-4 py-3.5 text-sm text-yellow-400 font-bold text-right whitespace-nowrap tabular-nums">
                       🪙 {user.totalCoinsEarned.toLocaleString()}
                     </td>
 
                     {/* Correct */}
-                    <td className="px-3 md:px-4 py-3.5 text-sm text-green-400 text-right hidden sm:table-cell">
+                    <td className="px-3 md:px-4 py-3.5 text-sm text-green-400 text-right hidden sm:table-cell tabular-nums">
                       {user.totalCorrect.toLocaleString()}
                     </td>
 
                     {/* Accuracy */}
-                    <td className="px-3 md:px-4 py-3.5 text-sm text-right hidden sm:table-cell">
+                    <td className="px-3 md:px-4 py-3.5 text-sm text-right hidden sm:table-cell tabular-nums">
                       <span
                         className={
                           accuracy >= 70
@@ -323,17 +323,17 @@ export default async function LeaderboardPage({
                     </td>
 
                     {/* Followers */}
-                    <td className="px-3 md:px-4 py-3.5 text-sm text-gray-400 text-right hidden sm:table-cell">
+                    <td className="px-3 md:px-4 py-3.5 text-sm text-gray-400 text-right hidden sm:table-cell tabular-nums">
                       👥 {user._count.followers}
                     </td>
 
                     {/* Quizlets */}
-                    <td className="px-3 md:px-4 py-3.5 text-sm text-purple-400 text-right hidden md:table-cell">
+                    <td className="px-3 md:px-4 py-3.5 text-sm text-purple-400 text-right hidden md:table-cell tabular-nums">
                       🎴 {user._count.ownedQuizlets}
                     </td>
 
                     {/* Quizzes */}
-                    <td className="px-3 md:px-4 py-3.5 text-sm text-blue-400 text-right hidden md:table-cell">
+                    <td className="px-3 md:px-4 py-3.5 text-sm text-blue-400 text-right hidden md:table-cell tabular-nums">
                       {user._count.quizAttempts}
                     </td>
 

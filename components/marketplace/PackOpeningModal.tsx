@@ -40,7 +40,7 @@ function SingleModal({ pack, results, coinsRefunded, onClose }: Props) {
   const isRainbow = ["unique", "impossible"].includes(quizlet.rarity);
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4">
       <div className="flex flex-col items-center gap-6 max-w-sm w-full">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white">🎴 {pack.name} Opened!</h2>

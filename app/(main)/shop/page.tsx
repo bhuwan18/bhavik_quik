@@ -463,14 +463,22 @@ function BuyCoinsTab() {
 
 // ─── Daily Reset ───────────────────────────────────────────────────────────────
 
+const DAILY_RESET_SALE_END = new Date("2026-04-17T00:00:00+05:30"); // ends midnight IST Apr 17
+const DAILY_RESET_SALE_DISCOUNT = 0.75; // 75% off
+
 function DailyResetTab() {
   const [utr, setUtr] = useState("");
   const [step, setStep] = useState<"info" | "pay" | "submitted">("info");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const isSaleActive = new Date() < DAILY_RESET_SALE_END;
+  const effectivePrice = isSaleActive
+    ? Math.round(DAILY_RESET_AMOUNT_INR * (1 - DAILY_RESET_SALE_DISCOUNT))
+    : DAILY_RESET_AMOUNT_INR;
+
   const utrValid = /^[A-Za-z0-9]{8,30}$/.test(utr.trim());
-  const upiLink = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${DAILY_RESET_AMOUNT_INR}&cu=INR&tn=${encodeURIComponent("BittsQuiz Daily Limit Reset")}`;
+  const upiLink = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${effectivePrice}&cu=INR&tn=${encodeURIComponent("BittsQuiz Daily Limit Reset")}`;
 
   const handleSubmit = async () => {
     if (!utrValid) return;
@@ -516,7 +524,13 @@ function DailyResetTab() {
       <div className="text-center mb-8">
         <div className="text-6xl mb-4">🔄</div>
         <h2 className="text-2xl font-bold text-white mb-2">Daily Limit Reset</h2>
-        <p className="text-gray-400">Hit your daily coin cap? Reset it instantly for ₹{DAILY_RESET_AMOUNT_INR}.</p>
+        <p className="text-gray-400">Hit your daily coin cap? Reset it instantly for ₹{effectivePrice}.</p>
+        {isSaleActive && (
+          <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-full">
+            <span className="text-red-400 font-bold text-sm">75% OFF</span>
+            <span className="text-gray-400 text-xs">Sale ends Apr 16</span>
+          </div>
+        )}
       </div>
 
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6 space-y-3">
@@ -537,7 +551,12 @@ function DailyResetTab() {
       <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6 flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-400">One-time fee</p>
-          <p className="text-3xl font-bold text-white">₹{DAILY_RESET_AMOUNT_INR}</p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-3xl font-bold text-white">₹{effectivePrice}</p>
+            {isSaleActive && (
+              <p className="text-base text-gray-500 line-through">₹{DAILY_RESET_AMOUNT_INR}</p>
+            )}
+          </div>
         </div>
         <div className="text-right">
           <p className="text-sm text-gray-400">You get</p>
@@ -550,7 +569,7 @@ function DailyResetTab() {
           onClick={() => { setStep("pay"); setError(""); }}
           className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-lg rounded-xl transition-all"
         >
-          Pay ₹{DAILY_RESET_AMOUNT_INR} via UPI →
+          Pay ₹{effectivePrice} via UPI →
         </button>
       )}
 
@@ -565,7 +584,7 @@ function DailyResetTab() {
             <p className="text-xs text-gray-500 mb-3">Scan with any UPI app (GPay, PhonePe, Paytm, etc.)</p>
             <p className="text-sm text-gray-400 mb-1">UPI ID</p>
             <p className="text-white font-mono font-bold text-lg mb-1">{UPI_ID || "merchant@upi"}</p>
-            <p className="text-gray-500 text-xs mb-4">{UPI_NAME} · ₹{DAILY_RESET_AMOUNT_INR}</p>
+            <p className="text-gray-500 text-xs mb-4">{UPI_NAME} · ₹{effectivePrice}</p>
             <a
               href={upiLink}
               className="inline-block px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-90 text-white text-sm font-semibold rounded-xl transition-all"

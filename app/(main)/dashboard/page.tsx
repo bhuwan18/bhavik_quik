@@ -83,15 +83,9 @@ export default async function DashboardPage() {
 
   const firstName = session.user.name?.split(" ")[0] ?? "Player";
 
-  const stats = [
-    { label: "Coins", value: user?.coins?.toLocaleString() ?? "0", icon: "🪙", color: "from-yellow-500/20 to-orange-500/10 border-yellow-500/30", href: "/buy-coins" },
-    { label: "Correct Answers", value: user?.totalCorrect?.toLocaleString() ?? "0", icon: "✅", color: "from-green-500/20 to-emerald-500/10 border-green-500/30", href: null },
-    { label: "Accuracy", value: `${accuracy}%`, icon: "🎯", color: "from-blue-500/20 to-cyan-500/10 border-blue-500/30", href: null },
-    { label: "Quizlets Owned", value: `${ownedQuizlets}/${totalQuizlets}`, icon: "🎴", color: "from-purple-500/20 to-pink-500/10 border-purple-500/30", href: "/quizlets" },
-  ];
 
   return (
-    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-5xl mx-auto">
+    <div className="p-4 pb-24 md:p-8 md:pb-0 max-w-5xl mx-auto">
       <IntroOverlay />
 
       {/* Completion Certificate Banner */}
@@ -111,16 +105,10 @@ export default async function DashboardPage() {
       )}
 
       {/* ── Hero: Play-first CTA ── */}
-      <div className="relative overflow-hidden rounded-3xl mb-8 border border-purple-500/25"
-        style={{ background: "linear-gradient(135deg, rgba(91,33,182,0.35) 0%, rgba(124,58,237,0.25) 50%, rgba(190,24,93,0.25) 100%)" }}>
-        {/* Decorative floating characters */}
-        <span className="absolute right-5 top-4 text-5xl opacity-20 select-none pointer-events-none">⚡</span>
-        <span className="absolute right-20 top-8 text-3xl opacity-15 select-none pointer-events-none">🎴</span>
-        <span className="absolute right-8 bottom-5 text-4xl opacity-15 select-none pointer-events-none">🪙</span>
-        <span className="absolute right-28 bottom-4 text-2xl opacity-10 select-none pointer-events-none">🏆</span>
-
+      <div className="relative overflow-hidden rounded-3xl mb-8 border border-white/10"
+        style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent) 0%, color-mix(in srgb, var(--accent2) 15%, transparent) 100%)" }}>
         <div className="relative z-10 p-7 md:p-10">
-          <p className="text-sm text-purple-300 font-medium mb-1">👋 Welcome back</p>
+          <p className="text-sm text-gray-400 font-medium mb-1">👋 Welcome back</p>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{firstName}!</h1>
           <p className="text-gray-300 mb-7 max-w-md text-sm md:text-base">
             You have{" "}
@@ -130,7 +118,7 @@ export default async function DashboardPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/discover"
-              className="inline-flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl hover:opacity-90 transition-all hover:scale-105 shadow-xl shadow-purple-500/30 text-base"
+              className="inline-flex items-center gap-2 px-7 py-3.5 bg-[var(--accent)] hover:brightness-110 text-black font-bold rounded-2xl transition-all hover:scale-105 shadow-lg text-base"
             >
               ⚡ Play Now
             </Link>
@@ -147,22 +135,44 @@ export default async function DashboardPage() {
       {/* ── Pick a Category ── */}
       <CategoryGrid categoriesWithNew={[...categoriesWithNew]} totalCoinsEarned={user?.totalCoinsEarned ?? 0} />
 
-      {/* ── Stats Grid ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {stats.map(({ label, value, icon, color, href }) => {
-          const card = (
-            <div className={`bg-gradient-to-br ${color} border rounded-2xl p-5 ${href ? "hover:scale-105 transition-transform" : ""}`}>
-              <div className="text-2xl mb-2">{icon}</div>
-              <div className="text-2xl font-bold text-white">{value}</div>
-              <div className="text-sm text-gray-400 mt-1">{label}</div>
+      {/* ── Stats ── */}
+      <div className="flex gap-4 mb-6">
+        {/* Primary: coin balance — the number that drives play decisions */}
+        <Link
+          href="/shop"
+          className="group flex flex-col justify-between p-5 rounded-2xl border transition-colors w-36 md:w-44 shrink-0"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          <span className="text-3xl">🪙</span>
+          <div>
+            <div className="text-2xl md:text-3xl font-bold text-white tabular-nums leading-none mb-0.5">
+              {user?.coins?.toLocaleString() ?? "0"}
             </div>
-          );
-          return href ? (
-            <Link key={label} href={href}>{card}</Link>
-          ) : (
-            <div key={label}>{card}</div>
-          );
-        })}
+            <div className="text-xs text-gray-400">Coins</div>
+          </div>
+          <span className="text-xs text-yellow-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity mt-2">
+            Get more →
+          </span>
+        </Link>
+
+        {/* Secondary stats: compact labeled rows */}
+        <div className="flex-1 flex flex-col justify-between py-0.5">
+          <div className="flex items-center gap-3 py-3 border-b border-white/5">
+            <span className="text-lg shrink-0">✅</span>
+            <span className="text-sm text-gray-400 flex-1">Correct answers</span>
+            <span className="text-white font-semibold tabular-nums">{user?.totalCorrect?.toLocaleString() ?? "0"}</span>
+          </div>
+          <div className="flex items-center gap-3 py-3 border-b border-white/5">
+            <span className="text-lg shrink-0">🎯</span>
+            <span className="text-sm text-gray-400 flex-1">Accuracy</span>
+            <span className="text-white font-semibold">{accuracy}%</span>
+          </div>
+          <Link href="/quizlets" className="group/q flex items-center gap-3 py-3">
+            <span className="text-lg shrink-0">🎴</span>
+            <span className="text-sm text-gray-400 flex-1 group-hover/q:text-gray-300 transition-colors">Quizlets owned</span>
+            <span className="text-white font-semibold">{ownedQuizlets}/{totalQuizlets} →</span>
+          </Link>
+        </div>
       </div>
 
       {/* ── Milestone + Streak (side-by-side) ── */}
@@ -207,10 +217,17 @@ export default async function DashboardPage() {
                       <span>Next: <span className="text-white">{nextMilestone.name}</span></span>
                       <span>{totalCoinsEarned.toLocaleString()} / {nextMilestone.threshold.toLocaleString()}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      role="progressbar"
+                      aria-valuenow={progressPct}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label="Milestone progress"
+                      className="h-2 rounded-full bg-white/10 overflow-hidden"
+                    >
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all"
-                        style={{ width: `${progressPct}%` }}
+                        className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-transform duration-500 ease-out"
+                        style={{ transform: `scaleX(${progressPct / 100})`, transformOrigin: "left", willChange: "transform" }}
                       />
                     </div>
                   </>
@@ -264,10 +281,17 @@ export default async function DashboardPage() {
                       <span>Next: <span className="text-white">{nextStreakMilestone} days</span></span>
                       <span>{streak} / {nextStreakMilestone}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      role="progressbar"
+                      aria-valuenow={progressPct}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label="Streak progress"
+                      className="h-2 rounded-full bg-white/10 overflow-hidden"
+                    >
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-orange-500 to-red-400 transition-all"
-                        style={{ width: `${progressPct}%` }}
+                        className="h-full rounded-full bg-gradient-to-r from-orange-500 to-red-400 transition-transform duration-500 ease-out"
+                        style={{ transform: `scaleX(${progressPct / 100})`, transformOrigin: "left", willChange: "transform" }}
                       />
                     </div>
                   </>
@@ -299,10 +323,17 @@ export default async function DashboardPage() {
             </span>
             <span className="text-sm text-gray-400">{dailyEarned} / {dailyLimit}</span>
           </div>
-          <div className="w-full bg-white/10 rounded-full h-2.5 mb-2">
+          <div
+            role="progressbar"
+            aria-valuenow={Math.min(100, Math.round((dailyEarned / dailyLimit) * 100))}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Daily coins earned"
+            className="w-full bg-white/10 rounded-full h-2.5 mb-2 overflow-hidden"
+          >
             <div
-              className={`h-2.5 rounded-full transition-all ${isMaxActive ? "bg-gradient-to-r from-purple-500 to-pink-500" : isProActive ? "bg-gradient-to-r from-yellow-500 to-orange-400" : "bg-gradient-to-r from-indigo-500 to-purple-500"}`}
-              style={{ width: `${Math.min(100, Math.round((dailyEarned / dailyLimit) * 100))}%` }}
+              className={`h-2.5 rounded-full transition-transform duration-500 ease-out ${isMaxActive ? "bg-gradient-to-r from-amber-500 to-yellow-400" : isProActive ? "bg-gradient-to-r from-yellow-500 to-amber-400" : "bg-gradient-to-r from-indigo-500 to-blue-400"}`}
+              style={{ transform: `scaleX(${Math.min(100, Math.round((dailyEarned / dailyLimit) * 100)) / 100})`, transformOrigin: "left", willChange: "transform" }}
             />
           </div>
           {dailyEarned >= dailyLimit ? (
@@ -321,10 +352,17 @@ export default async function DashboardPage() {
             <span className="text-sm font-semibold text-white">🎴 Collection</span>
             <span className="text-sm text-gray-400">{ownedQuizlets} / {totalQuizlets}</span>
           </div>
-          <div className="w-full bg-white/10 rounded-full h-2.5 mb-2">
+          <div
+            role="progressbar"
+            aria-valuenow={Math.round((ownedQuizlets / Math.max(totalQuizlets, 1)) * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Collection progress"
+            className="w-full bg-white/10 rounded-full h-2.5 mb-2 overflow-hidden"
+          >
             <div
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2.5 rounded-full transition-all duration-500"
-              style={{ width: `${Math.round((ownedQuizlets / Math.max(totalQuizlets, 1)) * 100)}%` }}
+              className="bg-gradient-to-r from-blue-500 to-indigo-400 h-2.5 rounded-full transition-transform duration-500 ease-out"
+              style={{ transform: `scaleX(${Math.round((ownedQuizlets / Math.max(totalQuizlets, 1)) * 100) / 100})`, transformOrigin: "left", willChange: "transform" }}
             />
           </div>
           <div className="flex justify-between text-xs text-gray-500">

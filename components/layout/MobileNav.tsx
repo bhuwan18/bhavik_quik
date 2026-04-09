@@ -77,9 +77,9 @@ export default function MobileNav() {
           drawerOpen ? "translate-y-0" : "translate-y-full"
         )}
         style={{
-          bottom: "56px",
+          bottom: "64px",
           background: "linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-mid) 100%)",
-          borderTop: "1px solid rgba(88,28,135,0.35)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
           borderRadius: "20px 20px 0 0",
           maxHeight: "80vh",
           overflowY: "auto",
@@ -102,8 +102,8 @@ export default function MobileNav() {
                 />
               ) : (
                 <div className={cn(
-                  "w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-sm font-bold text-white ring-2",
-                  isPro ? "ring-yellow-400" : "ring-purple-500/50"
+                  "w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-sm font-semibold text-white ring-2",
+                  isPro ? "ring-yellow-400" : "ring-white/20"
                 )}>
                   {session.user.name?.[0] ?? "?"}
                 </div>
@@ -112,12 +112,12 @@ export default function MobileNav() {
                 <div className="flex items-center gap-1.5">
                   <p className="text-sm font-semibold text-white truncate">{session.user.name}</p>
                   {isAdmin && (
-                    <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-1.5 py-0.5 rounded-full font-semibold shrink-0">
+                    <span className="text-xs bg-white/15 text-white border border-white/20 px-1.5 py-0.5 rounded-full font-semibold shrink-0">
                       ADMIN
                     </span>
                   )}
                   {!isAdmin && isPro && (
-                    <span className="text-xs bg-gradient-to-r from-yellow-500 to-orange-400 text-black px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                    <span className="text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-1.5 py-0.5 rounded-full font-bold shrink-0">
                       PRO
                     </span>
                   )}
@@ -201,7 +201,7 @@ export default function MobileNav() {
                 href={href}
                 onClick={() => setDrawerOpen(false)}
                 className={cn(
-                  "flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors",
+                  "flex-1 flex flex-col items-center gap-0.5 py-3 min-h-[44px] text-xs font-medium transition-colors",
                   active ? "text-purple-400" : "text-gray-500"
                 )}
               >
@@ -214,8 +214,10 @@ export default function MobileNav() {
           {/* More button — shows red dot if unread notifications */}
           <button
             onClick={() => setDrawerOpen((v) => !v)}
+            aria-label={drawerOpen ? "Close menu" : "Open menu"}
+            aria-expanded={drawerOpen}
             className={cn(
-              "flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors relative",
+              "flex-1 flex flex-col items-center gap-0.5 py-3 min-h-[44px] text-xs font-medium transition-colors relative",
               drawerOpen || isMoreActive ? "text-purple-400" : "text-gray-500"
             )}
           >
