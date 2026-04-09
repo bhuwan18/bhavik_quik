@@ -16,7 +16,9 @@
     "db:push": "prisma db push",
     "db:seed": "ts-node --project tsconfig.seed.json prisma/seed.ts",
     "db:studio": "prisma studio",
-    "db:explain": "ts-node --project tsconfig.seed.json prisma/seed-explanations.ts"
+    "db:explain": "ts-node --project tsconfig.seed.json prisma/seed-explanations.ts",
+    "remotion:studio": "remotion studio remotion/index.ts",
+    "remotion:render": "remotion render remotion/index.ts BittsQuizPromo out/promo.mp4"
   },
   "prisma": {
     "seed": "ts-node --project tsconfig.seed.json prisma/seed.ts"
@@ -29,6 +31,8 @@
     "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@remotion/cli": "^4.0.445",
+    "@remotion/player": "^4.0.445",
     "@types/nodemailer": "^7.0.11",
     "@types/pg": "^8.18.0",
     "@vercel/analytics": "^1.6.1",
@@ -48,6 +52,7 @@
     "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "remotion": "^4.0.445",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.5.0",

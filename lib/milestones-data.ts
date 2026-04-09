@@ -1,4 +1,4 @@
-export type MilestoneTier = "bronze" | "silver" | "gold" | "platinum" | "diamond";
+export type MilestoneTier = "bronze" | "silver" | "gold" | "platinum" | "diamond" | "cosmic";
 
 export interface MilestoneDef {
   threshold: number;
@@ -11,7 +11,10 @@ export interface MilestoneDef {
   animationClass?: string;
 }
 
-export const MILESTONE_THRESHOLDS: number[] = Array.from({ length: 50 }, (_, i) => (i + 1) * 1000);
+export const MILESTONE_THRESHOLDS: number[] = [
+  ...Array.from({ length: 60 }, (_, i) => (i + 1) * 1000),
+  65000, 70000, 75000, 85000, 100000,
+];
 
 export const MILESTONES: MilestoneDef[] = [
   // ── Bronze (1K–5K) ──────────────────────────────────────────────────────────
@@ -498,6 +501,158 @@ export const MILESTONES: MilestoneDef[] = [
     description: "50,000 coins! The ultimate BittsQuiz Legend.",
     animationClass: "rainbow-card",
   },
+
+  // ── Cosmic (51K–60K) ────────────────────────────────────────────────────────
+  {
+    threshold: 51000,
+    name: "Beyond Legend",
+    emoji: "🌟",
+    tier: "cosmic",
+    colorFrom: "#0d0221",
+    colorTo: "#ff6fd8",
+    description: "51,000 coins — you have surpassed legend itself.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 52000,
+    name: "Myth Maker",
+    emoji: "📖",
+    tier: "cosmic",
+    colorFrom: "#0a0118",
+    colorTo: "#f0abfc",
+    description: "52,000 coins — your story is now myth.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 53000,
+    name: "Cosmos Reborn",
+    emoji: "🌌",
+    tier: "cosmic",
+    colorFrom: "#0d0221",
+    colorTo: "#a78bfa",
+    description: "53,000 coins. The cosmos itself bows to you.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 54000,
+    name: "Infinity Seeker",
+    emoji: "♾️",
+    tier: "cosmic",
+    colorFrom: "#0a0118",
+    colorTo: "#e879f9",
+    description: "54,000 coins chasing infinity and winning.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 55000,
+    name: "Omniscient",
+    emoji: "👁️",
+    tier: "cosmic",
+    colorFrom: "#0d0221",
+    colorTo: "#c084fc",
+    description: "55,000 coins — all knowledge is yours.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 56000,
+    name: "Singularity",
+    emoji: "🕳️",
+    tier: "cosmic",
+    colorFrom: "#0a0118",
+    colorTo: "#f472b6",
+    description: "56,000 coins — a singular force in the quiz universe.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 57000,
+    name: "Astral Overlord",
+    emoji: "🪐",
+    tier: "cosmic",
+    colorFrom: "#0d0221",
+    colorTo: "#818cf8",
+    description: "57,000 coins. The astral plane answers to you.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 58000,
+    name: "Epoch Master",
+    emoji: "⏳",
+    tier: "cosmic",
+    colorFrom: "#0a0118",
+    colorTo: "#fb7185",
+    description: "58,000 coins spanning epochs of achievement.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 59000,
+    name: "Time Bender",
+    emoji: "🌀",
+    tier: "cosmic",
+    colorFrom: "#0d0221",
+    colorTo: "#a5b4fc",
+    description: "59,000 coins — you bend time to earn more.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 60000,
+    name: "BittsQuiz Immortal",
+    emoji: "⚜️",
+    tier: "cosmic",
+    colorFrom: "#0a0118",
+    colorTo: "#ff6fd8",
+    description: "60,000 coins! Truly immortal — the greatest BittsQuiz player of all time.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 65000,
+    name: "Galactic Scholar",
+    emoji: "🔭",
+    tier: "cosmic",
+    colorFrom: "#0d0221",
+    colorTo: "#f9a8d4",
+    description: "65,000 coins — a scholar whose wisdom spans entire galaxies.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 70000,
+    name: "Void Emperor",
+    emoji: "🌑",
+    tier: "cosmic",
+    colorFrom: "#0a0118",
+    colorTo: "#c026d3",
+    description: "70,000 coins. Emperor of the void — nothing can stop you.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 75000,
+    name: "Quantum Ascendant",
+    emoji: "⚛️",
+    tier: "cosmic",
+    colorFrom: "#0d0221",
+    colorTo: "#a78bfa",
+    description: "75,000 coins — ascending beyond the boundaries of reality.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 85000,
+    name: "Eternal Sovereign",
+    emoji: "👑",
+    tier: "cosmic",
+    colorFrom: "#0a0118",
+    colorTo: "#fb7185",
+    description: "85,000 coins. An eternal sovereign who rules all of time.",
+    animationClass: "rainbow-card",
+  },
+  {
+    threshold: 100000,
+    name: "BittsQuiz Addicted",
+    emoji: "🫀",
+    tier: "cosmic",
+    colorFrom: "#0d0221",
+    colorTo: "#ff6fd8",
+    description: "100,000 coins. Officially, irrevocably, gloriously addicted to BittsQuiz.",
+    animationClass: "rainbow-card",
+  },
 ];
 
 export function getMilestoneByThreshold(threshold: number): MilestoneDef {
@@ -510,4 +665,5 @@ export const TIER_COLORS: Record<MilestoneTier, { border: string; label: string;
   gold:     { border: "border-yellow-400",  label: "Gold",     text: "text-yellow-400" },
   platinum: { border: "border-cyan-400",    label: "Platinum", text: "text-cyan-400"   },
   diamond:  { border: "border-purple-400",  label: "Diamond",  text: "text-purple-400" },
+  cosmic:   { border: "border-pink-400",    label: "Cosmic",   text: "text-pink-400"   },
 };

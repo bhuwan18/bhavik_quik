@@ -37,6 +37,8 @@ const RARITY_LABEL: Record<string, string> = {
   legendary: "Legendary",
 };
 
+const MAX_BULK = 20;
+
 function computeDropRates(packSlug: string): { rarity: string; pct: number }[] {
   const pool = QUIZLETS_DATA.filter((q) => q.pack === packSlug && !q.isHidden);
   const totalWeight = pool.reduce((sum, q) => sum + (DROP_WEIGHTS[q.rarity] ?? 0), 0);
@@ -60,9 +62,10 @@ export default function MarketplaceClient({ packs, userCoins: initialCoins, fest
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleOpen = async (pack: Pack) => {
-    if (coins < pack.cost) {
-      setError("Not enough coins! Answer more quizzes to earn coins.");
+  const handleOpen = async (pack: Pack, quantity: number = 1) => {
+    const totalCost = pack.cost * quantity;
+    if (coins < totalCost) {
+      setError(`Not enough coins! You need ${(totalCost - coins).toLocaleString()} more.`);
       return;
     }
     setLoading(true);
@@ -72,7 +75,7 @@ export default function MarketplaceClient({ packs, userCoins: initialCoins, fest
       const res = await fetch("/api/packs/open", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packSlug: pack.slug }),
+        body: JSON.stringify({ packSlug: pack.slug, quantity }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -162,11 +165,12 @@ function PackCard({
 }: {
   pack: Pack;
   coins: number;
-  onOpen: (pack: Pack) => void;
+  onOpen: (pack: Pack, quantity: number) => void;
   loading: boolean;
   isFestival?: boolean;
 }) {
-  const canAfford = coins >= pack.cost;
+  const canAfford = (n: number) => coins >= pack.cost * n;
+  const maxCount = Math.min(Math.floor(coins / pack.cost), MAX_BULK);
   const dropRates = computeDropRates(pack.slug);
   const isRainbow = pack.slug === "rainbow-pack";
 
@@ -210,21 +214,75 @@ function PackCard({
           </div>
         )}
 
+        {/* Single open button */}
         <button
-          onClick={() => onOpen(pack)}
-          disabled={loading || !canAfford}
+          onClick={() => onOpen(pack, 1)}
+          disabled={loading || !canAfford(1)}
           className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
-            canAfford
+            canAfford(1)
               ? "bg-white text-gray-900 hover:bg-gray-100 hover:scale-[1.02] active:scale-[0.98]"
               : "bg-white/20 text-white/50 cursor-not-allowed"
           }`}
         >
-          {canAfford ? (
-            <>🪙 {pack.cost.toLocaleString()} coins — Open Pack</>
+          {canAfford(1) ? (
+            <>🪙 {pack.cost.toLocaleString()} — Open ×1</>
           ) : (
             <>Need {(pack.cost - coins).toLocaleString()} more coins</>
           )}
         </button>
+
+        {/* Bulk open buttons — only shown when user can afford at least 1 */}
+        {canAfford(1) && (
+          <div className="grid grid-cols-3 gap-1.5 mt-2">
+            {/* ×5 */}
+            <button
+              onClick={() => onOpen(pack, 5)}
+              disabled={loading || !canAfford(5)}
+              className={`py-2 rounded-lg font-bold text-xs transition-all ${
+                canAfford(5)
+                  ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
+                  : "bg-white/10 text-white/30 cursor-not-allowed"
+              }`}
+            >
+              ×5
+              <span className="block text-[10px] font-normal opacity-70">
+                {(pack.cost * 5).toLocaleString()}🪙
+              </span>
+            </button>
+
+            {/* ×10 */}
+            <button
+              onClick={() => onOpen(pack, 10)}
+              disabled={loading || !canAfford(10)}
+              className={`py-2 rounded-lg font-bold text-xs transition-all ${
+                canAfford(10)
+                  ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
+                  : "bg-white/10 text-white/30 cursor-not-allowed"
+              }`}
+            >
+              ×10
+              <span className="block text-[10px] font-normal opacity-70">
+                {(pack.cost * 10).toLocaleString()}🪙
+              </span>
+            </button>
+
+            {/* Max */}
+            <button
+              onClick={() => onOpen(pack, maxCount)}
+              disabled={loading || maxCount < 2}
+              className={`py-2 rounded-lg font-bold text-xs transition-all ${
+                maxCount >= 2
+                  ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
+                  : "bg-white/10 text-white/30 cursor-not-allowed"
+              }`}
+            >
+              Max
+              <span className="block text-[10px] font-normal opacity-70">
+                {maxCount >= 2 ? `×${maxCount}` : "×1"}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
