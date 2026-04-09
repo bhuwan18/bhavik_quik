@@ -1,6 +1,20 @@
 export type MilestoneTier = "bronze" | "silver" | "gold" | "platinum" | "diamond" | "cosmic";
+export type MilestoneType = "coins" | "quizzes" | "answers" | "categories" | "streak";
 
 export interface MilestoneDef {
+  threshold: number;
+  name: string;
+  emoji: string;
+  tier: MilestoneTier;
+  colorFrom: string;
+  colorTo: string;
+  description: string;
+  animationClass?: string;
+  milestoneType: MilestoneType;
+}
+
+// Internal base type used to build typed milestone arrays
+interface MilestoneDefBase {
   threshold: number;
   name: string;
   emoji: string;
@@ -16,7 +30,7 @@ export const MILESTONE_THRESHOLDS: number[] = [
   65000, 70000, 75000, 85000, 100000,
 ];
 
-export const MILESTONES: MilestoneDef[] = [
+const COIN_MILESTONES_RAW: MilestoneDefBase[] = [
   // ── Bronze (1K–5K) ──────────────────────────────────────────────────────────
   {
     threshold: 1000,
@@ -655,8 +669,79 @@ export const MILESTONES: MilestoneDef[] = [
   },
 ];
 
+export const MILESTONES: MilestoneDef[] = COIN_MILESTONES_RAW.map((m) => ({
+  ...m,
+  milestoneType: "coins" as MilestoneType,
+}));
+
+// ── Quizzes Played ────────────────────────────────────────────────────────────
+const QUIZ_MILESTONES_RAW: MilestoneDefBase[] = [
+  { threshold: 10,   name: "Quiz Rookie",       emoji: "🎮", tier: "bronze",   colorFrom: "#92400e", colorTo: "#b45309", description: "Played 10 quizzes. Just getting started!" },
+  { threshold: 25,   name: "Quiz Apprentice",   emoji: "📝", tier: "bronze",   colorFrom: "#78350f", colorTo: "#d97706", description: "25 quizzes completed. You're learning fast!" },
+  { threshold: 50,   name: "Quiz Practitioner", emoji: "🎯", tier: "silver",   colorFrom: "#334155", colorTo: "#64748b", description: "50 quizzes! A seasoned quiz taker." },
+  { threshold: 100,  name: "Century Scorer",    emoji: "💯", tier: "gold",     colorFrom: "#713f12", colorTo: "#ca8a04", description: "100 quizzes completed. A true centurion!", animationClass: "legendary-card" },
+  { threshold: 250,  name: "Quiz Veteran",      emoji: "⚔️", tier: "platinum", colorFrom: "#164e63", colorTo: "#06b6d4", description: "250 quizzes — a battle-hardened quiz veteran." },
+  { threshold: 500,  name: "Quiz Overlord",     emoji: "👑", tier: "diamond",  colorFrom: "#3b0764", colorTo: "#7c3aed", description: "500 quizzes! You rule the quiz realm.", animationClass: "rainbow-card" },
+  { threshold: 1000, name: "Quiz Immortal",     emoji: "♾️", tier: "cosmic",   colorFrom: "#0d0221", colorTo: "#ff6fd8", description: "1,000 quizzes! Truly immortal in dedication.", animationClass: "rainbow-card" },
+];
+export const QUIZ_MILESTONES: MilestoneDef[] = QUIZ_MILESTONES_RAW.map((m) => ({ ...m, milestoneType: "quizzes" as MilestoneType }));
+export const QUIZ_MILESTONE_THRESHOLDS = QUIZ_MILESTONES.map((m) => m.threshold);
+
+// ── Unique Correct Answers ────────────────────────────────────────────────────
+const ANSWER_MILESTONES_RAW: MilestoneDefBase[] = [
+  { threshold: 50,   name: "Sharp Eye",      emoji: "👁️", tier: "bronze",   colorFrom: "#92400e", colorTo: "#b45309", description: "50 unique correct answers. A sharp eye!" },
+  { threshold: 100,  name: "Hundred Club",   emoji: "💯", tier: "bronze",   colorFrom: "#78350f", colorTo: "#d97706", description: "100 unique correct answers. Welcome to the club!" },
+  { threshold: 250,  name: "Answer Machine", emoji: "🤖", tier: "silver",   colorFrom: "#334155", colorTo: "#64748b", description: "250 correct answers — a true answer machine." },
+  { threshold: 500,  name: "Knowledge Base", emoji: "📚", tier: "gold",     colorFrom: "#713f12", colorTo: "#ca8a04", description: "500 unique correct answers. A living knowledge base!", animationClass: "legendary-card" },
+  { threshold: 1000, name: "Trivia Master",  emoji: "🧠", tier: "platinum", colorFrom: "#164e63", colorTo: "#06b6d4", description: "1,000 correct answers. A trivia master!" },
+  { threshold: 2500, name: "Encyclopedia",   emoji: "📖", tier: "diamond",  colorFrom: "#3b0764", colorTo: "#7c3aed", description: "2,500 correct answers. You are a living encyclopedia.", animationClass: "rainbow-card" },
+  { threshold: 5000, name: "Oracle",         emoji: "🔮", tier: "cosmic",   colorFrom: "#0d0221", colorTo: "#ff6fd8", description: "5,000 unique correct answers. The Oracle speaks.", animationClass: "rainbow-card" },
+];
+export const ANSWER_MILESTONES: MilestoneDef[] = ANSWER_MILESTONES_RAW.map((m) => ({ ...m, milestoneType: "answers" as MilestoneType }));
+export const ANSWER_MILESTONE_THRESHOLDS = ANSWER_MILESTONES.map((m) => m.threshold);
+
+// ── Category Coverage ─────────────────────────────────────────────────────────
+const CATEGORY_MILESTONES_RAW: MilestoneDefBase[] = [
+  { threshold: 3,  name: "Dabbler",           emoji: "🗺️", tier: "bronze",   colorFrom: "#92400e", colorTo: "#b45309", description: "Tried 3 different quiz categories. A curious mind!" },
+  { threshold: 5,  name: "Multitasker",       emoji: "🎭", tier: "silver",   colorFrom: "#334155", colorTo: "#64748b", description: "5 categories explored. You wear many hats!" },
+  { threshold: 8,  name: "Generalist",        emoji: "🌐", tier: "gold",     colorFrom: "#713f12", colorTo: "#ca8a04", description: "8 categories conquered. A true generalist.", animationClass: "legendary-card" },
+  { threshold: 11, name: "All-Rounder",       emoji: "🏆", tier: "platinum", colorFrom: "#164e63", colorTo: "#06b6d4", description: "11 categories mastered. An all-rounder extraordinaire!" },
+  { threshold: 16, name: "Universal Scholar", emoji: "🌟", tier: "diamond",  colorFrom: "#3b0764", colorTo: "#7c3aed", description: "All 16 categories explored. A universal scholar!", animationClass: "rainbow-card" },
+];
+export const CATEGORY_MILESTONES: MilestoneDef[] = CATEGORY_MILESTONES_RAW.map((m) => ({ ...m, milestoneType: "categories" as MilestoneType }));
+export const CATEGORY_MILESTONE_THRESHOLDS = CATEGORY_MILESTONES.map((m) => m.threshold);
+
+// ── Max (Longest) Streak ──────────────────────────────────────────────────────
+const STREAK_BADGE_MILESTONES_RAW: MilestoneDefBase[] = [
+  { threshold: 5,   name: "On Fire",        emoji: "🔥", tier: "bronze",   colorFrom: "#92400e", colorTo: "#b45309", description: "Reached a 5-day streak. You're on fire!" },
+  { threshold: 10,  name: "Hot Streak",     emoji: "⚡", tier: "bronze",   colorFrom: "#78350f", colorTo: "#d97706", description: "10-day streak! The heat is rising." },
+  { threshold: 20,  name: "Dedicated",      emoji: "📅", tier: "silver",   colorFrom: "#334155", colorTo: "#64748b", description: "20-day streak. Your dedication is admirable." },
+  { threshold: 30,  name: "Monthly Master", emoji: "🗓️", tier: "gold",     colorFrom: "#713f12", colorTo: "#ca8a04", description: "A full month of daily play. Incredible!", animationClass: "legendary-card" },
+  { threshold: 50,  name: "Unstoppable",    emoji: "🚀", tier: "gold",     colorFrom: "#78350f", colorTo: "#eab308", description: "50-day streak — truly unstoppable.", animationClass: "legendary-card" },
+  { threshold: 75,  name: "Iron Will",      emoji: "💪", tier: "platinum", colorFrom: "#164e63", colorTo: "#06b6d4", description: "75-day streak. Iron will, iron discipline." },
+  { threshold: 100, name: "Centurion",      emoji: "🏅", tier: "platinum", colorFrom: "#0c4a6e", colorTo: "#0891b2", description: "100-day streak! A true centurion." },
+  { threshold: 150, name: "Relentless",     emoji: "⚔️", tier: "diamond",  colorFrom: "#3b0764", colorTo: "#7c3aed", description: "150-day streak. Nothing can stop you.", animationClass: "rainbow-card" },
+  { threshold: 200, name: "Bicentennial",   emoji: "🏆", tier: "diamond",  colorFrom: "#2e1065", colorTo: "#a855f7", description: "200-day streak! A legendary achievement.", animationClass: "rainbow-card" },
+  { threshold: 365, name: "Year Long",      emoji: "🎊", tier: "cosmic",   colorFrom: "#0d0221", colorTo: "#ff6fd8", description: "A full year of daily quizzes. A legend among legends.", animationClass: "rainbow-card" },
+];
+export const STREAK_BADGE_MILESTONES: MilestoneDef[] = STREAK_BADGE_MILESTONES_RAW.map((m) => ({ ...m, milestoneType: "streak" as MilestoneType }));
+export const STREAK_BADGE_MILESTONE_THRESHOLDS = STREAK_BADGE_MILESTONES.map((m) => m.threshold);
+
+// ── Combined ──────────────────────────────────────────────────────────────────
+export const ALL_MILESTONES: MilestoneDef[] = [
+  ...MILESTONES,
+  ...QUIZ_MILESTONES,
+  ...ANSWER_MILESTONES,
+  ...CATEGORY_MILESTONES,
+  ...STREAK_BADGE_MILESTONES,
+];
+
 export function getMilestoneByThreshold(threshold: number): MilestoneDef {
   return MILESTONES.find((m) => m.threshold === threshold) ?? MILESTONES[0];
+}
+
+export function getMilestone(type: MilestoneType, threshold: number): MilestoneDef {
+  return ALL_MILESTONES.find((m) => m.milestoneType === type && m.threshold === threshold) ?? ALL_MILESTONES[0];
 }
 
 export const TIER_COLORS: Record<MilestoneTier, { border: string; label: string; text: string }> = {

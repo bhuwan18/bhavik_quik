@@ -36,7 +36,7 @@ export default async function DashboardPage() {
     prisma.quizlet.count(),
     prisma.userQuizlet.count({ where: { userId: session.user.id } }),
     prisma.userMilestone.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id, milestoneType: "coins" },
       orderBy: { threshold: "desc" },
       select: { threshold: true },
     }),

@@ -250,13 +250,14 @@ model AppSetting {
 }
 
 model UserMilestone {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  threshold Int      // 1000, 2000, ..., 50000
-  earnedAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestoneType String   @default("coins") // "coins" | "quizzes" | "answers" | "categories" | "streak"
+  threshold     Int
+  earnedAt      DateTime @default(now())
 
-  @@unique([userId, threshold])
+  @@unique([userId, milestoneType, threshold])
   @@index([userId])
 }
 

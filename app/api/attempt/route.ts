@@ -13,7 +13,16 @@ import {
   MULTIPLIER_MAX,
   STREAK_MILESTONES,
 } from "@/lib/game-config";
-import { MILESTONE_THRESHOLDS, getMilestoneByThreshold } from "@/lib/milestones-data";
+import {
+  MILESTONE_THRESHOLDS,
+  getMilestoneByThreshold,
+  getMilestone,
+  QUIZ_MILESTONE_THRESHOLDS,
+  ANSWER_MILESTONE_THRESHOLDS,
+  CATEGORY_MILESTONE_THRESHOLDS,
+  STREAK_BADGE_MILESTONE_THRESHOLDS,
+  type MilestoneType,
+} from "@/lib/milestones-data";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -254,7 +263,7 @@ export async function POST(req: NextRequest) {
     const crossed = MILESTONE_THRESHOLDS.filter((t) => t > oldTotal && t <= newTotal);
     if (crossed.length > 0) {
       await prisma.userMilestone.createMany({
-        data: crossed.map((t) => ({ userId: session.user.id, threshold: t })),
+        data: crossed.map((t) => ({ userId: session.user.id, milestoneType: "coins", threshold: t })),
         skipDuplicates: true,
       });
       const highest = Math.max(...crossed);
@@ -283,6 +292,83 @@ export async function POST(req: NextRequest) {
             message: `🏅 ${dbUser.name ?? "Someone"} just unlocked the "${badge.name}" milestone!`,
           })),
         });
+      }
+    }
+  }
+
+  // ── Non-coin milestone checks (quizzes, answers, categories, streak) ─────────
+  {
+    const [totalQuizzes, totalCorrectCount, distinctQuizIdRows, earnedNonCoin] = await Promise.all([
+      prisma.quizAttempt.count({ where: { userId: session.user.id } }),
+      prisma.correctAnswer.count({ where: { userId: session.user.id } }),
+      prisma.quizAttempt.findMany({
+        where: { userId: session.user.id },
+        select: { quizId: true },
+        distinct: ["quizId"],
+      }),
+      prisma.userMilestone.findMany({
+        where: { userId: session.user.id, milestoneType: { not: "coins" } },
+        select: { threshold: true, milestoneType: true },
+      }),
+    ]);
+
+    const quizCategories = await prisma.quiz.findMany({
+      where: { id: { in: distinctQuizIdRows.map((q) => q.quizId) } },
+      select: { category: true },
+    });
+    const distinctCategoryCount = new Set(quizCategories.map((q) => q.category)).size;
+
+    const earnedByType = new Map<string, Set<number>>();
+    for (const m of earnedNonCoin) {
+      if (!earnedByType.has(m.milestoneType)) earnedByType.set(m.milestoneType, new Set());
+      earnedByType.get(m.milestoneType)!.add(m.threshold);
+    }
+
+    const newNonCoinMilestones: { userId: string; milestoneType: string; threshold: number }[] = [];
+
+    for (const t of QUIZ_MILESTONE_THRESHOLDS) {
+      if (totalQuizzes >= t && !earnedByType.get("quizzes")?.has(t)) {
+        newNonCoinMilestones.push({ userId: session.user.id, milestoneType: "quizzes", threshold: t });
+      }
+    }
+    for (const t of ANSWER_MILESTONE_THRESHOLDS) {
+      if (totalCorrectCount >= t && !earnedByType.get("answers")?.has(t)) {
+        newNonCoinMilestones.push({ userId: session.user.id, milestoneType: "answers", threshold: t });
+      }
+    }
+    for (const t of CATEGORY_MILESTONE_THRESHOLDS) {
+      if (distinctCategoryCount >= t && !earnedByType.get("categories")?.has(t)) {
+        newNonCoinMilestones.push({ userId: session.user.id, milestoneType: "categories", threshold: t });
+      }
+    }
+    for (const t of STREAK_BADGE_MILESTONE_THRESHOLDS) {
+      if (newLongest >= t && !earnedByType.get("streak")?.has(t)) {
+        newNonCoinMilestones.push({ userId: session.user.id, milestoneType: "streak", threshold: t });
+      }
+    }
+
+    if (newNonCoinMilestones.length > 0) {
+      await prisma.userMilestone.createMany({ data: newNonCoinMilestones, skipDuplicates: true });
+
+      // Group by type and send one notification per type (highest threshold)
+      const byType = new Map<string, number[]>();
+      for (const m of newNonCoinMilestones) {
+        if (!byType.has(m.milestoneType)) byType.set(m.milestoneType, []);
+        byType.get(m.milestoneType)!.push(m.threshold);
+      }
+      for (const [type, thresholds] of byType) {
+        const highest = Math.max(...thresholds);
+        const badge = getMilestone(type as MilestoneType, highest);
+        await prisma.notification.create({
+          data: {
+            userId: session.user.id,
+            type: "milestone",
+            message: `🏅 Milestone unlocked: ${badge.name}! ${badge.description}`,
+          },
+        });
+        import("@/lib/push").then(({ sendPushToUser }) => {
+          sendPushToUser(session.user.id, "Milestone unlocked! 🏅", badge.name, "/milestones").catch(() => {});
+        }).catch(() => {});
       }
     }
   }

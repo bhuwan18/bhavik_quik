@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { MILESTONE_THRESHOLDS } from "@/lib/milestones-data";
+import {
+  MILESTONE_THRESHOLDS,
+  QUIZ_MILESTONE_THRESHOLDS,
+  ANSWER_MILESTONE_THRESHOLDS,
+  CATEGORY_MILESTONE_THRESHOLDS,
+  STREAK_BADGE_MILESTONE_THRESHOLDS,
+} from "@/lib/milestones-data";
 
 export async function POST() {
   const session = await auth();
@@ -19,18 +25,55 @@ export async function POST() {
   }
 
   const users = await prisma.user.findMany({
-    where: { totalCoinsEarned: { gt: 0 } },
-    select: { id: true, totalCoinsEarned: true },
+    select: { id: true, totalCoinsEarned: true, longestStreak: true },
   });
 
   let granted = 0;
+
   for (const user of users) {
-    const thresholds = MILESTONE_THRESHOLDS.filter((t) => t <= user.totalCoinsEarned);
-    if (thresholds.length > 0) {
-      const result = await prisma.userMilestone.createMany({
-        data: thresholds.map((t) => ({ userId: user.id, threshold: t })),
-        skipDuplicates: true,
+    const milestones: { userId: string; milestoneType: string; threshold: number }[] = [];
+
+    // Coins
+    for (const t of MILESTONE_THRESHOLDS) {
+      if (user.totalCoinsEarned >= t) milestones.push({ userId: user.id, milestoneType: "coins", threshold: t });
+    }
+
+    // Streak
+    for (const t of STREAK_BADGE_MILESTONE_THRESHOLDS) {
+      if (user.longestStreak >= t) milestones.push({ userId: user.id, milestoneType: "streak", threshold: t });
+    }
+
+    // Quizzes played
+    const quizCount = await prisma.quizAttempt.count({ where: { userId: user.id } });
+    for (const t of QUIZ_MILESTONE_THRESHOLDS) {
+      if (quizCount >= t) milestones.push({ userId: user.id, milestoneType: "quizzes", threshold: t });
+    }
+
+    // Unique correct answers
+    const answerCount = await prisma.correctAnswer.count({ where: { userId: user.id } });
+    for (const t of ANSWER_MILESTONE_THRESHOLDS) {
+      if (answerCount >= t) milestones.push({ userId: user.id, milestoneType: "answers", threshold: t });
+    }
+
+    // Category coverage
+    const attemptedQuizIds = await prisma.quizAttempt.findMany({
+      where: { userId: user.id },
+      select: { quizId: true },
+      distinct: ["quizId"],
+    });
+    if (attemptedQuizIds.length > 0) {
+      const quizCategories = await prisma.quiz.findMany({
+        where: { id: { in: attemptedQuizIds.map((q) => q.quizId) } },
+        select: { category: true },
       });
+      const catCount = new Set(quizCategories.map((q) => q.category)).size;
+      for (const t of CATEGORY_MILESTONE_THRESHOLDS) {
+        if (catCount >= t) milestones.push({ userId: user.id, milestoneType: "categories", threshold: t });
+      }
+    }
+
+    if (milestones.length > 0) {
+      const result = await prisma.userMilestone.createMany({ data: milestones, skipDuplicates: true });
       granted += result.count;
     }
   }
