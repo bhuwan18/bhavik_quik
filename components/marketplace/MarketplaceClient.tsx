@@ -37,8 +37,6 @@ const RARITY_LABEL: Record<string, string> = {
   legendary: "Legendary",
 };
 
-const MAX_BULK = 20;
-
 function computeDropRates(packSlug: string): { rarity: string; pct: number }[] {
   const pool = QUIZLETS_DATA.filter((q) => q.pack === packSlug && !q.isHidden);
   const totalWeight = pool.reduce((sum, q) => sum + (DROP_WEIGHTS[q.rarity] ?? 0), 0);
@@ -170,7 +168,7 @@ function PackCard({
   isFestival?: boolean;
 }) {
   const canAfford = (n: number) => coins >= pack.cost * n;
-  const maxCount = Math.min(Math.floor(coins / pack.cost), MAX_BULK);
+  const maxCount = Math.floor(coins / pack.cost);
   const dropRates = computeDropRates(pack.slug);
   const isRainbow = pack.slug === "rainbow-pack";
 

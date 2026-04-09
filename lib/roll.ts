@@ -46,7 +46,9 @@ export function rollPackOpening(
   }
 
   // Single weighted roll from pack pool
-  const pool = packQuizlets.filter((q) => !q.isHidden);
+  // Exclude unique/impossible — they have dedicated special-case paths above.
+  // Secret quizlets are isHidden but intentionally rollable (weight 10).
+  const pool = packQuizlets.filter((q) => q.rarity !== "unique" && q.rarity !== "impossible");
   const pick = weightedRandom(pool);
   return pick ? [pick] : [];
 }

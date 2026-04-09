@@ -4,8 +4,6 @@ import { prisma } from "@/lib/db";
 import { rollPackOpening } from "@/lib/roll";
 import { SELL_VALUES } from "@/lib/utils";
 
-const MAX_BULK_QUANTITY = 20;
-
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,7 +22,7 @@ export async function POST(req: NextRequest) {
     packSlug = body.packSlug;
     if (typeof packSlug !== "string" || packSlug.length > 100) throw new Error("Invalid packSlug");
     quantity = typeof body.quantity === "number" ? Math.floor(body.quantity) : 1;
-    if (quantity < 1 || quantity > MAX_BULK_QUANTITY) throw new Error("Invalid quantity");
+    if (quantity < 1) throw new Error("Invalid quantity");
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
