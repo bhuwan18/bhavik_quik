@@ -77,6 +77,26 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Dark Matter", rarity: "secret", pack: "science-pack", icon: "🌑", colorFrom: "#030712", colorTo: "#111827", description: "Comprises 27% of the universe. You have somehow collected it.", isHidden: true, sellValue: 1000 },
   { name: "Polymere", rarity: "rare", pack: "science-pack", icon: "🧬", colorFrom: "#6ee7b7", colorTo: "#059669", description: "A long-chain molecular being that can fold into any shape imaginable.", isHidden: false, sellValue: 60 },
 
+  // ── MATH PACK ──────────────────────────────────────────────────
+  { name: "Numblet", rarity: "common", pack: "math-pack", icon: "🔢", colorFrom: "#bfdbfe", colorTo: "#93c5fd", description: "A tiny number sprite that counts everything it sees — twice, just to be sure.", isHidden: false, sellValue: 10 },
+  { name: "Fraxion", rarity: "common", pack: "math-pack", icon: "➗", colorFrom: "#bbf7d0", colorTo: "#86efac", description: "Half of a whole, one-third of chaos — Fraxion lives between the integers.", isHidden: false, sellValue: 10 },
+  { name: "Algy", rarity: "uncommon", pack: "math-pack", icon: "🔡", colorFrom: "#60a5fa", colorTo: "#2563eb", description: "An algebra spirit that solves for X before you even write the equation.", isHidden: false, sellValue: 25 },
+  { name: "Geometrix", rarity: "uncommon", pack: "math-pack", icon: "📐", colorFrom: "#34d399", colorTo: "#059669", description: "A shape-shifting entity that proves every theorem by simply existing.", isHidden: false, sellValue: 25 },
+  { name: "Primelock", rarity: "rare", pack: "math-pack", icon: "🔒", colorFrom: "#818cf8", colorTo: "#4338ca", description: "Guardian of all prime numbers — divisible only by itself and one.", isHidden: false, sellValue: 60 },
+  { name: "Calculus Rex", rarity: "epic", pack: "math-pack", icon: "📈", colorFrom: "#a78bfa", colorTo: "#6d28d9", description: "Master of derivatives and integrals — it finds the rate of change in your soul.", isHidden: false, sellValue: 150 },
+  { name: "The Infinite", rarity: "legendary", pack: "math-pack", icon: "♾️", colorFrom: "#fbbf24", colorTo: "#b45309", description: "A being without end, without bound — mathematics itself given consciousness.", isHidden: false, sellValue: 400 },
+  { name: "Zero Divide", rarity: "secret", pack: "math-pack", icon: "💥", colorFrom: "#1e1b4b", colorTo: "#0f0a23", description: "The catastrophic result of dividing by zero. Reality cracks wherever it appears.", isHidden: true, sellValue: 1000 },
+
+  // ── ENGLISH PACK ───────────────────────────────────────────────
+  { name: "Syllaby", rarity: "common", pack: "english-pack", icon: "🔤", colorFrom: "#fce7f3", colorTo: "#fbcfe8", description: "A cheerful syllable spirit that breaks every word into its smallest happy pieces.", isHidden: false, sellValue: 10 },
+  { name: "Punctus", rarity: "common", pack: "english-pack", icon: "❗", colorFrom: "#fde68a", colorTo: "#fbbf24", description: "A punctuation spirit that arrives at the end of every sentence — always on time.", isHidden: false, sellValue: 10 },
+  { name: "Metaphoria", rarity: "uncommon", pack: "english-pack", icon: "🌊", colorFrom: "#c084fc", colorTo: "#9333ea", description: "A metaphor weaver whose words paint pictures that outlast a thousand images.", isHidden: false, sellValue: 25 },
+  { name: "Rhymix", rarity: "uncommon", pack: "english-pack", icon: "🎤", colorFrom: "#f9a8d4", colorTo: "#db2777", description: "A rhyming spirit that turns any sentence into poetry without missing a beat.", isHidden: false, sellValue: 25 },
+  { name: "Grammara", rarity: "rare", pack: "english-pack", icon: "📝", colorFrom: "#a3e635", colorTo: "#4d7c0f", description: "The strict guardian of grammar — it corrects your tenses before you finish thinking.", isHidden: false, sellValue: 60 },
+  { name: "Lexicon", rarity: "epic", pack: "english-pack", icon: "📖", colorFrom: "#7c3aed", colorTo: "#4c1d95", description: "Master of every word ever spoken — its vocabulary has no limits and no end.", isHidden: false, sellValue: 150 },
+  { name: "The Bard", rarity: "legendary", pack: "english-pack", icon: "🎭", colorFrom: "#f59e0b", colorTo: "#d97706", description: "The eternal spirit of Shakespeare — to collect or not to collect was never a question.", isHidden: false, sellValue: 400 },
+  { name: "Plagiarix", rarity: "secret", pack: "english-pack", icon: "📋", colorFrom: "#18181b", colorTo: "#09090b", description: "A forbidden entity that copies everything perfectly. Every librarian fears its presence.", isHidden: true, sellValue: 1000 },
+
   // ── RAINBOW PACK ───────────────────────────────────────────────
   { name: "Spectrox", rarity: "rare", pack: "rainbow-pack", icon: "🌈", colorFrom: "#f87171", colorTo: "#818cf8", description: "A prismatic spirit born from seven simultaneous rainbows.", isHidden: false, sellValue: 60 },
   { name: "Chromara", rarity: "epic", pack: "rainbow-pack", icon: "🎆", colorFrom: "#c084fc", colorTo: "#38bdf8", description: "A chromatic entity that shifts colour every millisecond.", isHidden: false, sellValue: 150 },

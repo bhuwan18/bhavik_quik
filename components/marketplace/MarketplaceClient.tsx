@@ -176,7 +176,7 @@ function PackCard({
 
   return (
     <div
-      className={`relative rounded-2xl border overflow-hidden ${
+      className={`relative rounded-2xl border overflow-hidden flex flex-col ${
         isFestival ? "border-yellow-500/50" : "border-white/10"
       }`}
       style={{ background: `linear-gradient(135deg, ${pack.colorFrom}, ${pack.colorTo})` }}
@@ -186,7 +186,7 @@ function PackCard({
           LIMITED
         </div>
       )}
-      <div className="p-6">
+      <div className="p-6 flex flex-col flex-1">
         <div className="text-4xl mb-3">{pack.icon}</div>
         <h3 className="text-xl font-bold text-white mb-1">{pack.name}</h3>
         <p className="text-white/70 text-sm mb-4">{pack.description}</p>
@@ -214,75 +214,78 @@ function PackCard({
           </div>
         )}
 
-        {/* Single open button */}
-        <button
-          onClick={() => onOpen(pack, 1)}
-          disabled={loading || !canAfford(1)}
-          className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
-            canAfford(1)
-              ? "bg-white text-gray-900 hover:bg-gray-100 hover:scale-[1.02] active:scale-[0.98]"
-              : "bg-white/20 text-white/50 cursor-not-allowed"
-          }`}
-        >
-          {canAfford(1) ? (
-            <>🪙 {pack.cost.toLocaleString()} — Open ×1</>
-          ) : (
-            <>Need {(pack.cost - coins).toLocaleString()} more coins</>
+        {/* Buttons pinned to bottom */}
+        <div className="mt-auto">
+          {/* Single open button */}
+          <button
+            onClick={() => onOpen(pack, 1)}
+            disabled={loading || !canAfford(1)}
+            className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
+              canAfford(1)
+                ? "bg-white text-gray-900 hover:bg-gray-100 hover:scale-[1.02] active:scale-[0.98]"
+                : "bg-white/20 text-white/50 cursor-not-allowed"
+            }`}
+          >
+            {canAfford(1) ? (
+              <>🪙 {pack.cost.toLocaleString()} — Open ×1</>
+            ) : (
+              <>Need {(pack.cost - coins).toLocaleString()} more coins</>
+            )}
+          </button>
+
+          {/* Bulk open buttons — only shown when user can afford at least 1 */}
+          {canAfford(1) && (
+            <div className="grid grid-cols-3 gap-1.5 mt-2">
+              {/* ×5 */}
+              <button
+                onClick={() => onOpen(pack, 5)}
+                disabled={loading || !canAfford(5)}
+                className={`py-2 rounded-lg font-bold text-xs transition-all ${
+                  canAfford(5)
+                    ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
+                    : "bg-white/10 text-white/30 cursor-not-allowed"
+                }`}
+              >
+                ×5
+                <span className="block text-[10px] font-normal opacity-70">
+                  {(pack.cost * 5).toLocaleString()}🪙
+                </span>
+              </button>
+
+              {/* ×10 */}
+              <button
+                onClick={() => onOpen(pack, 10)}
+                disabled={loading || !canAfford(10)}
+                className={`py-2 rounded-lg font-bold text-xs transition-all ${
+                  canAfford(10)
+                    ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
+                    : "bg-white/10 text-white/30 cursor-not-allowed"
+                }`}
+              >
+                ×10
+                <span className="block text-[10px] font-normal opacity-70">
+                  {(pack.cost * 10).toLocaleString()}🪙
+                </span>
+              </button>
+
+              {/* Max */}
+              <button
+                onClick={() => onOpen(pack, maxCount)}
+                disabled={loading || maxCount < 2}
+                className={`py-2 rounded-lg font-bold text-xs transition-all ${
+                  maxCount >= 2
+                    ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
+                    : "bg-white/10 text-white/30 cursor-not-allowed"
+                }`}
+              >
+                Max
+                <span className="block text-[10px] font-normal opacity-70">
+                  {maxCount >= 2 ? `×${maxCount}` : "×1"}
+                </span>
+              </button>
+            </div>
           )}
-        </button>
-
-        {/* Bulk open buttons — only shown when user can afford at least 1 */}
-        {canAfford(1) && (
-          <div className="grid grid-cols-3 gap-1.5 mt-2">
-            {/* ×5 */}
-            <button
-              onClick={() => onOpen(pack, 5)}
-              disabled={loading || !canAfford(5)}
-              className={`py-2 rounded-lg font-bold text-xs transition-all ${
-                canAfford(5)
-                  ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
-                  : "bg-white/10 text-white/30 cursor-not-allowed"
-              }`}
-            >
-              ×5
-              <span className="block text-[10px] font-normal opacity-70">
-                {(pack.cost * 5).toLocaleString()}🪙
-              </span>
-            </button>
-
-            {/* ×10 */}
-            <button
-              onClick={() => onOpen(pack, 10)}
-              disabled={loading || !canAfford(10)}
-              className={`py-2 rounded-lg font-bold text-xs transition-all ${
-                canAfford(10)
-                  ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
-                  : "bg-white/10 text-white/30 cursor-not-allowed"
-              }`}
-            >
-              ×10
-              <span className="block text-[10px] font-normal opacity-70">
-                {(pack.cost * 10).toLocaleString()}🪙
-              </span>
-            </button>
-
-            {/* Max */}
-            <button
-              onClick={() => onOpen(pack, maxCount)}
-              disabled={loading || maxCount < 2}
-              className={`py-2 rounded-lg font-bold text-xs transition-all ${
-                maxCount >= 2
-                  ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
-                  : "bg-white/10 text-white/30 cursor-not-allowed"
-              }`}
-            >
-              Max
-              <span className="block text-[10px] font-normal opacity-70">
-                {maxCount >= 2 ? `×${maxCount}` : "×1"}
-              </span>
-            </button>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
