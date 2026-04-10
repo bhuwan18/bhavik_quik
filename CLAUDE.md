@@ -51,7 +51,7 @@ cp .env.example .env
 # Push database schema
 npm run db:push
 
-# Seed with 55 official quizzes + all quizlets + packs
+# Seed with ~170 official quizzes + all quizlets + packs
 npm run db:seed
 
 # Start development server
@@ -134,7 +134,7 @@ app/
 │   ├── notifications/page.tsx    View in-app notifications (feedback replies, leaderboard events, milestones, follow events)
 │   ├── buy-coins/page.tsx        Redirects to /shop
 │   ├── shop/page.tsx             Buy Pro (₹250/mo) or Max (₹500/mo) via UPI + coin purchase + daily reset + streak freeze (coin-based)
-│   ├── milestones/page.tsx       Coin milestone badges (50 total, 1K–50K) — earned grid + progress to next
+│   ├── milestones/page.tsx       Multi-type milestone badges (coins/quizzes/answers/categories/streak) — earned grid + progress to next
 │   └── admin/
 │       ├── layout.tsx            Admin auth guard
 │       ├── quizzes/page.tsx      List all quizzes with Edit links
@@ -192,6 +192,7 @@ components/
 ├── marketplace/
 │   ├── MarketplaceClient.tsx     Pack browsing + purchase
 │   └── PackOpeningModal.tsx      Animated pack reveal (tap cards)
+├── discover/DiscoverGrid.tsx     Quiz grid component used by the Discover page
 ├── quizlets/QuizletsClient.tsx   Toggle: "My Collection" (owned, sell, Hidden section) + "All Quizlets" dex view (all non-hidden, owned highlighted)
 ├── milestones/MilestonesClient.tsx  Milestone grid — earned badges with tier colors + progress bar to next unlock
 ├── profile/
@@ -205,14 +206,14 @@ components/
     └── DailyChallengeGame.tsx    5 deterministic questions per day (date-seeded), 30s per question
 
 lib/
-├── milestones-data.ts            50 milestone definitions (1K–50K in 1K steps), tiers: bronze→silver→gold→platinum→diamond
+├── milestones-data.ts            Multi-type milestones: coins (1K–100K), quizzes, answers, categories, streak — 6 tiers: bronze→silver→gold→platinum→diamond→cosmic
 ├── auth.ts                       NextAuth config — Google + admin credentials + test user + isMax in session
 ├── db.ts                         Prisma client singleton
 ├── email.ts                      Nodemailer helper — sendEmail() + ADMIN_EMAIL constant
 ├── push.ts                       Web Push helper — sendPushToUser(userId, title, body, url)
 ├── pusher.ts                     Pusher server instance + DinoRex shared types (DinoRexPlayer, etc.)
 ├── audio-context.tsx             React context for background music state + controls
-├── quizlets-data.ts              All 99 quizlet definitions (7 standard packs + 3 global uniques + 6 festival)
+├── quizlets-data.ts              All 84 quizlet definitions (9 standard packs + 3 global uniques + 6 festival)
 ├── packs-data.ts                 All 13 pack definitions (7 standard + 6 festival)
 ├── festivals.ts                  Festival calendar (6 festivals)
 ├── roll.ts                       Pack opening RNG logic
@@ -223,7 +224,7 @@ lib/
 
 prisma/
 ├── schema.prisma                 Full DB schema — 19 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification, UserMilestone, UserFollow
-└── seed.ts                       55 official quizzes (11 categories × 5) + all quizlets + packs
+└── seed.ts                       ~170 official quizzes across 20 categories + all quizlets + packs
 ```
 
 ---
@@ -232,7 +233,7 @@ prisma/
 
 ### Quizlets (Characters)
 - Called "Quizlets" in-game (not "characters")
-- **99 total**: 7 standard packs (9 each, except Rainbow with 5) + 3 global uniques + 6 festival pack quizlets
+- **84 total**: 9 standard packs (Tech/Sports/Magic/Hero/Music/Science × 9, Math × 8, English × 8, Rainbow × 5) + 3 global uniques + 6 festival pack quizlets
 - Each has: name, rarity, pack, icon (emoji), color gradient, description
 - Rarities: `common` | `uncommon` | `rare` | `epic` | `legendary` | `secret` | `unique` | `impossible`
 - Secret/Unique/Impossible have `isHidden: true` — shown in a separate "Hidden" section in the Quizlets tab (My Collection view only), not in the All Quizlets dex view or pack descriptions
@@ -277,9 +278,10 @@ If user already owns a quizlet: refund coins equal to its sell value.
 the festival pack slug. No DB change needed — pure date comparison at request time.
 
 ### Pre-made Quiz Content
-11 categories × 5 quizzes (difficulty 1–5) = **55 official quizzes** seeded via `prisma/seed.ts`.
-Seeded categories: football, cricket, harry-potter, technology, avengers, artists, musicians, math, science, physics, world-languages.
-Additional categories (flags, brand-logos, animals, anime, grade-6) exist in `CATEGORIES` and are selectable in the quiz maker but have no seeded quizzes by default.
+All 20 categories are seeded via `prisma/seed.ts` — approximately 170 official quizzes total.
+Seeded categories: football, cricket, harry-potter, technology, avengers, artists, musicians, math, science, physics, world-languages, flags, brand-logos, animals, anime, grade-6, geography, world-travel, gaming, memes.
+Category quiz counts vary: technology (22), science/math/harry-potter/football/cricket/avengers (12 each), physics/musicians/gaming/artists/world-travel (7 each), flags (6), others (5 each).
+Premium categories (`premiumTier` field on `CATEGORIES`): grade-6 (tier 1), geography (tier 1), world-travel (tier 2), gaming (tier 2), memes (tier 3).
 
 ### Quiz Answer Shuffling
 QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates shuffle (`shuffleOrder` in `components/quiz/QuizPlayer.tsx`). The correct answer mapping is preserved — do not change this logic.
@@ -380,15 +382,20 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - New correct answers are inserted via `prisma.correctAnswer.createMany({ skipDuplicates: true })`
 
 ### Milestone System
-- 50 milestones at 1K–50K `totalCoinsEarned` thresholds (every 1,000 coins)
-- 5 tiers: **bronze** (1K–5K) · **silver** (6K–10K) · **gold** (11K–20K) · **platinum** (21K–35K) · **diamond** (36K–50K)
-- Gold and diamond milestones have CSS animation classes (`legendary-card`, `rainbow-card`)
-- Defined in `lib/milestones-data.ts` — `MILESTONES`, `MILESTONE_THRESHOLDS`, `TIER_COLORS`
+- **5 milestone types**: `coins` | `quizzes` | `answers` | `categories` | `streak`
+- **6 tiers**: bronze · silver · gold · platinum · diamond · **cosmic** (new highest tier)
+- Coin milestones: 1K–60K (every 1K) + 65K, 70K, 75K, 85K, 100K (`MILESTONE_THRESHOLDS`)
+- Quiz milestones: 10, 25, 50, 100, 250, 500, 1000 quizzes played
+- Answer milestones: 50, 100, 250, 500, 1000, 2500, 5000 unique correct answers
+- Category milestones: 3, 5, 8, 11, 16 categories explored
+- Streak badge milestones: 5, 10, 20, 30, 50, 75, 100, 150, 200, 365 days
+- Defined in `lib/milestones-data.ts` — `ALL_MILESTONES`, `MILESTONES` (coins), `QUIZ_MILESTONES`, `ANSWER_MILESTONES`, `CATEGORY_MILESTONES`, `STREAK_BADGE_MILESTONES`, `TIER_COLORS`
+- Gold/diamond/cosmic milestones have CSS animation classes (`legendary-card`, `rainbow-card`)
 - Auto-granted in `/api/attempt` when a quiz completion crosses a threshold
-- Stored in `UserMilestone` model: `@@unique([userId, threshold])`
+- Stored in `UserMilestone` model: `@@unique([userId, milestoneType, threshold])` (milestoneType added)
 - On unlock: creates an in-app `Notification` (type `milestone`) + fires a web push
 - Existing users can be backfilled via `POST /api/admin/grant-milestones` (admin only)
-- `/milestones` page shows earned badges + progress bar toward next unlock
+- `/milestones` page shows earned badges by type + progress bar toward next unlock
 - Dashboard shows the user's latest earned milestone badge and links to `/milestones`
 
 ### Daily Streaks
@@ -449,6 +456,16 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - Generate VAPID keys: `npx web-push generate-vapid-keys`
 - Expired/revoked subscriptions (HTTP 410/404) are auto-deleted from DB on send
 
+### Remotion Video Composition
+- `remotion/` directory contains a standalone video composition (not part of the web app)
+- Files: `BittsQuizReel.tsx`, `BittsQuizVideo.tsx`, `Root.tsx`, `index.ts`, `tokens.ts`
+- Used to generate promotional/social media video reels for BittsQuiz
+- Does not affect the Next.js app or DB — edit independently
+
+### Design System
+- `design-system.md` documents the visual design tokens, colors, spacing, and component patterns
+- Reference this when adding new UI components to stay consistent
+
 ### Year Auto-Increment
 The app name is always `BittsQuiz {new Date().getFullYear()}`.
 Never hardcode a year — always use `new Date().getFullYear()`.
@@ -460,12 +477,12 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | File | Purpose |
 |------|---------|
 | `lib/profile.ts` | Server-only profile data fetcher — `getProfileData(userId, viewerUserId)` — returns `null` for admins; parallel queries via `Promise.all` |
-| `lib/milestones-data.ts` | 50 milestone definitions + `MILESTONE_THRESHOLDS` + `TIER_COLORS` — edit names/tiers here |
-| `lib/quizlets-data.ts` | All 99 quizlet definitions (7 standard packs + 3 global uniques + 6 festival) |
-| `lib/packs-data.ts` | All 13 pack definitions (7 standard + 6 festival) — prices at ~25% of original |
+| `lib/milestones-data.ts` | Multi-type milestone definitions + `ALL_MILESTONES` + `TIER_COLORS` (6 tiers incl. cosmic) — edit names/tiers here |
+| `lib/quizlets-data.ts` | All 84 quizlet definitions (9 standard packs + 3 global uniques + 6 festival) |
+| `lib/packs-data.ts` | All 15 pack definitions (9 standard + 6 festival) |
 | `lib/roll.ts` | Pack opening RNG — edit drop rates here |
 | `lib/festivals.ts` | Add/modify festival dates here |
-| `lib/utils.ts` | RARITY_COLORS, SELL_VALUES, CATEGORIES (16 total), CategorySlug type |
+| `lib/utils.ts` | RARITY_COLORS, SELL_VALUES, CATEGORIES (20 total, 4 with premiumTier), CategorySlug type |
 | `lib/time.ts` | isSchoolHours() + getISTDateString() + IST offset helpers |
 | `lib/game-config.ts` | Game timing constants, coin earn amounts, membership pricing, daily limits, streak constants |
 | `lib/app-settings.ts` | getSchoolHoursEnabled() — reads AppSetting from DB |
@@ -489,7 +506,7 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `components/game/SurvivalGame.tsx` | Survival mode — streak until first wrong answer |
 | `components/game/DailyChallengeGame.tsx` | Daily challenge — 5 deterministic questions per day |
 | `prisma/schema.prisma` | DB schema — run `npm run db:push` after changes |
-| `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed (55 quizzes, 11 seeded categories) |
+| `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed (~170 quizzes, all 20 categories) |
 
 ---
 
@@ -542,11 +559,11 @@ npm run db:seed      # re-seed data (idempotent)
 - **isMax**: always check `isMax && (!maxExpiresAt || maxExpiresAt > new Date())` for active Max status, same pattern for Pro
 - **CorrectAnswer**: never skip the dedup check in `/api/attempt` — it prevents infinite coin farming
 - **School hours**: IST = UTC+5:30; use `lib/time.ts → isSchoolHours()` rather than inline time math; check `getSchoolHoursEnabled()` from `lib/app-settings.ts` before enforcing
-- **Categories**: CATEGORIES has 16 entries; seeded quizzes only cover 11 — the 5 extra categories (flags, brand-logos, animals, anime, grade-6) are quiz-maker-only until seeded
+- **Categories**: CATEGORIES has 20 entries — all are seeded; grade-6/geography (premiumTier 1), world-travel/gaming (premiumTier 2), memes (premiumTier 3) are premium-gated
 - **Notifications**: use `Notification` model for in-app messages; use `lib/push.ts → sendPushToUser()` for browser push — these are separate channels
 - **Admin users**: actions go through PATCH `/api/admin/users/[id]` with `action` field (`lock`, `unlock`, `reset_daily`, `grant_pro`, `revoke_pro`, `grant_max`, `revoke_max`)
 - **AppSetting**: read via `lib/app-settings.ts`; write via PATCH `/api/admin/settings`; never hardcode setting keys outside those two files
-- **Milestones**: thresholds are 1K–50K in steps of 1K (`MILESTONE_THRESHOLDS`); always use `skipDuplicates: true` when inserting `UserMilestone`; milestone push is fire-and-forget (dynamic import, errors swallowed)
+- **Milestones**: 5 types (coins/quizzes/answers/categories/streak); `UserMilestone` unique key is `[userId, milestoneType, threshold]`; always pass `milestoneType` when inserting; use `skipDuplicates: true`; push is fire-and-forget
 - **Streaks**: always use `getISTDateString()` from `lib/time.ts` for IST date comparison — never inline IST math; streak DB write is skipped when `lastDateIST === todayIST`; freeze purchase uses `streakFreezes: { increment: 1 }` (atomic, no read-modify-write)
 - **SVG icons**: custom category icons live in `components/icons/` — import from there, not inline SVG
 - **Follow system**: `UserFollow` model with cascade deletes; `lib/profile.ts → getProfileData()` returns `null` for admins (→ `notFound()`); leaderboard sort is URL-param-driven (`sort`/`dir`/`page`); accuracy is computed and NOT sortable (no raw query needed)

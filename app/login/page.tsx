@@ -58,18 +58,17 @@ export default function LoginPage() {
       style={{ background: "var(--main-bg)" }}>
       {/* Animated background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-600/25 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-pink-600/25 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-indigo-600/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
-        <div className="absolute bottom-1/3 left-1/4 w-48 h-48 bg-orange-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "0.5s" }} />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-amber-500/8 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-yellow-600/6 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 flex flex-col items-center gap-8 max-w-md w-full">
         {/* Logo */}
         <div className="text-center">
-          <div className="text-7xl mb-4 float-anim inline-block">🎯</div>
-          <h1 className="text-5xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-            BittsQuiz
+          <div className="text-7xl mb-4 float-anim inline-block">⚡</div>
+          <h1 className="text-5xl font-black text-white tracking-tight">
+            Bitts<span className="text-[var(--accent)]">Quiz</span>
           </h1>
           <p className="mt-3 text-gray-400 text-lg font-medium">
             Quiz. Collect. Conquer.
@@ -77,8 +76,8 @@ export default function LoginPage() {
         </div>
 
         {/* Feature list */}
-        <div className="w-full rounded-2xl p-6 space-y-3 border border-purple-500/20"
-          style={{ background: "rgba(139, 92, 246, 0.08)" }}>
+        <div className="w-full rounded-2xl p-6 space-y-3 border"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
           {[
             { icon: "🧠", text: "Answer quizzes across 10 categories" },
             { icon: "🪙", text: "Earn coins for every correct answer" },
@@ -175,7 +174,7 @@ export default function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-4 py-3 rounded-xl border border-purple-500/30 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 bg-purple-500/10"
+              className="w-full px-4 py-3 rounded-xl border border-white/15 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/60 bg-white/5"
             />
             <input
               type="password"
@@ -183,13 +182,13 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 rounded-xl border border-purple-500/30 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 bg-purple-500/10"
+              className="w-full px-4 py-3 rounded-xl border border-white/15 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/60 bg-white/5"
             />
             {adminError && <p className="text-red-400 text-sm text-center">{adminError}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl transition-all disabled:opacity-50"
+              className="w-full py-3 bg-[var(--accent)] hover:brightness-110 text-black font-bold rounded-xl transition-all disabled:opacity-50"
             >
               {loading ? "Signing in..." : "Sign in as Admin"}
             </button>

@@ -81,10 +81,10 @@ export default function Sidebar() {
       collapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
       active
         ? adminStyle
-          ? "bg-gradient-to-r from-purple-600/40 to-pink-600/30 text-purple-100 border border-purple-400/50"
-          : "bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-purple-200 border border-purple-500/40 shadow-sm shadow-purple-500/10"
+          ? "bg-amber-500/15 text-amber-100 border border-amber-500/35"
+          : "bg-amber-500/15 text-amber-100 border border-amber-500/30 shadow-sm"
         : adminStyle
-          ? "text-purple-400/80 hover:bg-purple-500/10 hover:text-purple-200"
+          ? "text-slate-400/80 hover:bg-white/5 hover:text-slate-200"
           : "text-gray-400 hover:bg-white/5 hover:text-white"
     );
 
@@ -94,12 +94,12 @@ export default function Sidebar() {
       style={{
         width: collapsed ? "68px" : "240px",
         background: "linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-mid) 50%, var(--sidebar-to) 100%)",
-        borderColor: "var(--sidebar-border, rgba(88,28,135,0.3))",
+        borderColor: "var(--border)",
       }}
     >
       {/* Logo + toggle */}
       <div className={cn(
-        "border-b border-purple-800/30 flex items-center",
+        "border-b border-white/8 flex items-center",
         collapsed ? "justify-center p-3 flex-col gap-2" : "px-4 py-4 justify-between"
       )}>
         <Link href="/dashboard" className="flex items-center gap-2.5 group min-w-0" title={collapsed ? "BittsQuiz" : undefined}>
@@ -111,8 +111,8 @@ export default function Sidebar() {
             className="shrink-0 group-hover:scale-110 transition-transform rounded-md"
           />
           {!collapsed && (
-            <span className="text-lg font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent whitespace-nowrap">
-              BittsQuiz
+            <span className="text-lg font-bold text-white whitespace-nowrap tracking-tight">
+              Bitts<span className="text-[var(--accent)]">Quiz</span>
             </span>
           )}
         </Link>
@@ -175,9 +175,9 @@ export default function Sidebar() {
         {isAdmin && (
           <>
             <div className={cn("pt-3 pb-1", collapsed ? "px-0" : "px-1")}>
-              <div className="border-t border-purple-800/30 mb-2" />
+              <div className="border-t border-white/8 mb-2" />
               {!collapsed && (
-                <p className="text-[10px] text-purple-400/80 font-bold uppercase tracking-widest">Admin Panel</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Admin Panel</p>
               )}
             </div>
             {ADMIN_NAV_ITEMS.map(({ href, icon: Icon, label, color }) => {
@@ -213,10 +213,10 @@ export default function Sidebar() {
 
       {/* User section */}
       {session?.user && (
-        <div className={cn("border-t border-purple-800/30", collapsed ? "px-2 py-3" : "px-4 py-4")}>
+        <div className={cn("border-t border-white/8", collapsed ? "px-2 py-3" : "px-4 py-4")}>
           {!collapsed && isAdmin && (
             <div className="mb-2.5 text-center">
-              <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-0.5 rounded-full font-semibold">
+              <span className="text-xs bg-red-500/20 text-red-300 border border-red-500/30 px-3 py-0.5 rounded-full font-semibold">
                 ADMIN
               </span>
             </div>
@@ -241,15 +241,15 @@ export default function Sidebar() {
                   title={session.user.name ?? ""}
                   className={cn(
                     "rounded-full ring-2 shrink-0 cursor-pointer",
-                    isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-purple-500/50"
+                    isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-white/20"
                   )}
                 />
               ) : (
                 <div
                   title={session.user.name ?? ""}
                   className={cn(
-                    "w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-sm font-bold text-white ring-2 shrink-0",
-                    isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-purple-500/50"
+                    "w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-sm font-bold text-white ring-2 shrink-0",
+                    isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-white/20"
                   )}
                 >
                   {session.user.name?.[0] ?? "?"}
@@ -275,13 +275,13 @@ export default function Sidebar() {
                     height={34}
                     className={cn(
                       "rounded-full ring-2 shrink-0",
-                      isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-purple-500/50"
+                      isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-white/20"
                     )}
                   />
                 ) : (
                   <div className={cn(
-                    "w-[34px] h-[34px] rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-sm font-bold text-white ring-2 shrink-0",
-                    isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-purple-500/50"
+                    "w-[34px] h-[34px] rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-sm font-bold text-white ring-2 shrink-0",
+                    isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-white/20"
                   )}>
                     {session.user.name?.[0] ?? "?"}
                   </div>

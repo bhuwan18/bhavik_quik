@@ -120,7 +120,7 @@ export default async function DashboardPage() {
               href="/discover"
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-[var(--accent)] hover:brightness-110 text-black font-bold rounded-2xl transition-all hover:scale-105 shadow-lg text-base"
             >
-              ⚡ Play Now
+              🚀 Play Now
             </Link>
             <Link
               href="/game"
@@ -332,14 +332,14 @@ export default async function DashboardPage() {
             className="w-full bg-white/10 rounded-full h-2.5 mb-2 overflow-hidden"
           >
             <div
-              className={`h-2.5 rounded-full transition-transform duration-500 ease-out ${isMaxActive ? "bg-gradient-to-r from-amber-500 to-yellow-400" : isProActive ? "bg-gradient-to-r from-yellow-500 to-amber-400" : "bg-gradient-to-r from-indigo-500 to-blue-400"}`}
+              className="h-2.5 rounded-full transition-transform duration-500 ease-out bg-gradient-to-r from-amber-500 to-yellow-400"
               style={{ transform: `scaleX(${Math.min(100, Math.round((dailyEarned / dailyLimit) * 100)) / 100})`, transformOrigin: "left", willChange: "transform" }}
             />
           </div>
           {dailyEarned >= dailyLimit ? (
-            <p className="text-xs text-orange-400">
-              Daily limit reached — resets tomorrow.{" "}
-              {!isProActive && !isMaxActive && <Link href="/shop" className="underline">Upgrade to Pro or Max</Link>} for more.
+            <p className="text-xs text-gray-400">
+              You&apos;ve maxed out today — come back tomorrow!{" "}
+              {!isProActive && !isMaxActive && <Link href="/shop" className="text-amber-400 hover:text-amber-300">Upgrade for a higher limit →</Link>}
             </p>
           ) : (
             <p className="text-xs text-gray-500">{dailyLimit - dailyEarned} coins left today</p>
@@ -361,13 +361,13 @@ export default async function DashboardPage() {
             className="w-full bg-white/10 rounded-full h-2.5 mb-2 overflow-hidden"
           >
             <div
-              className="bg-gradient-to-r from-blue-500 to-indigo-400 h-2.5 rounded-full transition-transform duration-500 ease-out"
+              className="bg-gradient-to-r from-amber-500 to-yellow-400 h-2.5 rounded-full transition-transform duration-500 ease-out"
               style={{ transform: `scaleX(${Math.round((ownedQuizlets / Math.max(totalQuizlets, 1)) * 100) / 100})`, transformOrigin: "left", willChange: "transform" }}
             />
           </div>
           <div className="flex justify-between text-xs text-gray-500">
             <span>{Math.round((ownedQuizlets / Math.max(totalQuizlets, 1)) * 100)}% complete</span>
-            <Link href="/marketplace" className="text-indigo-400 hover:text-indigo-300">Open packs →</Link>
+            <Link href="/marketplace" className="text-amber-400 hover:text-amber-300">Open packs →</Link>
           </div>
         </div>
       </div>
@@ -377,7 +377,7 @@ export default async function DashboardPage() {
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
-            <Link href="/discover" className="text-sm text-purple-400 hover:text-purple-300 transition-colors">Play more →</Link>
+            <Link href="/discover" className="text-sm text-amber-400 hover:text-amber-300 transition-colors">Play more →</Link>
           </div>
           <div className="space-y-3">
             {recentAttempts.map((attempt) => {

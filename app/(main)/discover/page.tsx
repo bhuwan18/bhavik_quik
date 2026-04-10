@@ -67,7 +67,7 @@ export default async function DiscoverPage({
           <Link
             href="/discover"
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-              !category ? "bg-indigo-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
+              !category ? "bg-amber-500 text-black font-semibold" : "bg-white/5 text-gray-400 hover:bg-white/10"
             }`}
           >
             All
@@ -82,7 +82,7 @@ export default async function DiscoverPage({
                 href={`/discover?category=${slug}`}
                 className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
                   category === slug
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-amber-500 text-black font-semibold"
                     : locked
                     ? "bg-white/5 text-gray-600 cursor-pointer"
                     : "bg-white/5 text-gray-400 hover:bg-white/10"
@@ -95,7 +95,7 @@ export default async function DiscoverPage({
                   </>
                 ) : (
                   <>
-                    <Icon size={14} className={category === slug ? "text-white" : color} /> {label}
+                    <Icon size={14} className={category === slug ? "text-black" : color} /> {label}
                   </>
                 )}
               </Link>

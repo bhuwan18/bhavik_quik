@@ -178,7 +178,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
   return (
     <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-6xl mx-auto">
       {toast && (
-        <div className="fixed top-6 right-6 z-50 bg-green-500/90 text-white px-5 py-3 rounded-xl shadow-lg">
+        <div className="fixed bottom-24 right-4 md:bottom-8 md:right-6 z-50 bg-green-500/90 text-white px-5 py-3 rounded-xl shadow-lg">
           {toast}
         </div>
       )}
@@ -203,7 +203,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
           onClick={() => setView("mine")}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
             view === "mine"
-              ? "bg-indigo-600 text-white"
+              ? "bg-amber-500 text-black"
               : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
           }`}
         >
@@ -213,7 +213,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
           onClick={() => setView("all")}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
             view === "all"
-              ? "bg-indigo-600 text-white"
+              ? "bg-amber-500 text-black"
               : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
           }`}
         >
@@ -247,7 +247,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
               key={r}
               onClick={() => setRarityFilter(r)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all capitalize ${
-                rarityFilter === r ? "bg-indigo-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
+                rarityFilter === r ? "bg-amber-500 text-black" : "bg-white/5 text-gray-400 hover:bg-white/10"
               }`}
             >
               {info ? <span className={info.text}>{info.label}</span> : "All Rarities"}
@@ -306,17 +306,17 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
           {hiddenQuizlets.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+                <div className="h-px flex-1 bg-white/10" />
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🔮</span>
-                  <h2 className="text-lg font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
+                  <h2 className="text-lg font-bold text-violet-300">
                     Hidden
                   </h2>
-                  <span className="text-xs bg-purple-500/20 border border-purple-500/30 text-purple-400 px-2 py-0.5 rounded-full font-semibold">
+                  <span className="text-xs bg-white/10 border border-white/15 text-slate-300 px-2 py-0.5 rounded-full font-semibold">
                     {hiddenQuizlets.length}
                   </span>
                 </div>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+                <div className="h-px flex-1 bg-white/10" />
               </div>
               <p className="text-sm text-gray-500 mb-5 text-center">
                 Ultra-rare quizlets — Secrets, Uniques, and the Impossible Legend.

@@ -149,11 +149,49 @@ h1, h2, h3, h4, h5, h6, .font-display {
 ::-webkit-scrollbar-track { background: var(--background); }
 ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
 .glow-card:hover {
-  box-shadow: 0 0 30px rgba(139,92,246,0.3), 0 0 60px rgba(236,72,153,0.15);
+  box-shadow: 0 0 28px rgba(245,158,11,0.25), 0 0 56px rgba(245,158,11,0.1);
 }
-.pack-reveal { perspective: 1000px; }
-.pack-card-flip { transition: transform 0.6s ease; transform-style: preserve-3d; }
+.pack-reveal { perspective: 1200px; }
+.pack-card-flip {
+  transition: transform 0.65s cubic-bezier(0.45, 0, 0.25, 1);
+  transform-style: preserve-3d;
+  position: relative;
+}
 .pack-card-flip.flipped { transform: rotateY(180deg); }
+.pack-card-back,
+.pack-card-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.pack-card-face { transform: rotateY(180deg); }
+
+/* Legendary reveal entrance */
+@keyframes legendary-burst {
+  0%   { transform: scale(0.82); }
+  55%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.legendary-reveal { animation: legendary-burst 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* Subtle shimmer on unrevealed card back */
+@keyframes card-shimmer {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.018); }
+}
+.card-shimmer { animation: card-shimmer 1.6s ease-in-out infinite; }
+
+/* Staggered bulk card entrance */
+@keyframes card-flip-in {
+  0%   { opacity: 0; transform: rotateY(-90deg) scale(0.8); }
+  100% { opacity: 1; transform: rotateY(0deg) scale(1); }
+}
+.bulk-card-reveal {
+  opacity: 0;
+  animation: card-flip-in 0.4s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
 
 /* ─── Reduced motion ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

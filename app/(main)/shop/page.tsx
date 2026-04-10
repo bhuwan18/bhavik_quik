@@ -206,7 +206,7 @@ function MembershipTab({ isPro, isMax }: { isPro: boolean; isMax: boolean }) {
               value={utrNumber}
               onChange={(e) => setUtrNumber(e.target.value)}
               placeholder="Enter UTR / Reference number"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 mb-3"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/60 mb-3"
             />
             {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
             <button
@@ -338,7 +338,7 @@ function BuyCoinsTab() {
                   key={amt}
                   onClick={() => { setCoins(amt); setInputValue(String(amt)); }}
                   className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors border ${
-                    coins === amt ? "bg-purple-600 border-purple-500 text-white" : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
+                    coins === amt ? "bg-amber-500 border-amber-400 text-black font-semibold" : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
                   }`}
                 >
                   {amt} 🪙 <span className="opacity-60 text-xs">₹{amt}</span>
@@ -356,7 +356,7 @@ function BuyCoinsTab() {
                 max={BUY_COINS_MAX}
                 value={inputValue}
                 onChange={(e) => handleInputChange(e.target.value)}
-                className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-purple-500 text-sm"
+                className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-amber-500/60 text-sm"
               />
               <div className="text-right shrink-0">
                 <div className="text-lg font-bold text-white">₹{isValid ? coins : "—"}</div>
@@ -432,7 +432,7 @@ function BuyCoinsTab() {
               placeholder="e.g. 123456789012"
               value={utr}
               onChange={(e) => setUtr(e.target.value.slice(0, 30))}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-purple-500 text-sm"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500/60 text-sm"
             />
             <p className="text-xs text-gray-600 mt-1">Find the UTR in your UPI app after paying.</p>
             {utr && !utrValid && <p className="text-xs text-red-400 mt-1">UTR must be 8–30 alphanumeric characters.</p>}

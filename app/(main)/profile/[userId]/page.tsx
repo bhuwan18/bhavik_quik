@@ -24,7 +24,7 @@ export default async function ProfilePage({
   const stats = [
     { label: "Coins Earned", value: `🪙 ${data.totalCoinsEarned.toLocaleString()}`, color: "text-yellow-400" },
     { label: "Current Streak", value: `🔥 ${data.currentStreak}d`, color: "text-orange-400" },
-    { label: "Longest Streak", value: `🏆 ${data.longestStreak}d`, color: "text-amber-400" },
+    { label: "Longest Streak", value: `📈 ${data.longestStreak}d`, color: "text-amber-400" },
     { label: "Accuracy", value: `🎯 ${data.accuracy}%`, color: data.accuracy >= 70 ? "text-green-400" : data.accuracy >= 50 ? "text-yellow-400" : "text-red-400" },
     { label: "Quizlets Owned", value: `🎴 ${data.ownedQuizletsCount}`, color: "text-purple-400" },
     { label: "Total Quizzes", value: `📝 ${data.totalQuizzes}`, color: "text-blue-400" },
@@ -134,7 +134,7 @@ export default async function ProfilePage({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {data.mostPlayedCategory && (
               <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-3">
-                <span className="text-2xl">🎯</span>
+                <span className="text-2xl">📊</span>
                 <div>
                   <p className="text-white font-semibold">{data.mostPlayedCategory}</p>
                   <p className="text-xs text-gray-500">Most played category</p>

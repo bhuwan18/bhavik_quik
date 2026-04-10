@@ -54,7 +54,7 @@ export default function AudioPlayer() {
               step={0.05}
               value={volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="flex-1 accent-purple-500"
+              className="flex-1 accent-amber-500"
             />
             <span className="text-xs opacity-50 w-8 text-right">{Math.round(volume * 100)}%</span>
           </div>
@@ -64,9 +64,9 @@ export default function AudioPlayer() {
             onClick={toggle}
             className="w-full py-2 rounded-xl text-xs font-semibold transition-colors"
             style={{
-              background: enabled ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.05)",
-              color: enabled ? "#c4b5fd" : "#6b7280",
-              border: `1px solid ${enabled ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.1)"}`,
+              background: enabled ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.05)",
+              color: enabled ? "#fbbf24" : "#6b7280",
+              border: `1px solid ${enabled ? "rgba(245,158,11,0.35)" : "rgba(255,255,255,0.1)"}`,
             }}
           >
             {enabled ? "🎵 Music ON" : "🔕 Music OFF"}
@@ -80,8 +80,9 @@ export default function AudioPlayer() {
         title="Music controls"
         className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95"
         style={{
-          background: "linear-gradient(135deg, #7c3aed, #ec4899)",
-          boxShadow: enabled && playing ? "0 0 16px rgba(139,92,246,0.6)" : undefined,
+          background: enabled && playing ? "var(--accent)" : "var(--surface)",
+          border: `1px solid ${enabled && playing ? "rgba(245,158,11,0.5)" : "rgba(255,255,255,0.1)"}`,
+          boxShadow: enabled && playing ? "0 0 14px rgba(245,158,11,0.4)" : undefined,
         }}
       >
         <span className="text-xl">{enabled && playing ? "🎵" : "🔕"}</span>

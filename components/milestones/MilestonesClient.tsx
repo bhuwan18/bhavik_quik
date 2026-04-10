@@ -156,7 +156,7 @@ function TypeProgressBar({
       </p>
       <div className="h-2 rounded-full bg-white/10 overflow-hidden">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
