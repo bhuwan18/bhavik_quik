@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useState } from "react";
@@ -24,8 +23,6 @@ import {
   ClipboardList,
   MessageCircle,
   Settings,
-  Moon,
-  Sun,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -57,11 +54,9 @@ const ADMIN_NAV_ITEMS: { href: string; icon: LucideIcon; label: string; color: s
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { theme, setTheme } = useTheme();
   const user = session?.user as { isAdmin?: boolean; isPro?: boolean } | undefined;
   const isAdmin = !!user?.isAdmin;
   const isPro = !!user?.isPro;
-  const isLight = theme === "light";
 
   const unreadCount = useUnreadCount();
   const [collapsed, setCollapsed] = useState(() => {
@@ -192,24 +187,6 @@ export default function Sidebar() {
           </>
         )}
       </nav>
-
-      {/* Theme toggle */}
-      <div className={cn("py-2 border-t border-purple-800/20", collapsed ? "px-2" : "px-3")}>
-        <button
-          onClick={() => setTheme(isLight ? "dark" : "light")}
-          title={collapsed ? (isLight ? "Dark Mode" : "Light Mode") : undefined}
-          className={cn(
-            "w-full flex items-center rounded-lg text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-all",
-            collapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
-          )}
-        >
-          {isLight
-            ? <Moon size={collapsed ? 20 : 17} className="shrink-0 text-indigo-400" />
-            : <Sun size={collapsed ? 20 : 17} className="shrink-0 text-yellow-400" />
-          }
-          {!collapsed && (isLight ? "Dark Mode" : "Light Mode")}
-        </button>
-      </div>
 
       {/* User section */}
       {session?.user && (

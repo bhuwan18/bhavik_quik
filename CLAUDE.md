@@ -118,7 +118,7 @@ app/
 ├── certificate/page.tsx          Completion certificate (only if all quizlets owned)
 ├── globals.css                   CSS variables for dark/light theme + Tailwind overrides
 ├── (main)/                       Auth-guarded area (sidebar layout + AudioProvider)
-│   ├── layout.tsx                Auth guard + Sidebar (desktop) + MobileNav + OnlinePing + AudioPlayer + PushSubscriptionManager
+│   ├── layout.tsx                Auth guard + Sidebar (desktop) + MobileNav + OnlinePing + AudioPlayer + PushSubscriptionManager + SplashScreen + NotificationsProvider
 │   ├── loading.tsx               App-level loading screen with rotating game facts
 │   ├── dashboard/page.tsx        Play-first hero + IntroOverlay + category quick-play + stats
 │   ├── discover/page.tsx         Browse quizzes — shows ✓ Completed badge on perfect-score quizzes
@@ -157,6 +157,7 @@ app/
     ├── user/stats/               GET dashboard stats
     ├── user/ping/                POST update lastSeenAt — called every 2 min by OnlinePing
     ├── user/follow/[userId]/     POST follow a user; DELETE unfollow — auth + self-follow + admin guards
+    ├── user/[userId]/follow-list/ GET followers or following list for a user (admin + own profile only; ?type=followers|following)
     ├── user/buy-streak-freeze/   GET streak info; POST purchase streak freeze with coins (1K or 2.5K coins, max 2)
     ├── user/submit-payment/      POST submit UTR number for UPI payment (coins/pro/max/reset)
     ├── push/subscribe/           POST/DELETE web push subscription (VAPID endpoint + keys)
@@ -184,7 +185,9 @@ components/
 ├── layout/MobileNav.tsx          Bottom tab bar (mobile only, md:hidden) — 5 tabs + "More" drawer
 ├── layout/OnlinePing.tsx         Client component — silently POSTs /api/user/ping every 2 min
 ├── layout/PushSubscriptionManager.tsx  Registers sw.js, shows push opt-in banner, saves subscription
+├── layout/NotificationsProvider.tsx    React context — fetches unread notification count on every route change; exposes useUnreadCount()
 ├── ThemeProvider.tsx             next-themes wrapper (class-based, default: dark)
+├── SplashScreen.tsx              Daily splash shown once per IST day (localStorage key bq_splash_date) — active promotions, festival pack, Pro/Max pitch; 5s auto-dismiss
 ├── IntroOverlay.tsx              First-visit onboarding overlay (5 steps, localStorage key bq_intro_seen_v1)
 ├── AudioPlayer.tsx               Floating music player (bottom-right) — volume + on/off
 ├── quiz/QuizPlayer.tsx           Interactive quiz — answers shuffled randomly each session
@@ -196,7 +199,8 @@ components/
 ├── quizlets/QuizletsClient.tsx   Toggle: "My Collection" (owned, sell, Hidden section) + "All Quizlets" dex view (all non-hidden, owned highlighted)
 ├── milestones/MilestonesClient.tsx  Milestone grid — earned badges with tier colors + progress bar to next unlock
 ├── profile/
-│   └── FollowButton.tsx          Optimistic follow/unfollow toggle — POST/DELETE /api/user/follow/[id]; rollback on failure
+│   ├── FollowButton.tsx          Optimistic follow/unfollow toggle — POST/DELETE /api/user/follow/[id]; rollback on failure
+│   └── FollowListModal.tsx       Modal to browse followers/following — fetches /api/user/[id]/follow-list; admin + own profile only
 └── game/
     ├── GameModesClient.tsx       Mode selection (HackDev, DinoRex, SpeedBlitz, Survival, Daily, Classic)
     ├── HackDevGame.tsx           60-second tech quiz sprint
@@ -214,17 +218,18 @@ lib/
 ├── pusher.ts                     Pusher server instance + DinoRex shared types (DinoRexPlayer, etc.)
 ├── audio-context.tsx             React context for background music state + controls
 ├── quizlets-data.ts              All 84 quizlet definitions (9 standard packs + 3 global uniques + 6 festival)
-├── packs-data.ts                 All 13 pack definitions (7 standard + 6 festival)
+├── packs-data.ts                 All 15 pack definitions (9 standard + 6 festival)
+├── promotions.ts                 Time-limited promotions (PROMOTIONS array + getActivePromotions() — returns promos active on today's IST date)
 ├── festivals.ts                  Festival calendar (6 festivals)
 ├── roll.ts                       Pack opening RNG logic
 ├── time.ts                       Time utilities — isSchoolHours(), getISTDateString(), IST offset helpers
 ├── game-config.ts                Game timing constants, coin economy values, membership pricing, streak config (STREAK_MILESTONES, freeze costs)
 ├── app-settings.ts               AppSetting model helpers — getSchoolHoursEnabled(), etc.
-└── utils.ts                      cn(), CATEGORIES (16 total), RARITY_COLORS, SELL_VALUES, CategorySlug
+└── utils.ts                      cn(), CATEGORIES (20 total), RARITY_COLORS, SELL_VALUES, CategorySlug
 
 prisma/
 ├── schema.prisma                 Full DB schema — 19 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification, UserMilestone, UserFollow
-└── seed.ts                       ~170 official quizzes across 20 categories + all quizlets + packs
+└── seed.ts                       ~175 official quizzes across 20 categories + all quizlets + packs
 ```
 
 ---
@@ -278,10 +283,15 @@ If user already owns a quizlet: refund coins equal to its sell value.
 the festival pack slug. No DB change needed — pure date comparison at request time.
 
 ### Pre-made Quiz Content
-All 20 categories are seeded via `prisma/seed.ts` — approximately 170 official quizzes total.
+All 20 categories are seeded via `prisma/seed.ts` — approximately 175 official quizzes total.
 Seeded categories: football, cricket, harry-potter, technology, avengers, artists, musicians, math, science, physics, world-languages, flags, brand-logos, animals, anime, grade-6, geography, world-travel, gaming, memes.
-Category quiz counts vary: technology (22), science/math/harry-potter/football/cricket/avengers (12 each), physics/musicians/gaming/artists/world-travel (7 each), flags (6), others (5 each).
+Category quiz counts vary: technology (22), science/math/harry-potter/football/cricket/avengers (12 each), physics/musicians/gaming/artists/world-travel (7 each), grade-6 (10+), flags (6), others (5 each).
 Premium categories (`premiumTier` field on `CATEGORIES`): grade-6 (tier 1), geography (tier 1), world-travel (tier 2), gaming (tier 2), memes (tier 3).
+
+### Promotions & Splash Screen
+- `lib/promotions.ts` — `PROMOTIONS` array of time-limited offers; `getActivePromotions()` returns offers whose `startDate`/`endDate` (YYYY-MM-DD IST) bracket today
+- `components/SplashScreen.tsx` — full-screen overlay shown once per IST day (localStorage key `bq_splash_date`); displays active promotions, today's festival pack (if any), and a Pro/Max pitch; auto-dismisses after 5 seconds
+- To run a sale: add an entry to `PROMOTIONS` in `lib/promotions.ts` with the desired date range and link — no code changes elsewhere needed
 
 ### Quiz Answer Shuffling
 QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates shuffle (`shuffleOrder` in `components/quiz/QuizPlayer.tsx`). The correct answer mapping is preserved — do not change this logic.
@@ -489,6 +499,7 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `lib/email.ts` | sendEmail() helper — used by auth createUser event (new user alerts); NOT used by feedback |
 | `lib/push.ts` | sendPushToUser() — sends VAPID web push to all of a user's subscriptions; auto-cleans expired |
 | `lib/pusher.ts` | pusherServer instance + DinoRex shared types (DinoRexPlayer, DinoRexQuestion, PusherEvent) |
+| `lib/promotions.ts` | Time-limited promotions — add entries here to run sales; `getActivePromotions()` is used by SplashScreen |
 | `lib/audio-context.tsx` | Background music context + state |
 | `public/sw.js` | Service worker — receives push events and shows browser notifications |
 | `app/icon.svg` | App favicon — SVG lightning bolt on purple-to-pink gradient (auto-served by Next.js) |
@@ -498,6 +509,9 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `app/(main)/notifications/page.tsx` | In-app notifications list |
 | `app/(main)/admin/users/page.tsx` | User manager — lock/unlock, reset daily, grant/revoke tiers, send push |
 | `app/(main)/admin/settings/page.tsx` | Global admin settings — school hours toggle |
+| `components/SplashScreen.tsx` | Daily splash screen — edit/add promotions in `lib/promotions.ts`, not here |
+| `components/profile/FollowListModal.tsx` | Follower/following list modal on profile pages |
+| `components/layout/NotificationsProvider.tsx` | Unread notification count context — read via `useUnreadCount()` |
 | `components/ThemeProvider.tsx` | next-themes wrapper |
 | `components/IntroOverlay.tsx` | First-visit onboarding (5 steps, shown once via localStorage) |
 | `components/layout/Sidebar.tsx` | Desktop collapsible sidebar — edit nav items here |
@@ -506,7 +520,7 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `components/game/SurvivalGame.tsx` | Survival mode — streak until first wrong answer |
 | `components/game/DailyChallengeGame.tsx` | Daily challenge — 5 deterministic questions per day |
 | `prisma/schema.prisma` | DB schema — run `npm run db:push` after changes |
-| `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed (~170 quizzes, all 20 categories) |
+| `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed (~175 quizzes, all 20 categories) |
 
 ---
 
@@ -556,6 +570,8 @@ npm run db:seed      # re-seed data (idempotent)
 - **Fonts**: body = Plus Jakarta Sans (`--font-jakarta`), headings = Space Grotesk (`--font-grotesk`) — do not change font imports in `app/layout.tsx`
 - **Confirm before**: deleting files, dropping DB tables, force-pushing
 - **Shop vs Upgrade**: `/shop` replaced `/upgrade` and `/buy-coins` everywhere — do not link to either old route
+- **Promotions**: add time-limited offers in `lib/promotions.ts → PROMOTIONS`; `SplashScreen` picks them up automatically — no code changes to the component needed
+- **Notifications context**: `useUnreadCount()` from `components/layout/NotificationsProvider.tsx` gives the current unread count client-side; already available everywhere inside `(main)/layout.tsx`
 - **isMax**: always check `isMax && (!maxExpiresAt || maxExpiresAt > new Date())` for active Max status, same pattern for Pro
 - **CorrectAnswer**: never skip the dedup check in `/api/attempt` — it prevents infinite coin farming
 - **School hours**: IST = UTC+5:30; use `lib/time.ts → isSchoolHours()` rather than inline time math; check `getSchoolHoursEnabled()` from `lib/app-settings.ts` before enforcing

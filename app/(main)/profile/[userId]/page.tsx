@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getProfileData } from "@/lib/profile";
 import { RARITY_COLORS } from "@/lib/utils";
 import FollowButton from "@/components/profile/FollowButton";
+import FollowListModal from "@/components/profile/FollowListModal";
 
 export default async function ProfilePage({
   params,
@@ -17,6 +18,7 @@ export default async function ProfilePage({
   if (!data) notFound();
 
   const isOwnProfile = session?.user?.id === userId;
+  const canView = session?.user?.isAdmin === true || isOwnProfile;
 
   const isMaxActive = data.isMax && (!data.maxExpiresAt || data.maxExpiresAt > new Date());
   const isProActive = !isMaxActive && data.isPro && (!data.proExpiresAt || data.proExpiresAt > new Date());
@@ -97,18 +99,13 @@ export default async function ProfilePage({
           )}
         </div>
 
-        {/* Follower / following counts */}
-        <div className="flex items-center gap-6 mt-5 pt-4 border-t border-white/10">
-          <div className="text-center">
-            <p className="text-xl font-bold text-white">{data.followerCount}</p>
-            <p className="text-xs text-gray-500">Followers</p>
-          </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div className="text-center">
-            <p className="text-xl font-bold text-white">{data.followingCount}</p>
-            <p className="text-xs text-gray-500">Following</p>
-          </div>
-        </div>
+        {/* Follower / following counts — clickable for admins and own profile */}
+        <FollowListModal
+          userId={userId}
+          followerCount={data.followerCount}
+          followingCount={data.followingCount}
+          canView={canView}
+        />
       </div>
 
       {/* Stats grid */}

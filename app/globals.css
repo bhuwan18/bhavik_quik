@@ -14,20 +14,6 @@
   --main-bg: linear-gradient(135deg, #08091c 0%, #0d1230 50%, #08091c 100%);
 }
 
-/* Light theme — warm cream + deep amber */
-.light {
-  --background: #f8f9ff;
-  --surface: #eef0ff;
-  --border: #c7d2f7;
-  --accent: #b45309;
-  --accent2: #1d4ed8;
-  --text-base: #0f172a;
-  --sidebar-from: #e8ecff;
-  --sidebar-mid: #dde2ff;
-  --sidebar-to: #c7d2f7;
-  --main-bg: linear-gradient(135deg, #f8f9ff 0%, #eef0ff 50%, #f8f9ff 100%);
-}
-
 body {
   background: var(--background);
   color: var(--text-base);
@@ -48,70 +34,6 @@ h1, h2, h3, h4, h5, h6, .font-display {
   font-family: var(--font-grotesk), "Rubik", var(--font-jakarta), sans-serif;
   letter-spacing: -0.025em;
 }
-
-/* ─── Light mode overrides ─────────────────────────────────────── */
-
-/* Text */
-.light .text-white  { color: #0f172a !important; }
-.light .text-gray-300 { color: #374151 !important; }
-.light .text-gray-400 { color: #4b5563 !important; }
-.light .text-gray-500 { color: #6b7280 !important; }
-.light .text-gray-600 { color: #9ca3af !important; }
-
-/* Backgrounds */
-.light .bg-white\/3  { background-color: rgba(255,255,255,0.6) !important; }
-.light .bg-white\/5  { background-color: rgba(255,255,255,0.7) !important; }
-.light .bg-white\/10 { background-color: rgba(255,255,255,0.8) !important; }
-.light .bg-white\/20 { background-color: rgba(255,255,255,0.9) !important; }
-.light .bg-black\/60 { background-color: rgba(0,0,0,0.4) !important; }
-
-/* Borders */
-.light .border-white\/10 { border-color: rgba(29,78,216,0.15) !important; }
-.light .border-white\/20 { border-color: rgba(29,78,216,0.25) !important; }
-
-/* Hover states */
-.light .hover\:bg-white\/10:hover { background-color: rgba(29,78,216,0.08) !important; }
-.light .hover\:bg-white\/20:hover { background-color: rgba(29,78,216,0.15) !important; }
-.light .hover\:bg-white\/8:hover  { background-color: rgba(29,78,216,0.06) !important; }
-.light .hover\:border-white\/20:hover { border-color: rgba(29,78,216,0.25) !important; }
-
-/* ── Select & Option elements (hardcoded dark bg in component code) ── */
-.light select {
-  background-color: #fff !important;
-  color: #0f172a !important;
-  border-color: rgba(29,78,216,0.25) !important;
-}
-.light select option {
-  background-color: #fff !important;
-  color: #0f172a !important;
-}
-
-/* ── Input & Textarea ── */
-.light input,
-.light textarea {
-  background-color: rgba(255,255,255,0.8) !important;
-  color: #0f172a !important;
-  border-color: rgba(29,78,216,0.2) !important;
-}
-.light input::placeholder,
-.light textarea::placeholder {
-  color: #9ca3af !important;
-}
-.light input:focus,
-.light textarea:focus,
-.light select:focus {
-  border-color: #1d4ed8 !important;
-  background-color: #fff !important;
-}
-
-/* ── Cards / modals with hardcoded bg-gray-900 ── */
-.light .bg-gray-900 {
-  background-color: #fff !important;
-  color: #1e1b4b !important;
-}
-
-/* ── Scrollbar ── */
-.light ::-webkit-scrollbar-track { background: var(--background); }
 
 /* Rainbow animated border */
 @keyframes rainbow-spin {

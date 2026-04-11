@@ -7,6 +7,7 @@ import { AudioProvider } from "@/lib/audio-context";
 import AudioPlayer from "@/components/AudioPlayer";
 import PushSubscriptionManager from "@/components/layout/PushSubscriptionManager";
 import { NotificationsProvider } from "@/components/layout/NotificationsProvider";
+import SplashScreen from "@/components/SplashScreen";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -33,6 +34,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       <OnlinePing />
       <AudioPlayer />
       <PushSubscriptionManager />
+      <SplashScreen />
       </NotificationsProvider>
     </AudioProvider>
   );
