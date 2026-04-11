@@ -76,7 +76,7 @@ export default function SplashScreen() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-5 md:p-10"
           style={{ background: "var(--background)" }}
         >
           {/* Radial glow behind card */}
@@ -91,7 +91,7 @@ export default function SplashScreen() {
           {/* Skip button */}
           <button
             onClick={dismiss}
-            className="absolute top-5 right-5 text-sm px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white/70 hover:text-white"
+            className="absolute top-5 right-5 text-sm md:text-base px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white/70 hover:text-white"
           >
             Skip
           </button>
@@ -102,40 +102,40 @@ export default function SplashScreen() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.97, opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-sm flex flex-col gap-4"
+            className="w-full max-w-md md:max-w-xl flex flex-col gap-5 md:gap-7 overflow-y-auto max-h-[calc(100dvh-3rem)]"
           >
             {/* Branding */}
-            <div className="text-center">
-              <div className="text-6xl mb-3 select-none">⚡</div>
+            <div className="text-center pt-2">
+              <div className="text-7xl md:text-8xl mb-3 md:mb-4 select-none">⚡</div>
               <h1
-                className="text-4xl font-bold text-white"
+                className="text-5xl md:text-6xl font-bold text-white"
                 style={{ fontFamily: "var(--font-grotesk)" }}
               >
                 BittsQuiz {new Date().getFullYear()}
               </h1>
-              <p className="mt-1 text-sm text-white/50 tracking-widest uppercase">
+              <p className="mt-2 text-sm md:text-base text-white/50 tracking-widest uppercase">
                 Quiz · Collect · Compete
               </p>
             </div>
 
             {/* Offer cards */}
-            <div className="flex flex-col gap-2.5 mt-1">
+            <div className="flex flex-col gap-3 md:gap-3.5">
               {/* Active promotions */}
               {offers.promos.map((promo: Promotion) => (
                 <Link key={promo.id} href={promo.link} onClick={dismiss}>
                   <div
-                    className={`relative overflow-hidden rounded-xl p-3.5 bg-gradient-to-br ${promo.colorFrom} ${promo.colorTo} cursor-pointer hover:opacity-90 transition-opacity`}
+                    className={`relative overflow-hidden rounded-2xl p-4 md:p-5 bg-gradient-to-br ${promo.colorFrom} ${promo.colorTo} cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all`}
                   >
-                    <span className="absolute top-2.5 right-2.5 text-xs font-bold bg-white/20 text-white px-2 py-0.5 rounded-full">
+                    <span className="absolute top-3 right-3 text-xs md:text-sm font-bold bg-white/25 text-white px-2.5 py-0.5 rounded-full">
                       {promo.badge}
                     </span>
-                    <div className="flex items-start gap-2.5">
-                      <span className="text-2xl">{promo.icon}</span>
+                    <div className="flex items-start gap-3 md:gap-4">
+                      <span className="text-3xl md:text-4xl">{promo.icon}</span>
                       <div>
-                        <p className="font-semibold text-white text-sm leading-tight">
+                        <p className="font-semibold text-white text-base md:text-lg leading-tight">
                           {promo.title}
                         </p>
-                        <p className="text-white/80 text-xs mt-0.5 leading-snug">
+                        <p className="text-white/80 text-sm md:text-base mt-1 leading-snug">
                           {promo.description}
                         </p>
                       </div>
@@ -148,23 +148,23 @@ export default function SplashScreen() {
               {offers.festival && (
                 <Link href="/marketplace" onClick={dismiss}>
                   <div
-                    className="relative overflow-hidden rounded-xl p-3.5 cursor-pointer hover:opacity-90 transition-opacity"
+                    className="relative overflow-hidden rounded-2xl p-4 md:p-5 cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all"
                     style={{
                       background: offers.festivalPack
                         ? `linear-gradient(135deg, ${offers.festivalPack.colorFrom}, ${offers.festivalPack.colorTo})`
                         : "linear-gradient(135deg, #7c3aed, #db2777)",
                     }}
                   >
-                    <span className="absolute top-2.5 right-2.5 text-xs font-bold bg-white/20 text-white px-2 py-0.5 rounded-full">
+                    <span className="absolute top-3 right-3 text-xs md:text-sm font-bold bg-white/25 text-white px-2.5 py-0.5 rounded-full">
                       TODAY ONLY
                     </span>
-                    <div className="flex items-start gap-2.5">
-                      <span className="text-2xl">{offers.festival.icon}</span>
+                    <div className="flex items-start gap-3 md:gap-4">
+                      <span className="text-3xl md:text-4xl">{offers.festival.icon}</span>
                       <div>
-                        <p className="font-semibold text-white text-sm leading-tight">
+                        <p className="font-semibold text-white text-base md:text-lg leading-tight">
                           {offers.festival.name}
                         </p>
-                        <p className="text-white/80 text-xs mt-0.5 leading-snug">
+                        <p className="text-white/80 text-sm md:text-base mt-1 leading-snug">
                           Festival pack available in Marketplace today
                         </p>
                       </div>
@@ -175,14 +175,14 @@ export default function SplashScreen() {
 
               {/* Pro / Max pitch — always shown */}
               <Link href="/shop" onClick={dismiss}>
-                <div className="rounded-xl p-3.5 bg-gradient-to-br from-violet-600/30 to-amber-500/20 border border-white/10 cursor-pointer hover:bg-white/5 transition-colors">
-                  <div className="flex items-start gap-2.5">
-                    <span className="text-2xl">👑</span>
+                <div className="rounded-2xl p-4 md:p-5 bg-gradient-to-br from-violet-600/30 to-amber-500/20 border border-white/10 cursor-pointer hover:bg-white/5 active:scale-[0.98] transition-all">
+                  <div className="flex items-start gap-3 md:gap-4">
+                    <span className="text-3xl md:text-4xl">👑</span>
                     <div>
-                      <p className="font-semibold text-white text-sm leading-tight">
+                      <p className="font-semibold text-white text-base md:text-lg leading-tight">
                         Earn up to 2× coins with Max
                       </p>
-                      <p className="text-white/60 text-xs mt-0.5">
+                      <p className="text-white/60 text-sm md:text-base mt-1">
                         Pro ₹{PRO_AMOUNT_INR}/mo · Max ₹{MAX_AMOUNT_INR}/mo
                       </p>
                     </div>
@@ -192,19 +192,19 @@ export default function SplashScreen() {
             </div>
 
             {/* Countdown progress bar */}
-            <div className="mt-1">
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="text-xs text-white/30">
+            <div className="pb-2">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm md:text-base text-white/30">
                   Opening in {secondsLeft}s…
                 </span>
                 <button
                   onClick={dismiss}
-                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                  className="text-sm md:text-base text-white/40 hover:text-white/70 transition-colors"
                 >
                   Enter now
                 </button>
               </div>
-              <div className="h-0.5 w-full rounded-full bg-white/10 overflow-hidden">
+              <div className="h-1 md:h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
                 <motion.div
                   className="h-full bg-violet-400/60 rounded-full"
                   initial={{ width: "100%" }}

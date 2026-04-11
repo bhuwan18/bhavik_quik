@@ -68,16 +68,23 @@ const TIERS = [
   },
 ];
 
-function MembershipTab({ isPro, isMax }: { isPro: boolean; isMax: boolean }) {
+function applyDiscount(base: number, pct?: number) {
+  return pct ? Math.round(base * (1 - pct / 100)) : base;
+}
+
+function MembershipTab({ isPro, isMax, proDiscountPct, maxDiscountPct }: { isPro: boolean; isMax: boolean; proDiscountPct?: number; maxDiscountPct?: number }) {
   const [selectedTier, setSelectedTier] = useState<Tier | null>(null);
   const [utrNumber, setUtrNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
+  const discountPct: Partial<Record<Tier, number>> = { pro: proDiscountPct, max: maxDiscountPct };
+
   const activeTier = TIERS.find((t) => t.id === selectedTier);
+  const effectivePrice = activeTier ? applyDiscount(activeTier.price, discountPct[activeTier.id]) : 0;
   const upiLink = activeTier
-    ? `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${activeTier.price}&cu=INR&tn=${encodeURIComponent(`BittsQuiz ${activeTier.name} Upgrade`)}`
+    ? `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${effectivePrice}&cu=INR&tn=${encodeURIComponent(`BittsQuiz ${activeTier.name} Upgrade`)}`
     : "";
 
   const handleSubmit = async () => {
@@ -88,7 +95,7 @@ function MembershipTab({ isPro, isMax }: { isPro: boolean; isMax: boolean }) {
       const res = await fetch("/api/user/submit-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: selectedTier, utrNumber: utrNumber.trim(), amountInr: activeTier!.price }),
+        body: JSON.stringify({ type: selectedTier, utrNumber: utrNumber.trim(), amountInr: effectivePrice }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -149,7 +156,19 @@ function MembershipTab({ isPro, isMax }: { isPro: boolean; isMax: boolean }) {
                 </div>
                 <span className={`text-xs font-bold px-2 py-1 rounded-full ${tier.badgeColor}`}>{tier.badge}</span>
               </div>
-              <div className="text-3xl font-bold text-white mb-1">₹{tier.price}</div>
+              {discountPct[tier.id] ? (
+                <div className="mb-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold text-white">₹{applyDiscount(tier.price, discountPct[tier.id])}</span>
+                    <span className="text-base text-gray-500 line-through">₹{tier.price}</span>
+                  </div>
+                  <span className="inline-block text-xs font-bold px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 border border-green-500/30 mt-1">
+                    {discountPct[tier.id]}% OFF THIS WEEK
+                  </span>
+                </div>
+              ) : (
+                <div className="text-3xl font-bold text-white mb-1">₹{tier.price}</div>
+              )}
               <div className="text-gray-500 text-sm mb-5">per month</div>
               <ul className="space-y-2 mb-6 flex-1">
                 {tier.features.map((f) => (
@@ -178,7 +197,14 @@ function MembershipTab({ isPro, isMax }: { isPro: boolean; isMax: boolean }) {
             <div className="flex items-center gap-3 mb-4">
               <span className="text-3xl">{activeTier.icon}</span>
               <div>
-                <h2 className="text-xl font-bold text-white">{activeTier.name} — ₹{activeTier.price}/month</h2>
+                <h2 className="text-xl font-bold text-white">
+                  {activeTier.name} — ₹{effectivePrice}/month
+                  {discountPct[activeTier.id] && (
+                    <span className="ml-2 text-xs font-bold px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
+                      {discountPct[activeTier.id]}% OFF
+                    </span>
+                  )}
+                </h2>
                 <p className="text-gray-400 text-sm">Pay via UPI, then enter your UTR number below</p>
               </div>
             </div>
@@ -194,7 +220,7 @@ function MembershipTab({ isPro, isMax }: { isPro: boolean; isMax: boolean }) {
             </div>
             <p className="text-xs text-gray-500 mb-3">Scan with any UPI app (GPay, PhonePe, Paytm, etc.)</p>
             <a href={upiLink} className={`block w-full text-center py-3 bg-gradient-to-r ${activeTier.buttonGradient} text-white font-bold rounded-xl hover:opacity-90 transition-all mb-2`}>
-              Open UPI App — Pay ₹{activeTier.price}
+              Open UPI App — Pay ₹{effectivePrice}
             </a>
             <p className="text-gray-500 text-xs text-center">Opens GPay / PhonePe / Paytm</p>
           </div>
@@ -260,7 +286,7 @@ function upiCoinLink(amount: number) {
 
 type CoinStep = "select" | "pay" | "submitted";
 
-function BuyCoinsTab() {
+function BuyCoinsTab({ coinsDiscountPct }: { coinsDiscountPct?: number }) {
   const [coins, setCoins] = useState(100);
   const [inputValue, setInputValue] = useState("100");
   const [step, setStep] = useState<CoinStep>("select");
@@ -270,6 +296,7 @@ function BuyCoinsTab() {
 
   const isValid = Number.isInteger(coins) && coins >= BUY_COINS_MIN && coins <= BUY_COINS_MAX;
   const utrValid = /^[A-Za-z0-9]{8,30}$/.test(utr.trim());
+  const payAmount = isValid ? (coinsDiscountPct ? Math.round(coins * (1 - coinsDiscountPct / 100)) : coins) : 0;
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -297,7 +324,7 @@ function BuyCoinsTab() {
     }
   };
 
-  const payLink = upiCoinLink(coins);
+  const payLink = upiCoinLink(payAmount);
 
   if (step === "submitted") {
     return (
@@ -325,7 +352,16 @@ function BuyCoinsTab() {
       <div className="text-center mb-8">
         <div className="text-6xl mb-4">🪙</div>
         <h2 className="text-2xl font-bold text-white mb-2">Buy Coins</h2>
-        <p className="text-gray-400">1 coin = ₹1 &nbsp;·&nbsp; Pay via UPI</p>
+        <p className="text-gray-400">
+          {coinsDiscountPct ? (
+            <>
+              <span className="line-through text-gray-500">1 coin = ₹1</span>{" "}
+              <span className="text-green-300 font-semibold">{coinsDiscountPct}% OFF this week!</span>
+            </>
+          ) : (
+            "1 coin = ₹1 · Pay via UPI"
+          )}
+        </p>
       </div>
 
       {step === "select" && (
@@ -376,7 +412,10 @@ function BuyCoinsTab() {
               </div>
               <div className="text-right">
                 <div className="text-sm text-gray-400">You pay</div>
-                <div className="text-2xl font-bold text-white">₹{coins}</div>
+                <div className="flex items-baseline gap-1.5 justify-end">
+                  <div className="text-2xl font-bold text-white">₹{payAmount}</div>
+                  {coinsDiscountPct && <div className="text-sm text-gray-500 line-through">₹{coins}</div>}
+                </div>
               </div>
             </div>
           )}
@@ -386,7 +425,7 @@ function BuyCoinsTab() {
             disabled={!isValid}
             className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-lg rounded-xl transition-all"
           >
-            Proceed to Pay ₹{isValid ? coins : "—"}
+            Proceed to Pay ₹{isValid ? payAmount : "—"}
           </button>
 
           <div className="mt-6 p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl">
@@ -404,8 +443,9 @@ function BuyCoinsTab() {
         <>
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6 text-center">
             <p className="text-sm text-gray-400 mb-4">
-              Pay <strong className="text-white">₹{coins}</strong> to complete your purchase of{" "}
+              Pay <strong className="text-white">₹{payAmount}</strong> to complete your purchase of{" "}
               <strong className="text-white">{coins} coins</strong>
+              {coinsDiscountPct && <span className="text-green-400"> ({coinsDiscountPct}% off!)</span>}
             </p>
             {UPI_ID ? (
               <>
@@ -463,18 +503,14 @@ function BuyCoinsTab() {
 
 // ─── Daily Reset ───────────────────────────────────────────────────────────────
 
-const DAILY_RESET_SALE_END = new Date("2026-04-17T00:00:00+05:30"); // ends midnight IST Apr 17
-const DAILY_RESET_SALE_DISCOUNT = 0.75; // 75% off
-
-function DailyResetTab() {
+function DailyResetTab({ dailyResetDiscountPct }: { dailyResetDiscountPct?: number }) {
   const [utr, setUtr] = useState("");
   const [step, setStep] = useState<"info" | "pay" | "submitted">("info");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isSaleActive = new Date() < DAILY_RESET_SALE_END;
-  const effectivePrice = isSaleActive
-    ? Math.round(DAILY_RESET_AMOUNT_INR * (1 - DAILY_RESET_SALE_DISCOUNT))
+  const effectivePrice = dailyResetDiscountPct
+    ? Math.round(DAILY_RESET_AMOUNT_INR * (1 - dailyResetDiscountPct / 100))
     : DAILY_RESET_AMOUNT_INR;
 
   const utrValid = /^[A-Za-z0-9]{8,30}$/.test(utr.trim());
@@ -525,10 +561,10 @@ function DailyResetTab() {
         <div className="text-6xl mb-4">🔄</div>
         <h2 className="text-2xl font-bold text-white mb-2">Daily Limit Reset</h2>
         <p className="text-gray-400">Hit your daily coin cap? Reset it instantly for ₹{effectivePrice}.</p>
-        {isSaleActive && (
-          <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-full">
-            <span className="text-red-400 font-bold text-sm">75% OFF</span>
-            <span className="text-gray-400 text-xs">Sale ends Apr 16</span>
+        {dailyResetDiscountPct && (
+          <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-green-500/20 border border-green-500/40 rounded-full">
+            <span className="text-green-300 font-bold text-sm">{dailyResetDiscountPct}% OFF</span>
+            <span className="text-gray-400 text-xs">This week only</span>
           </div>
         )}
       </div>
@@ -553,7 +589,7 @@ function DailyResetTab() {
           <p className="text-sm text-gray-400">One-time fee</p>
           <div className="flex items-baseline gap-2">
             <p className="text-3xl font-bold text-white">₹{effectivePrice}</p>
-            {isSaleActive && (
+            {dailyResetDiscountPct && (
               <p className="text-base text-gray-500 line-through">₹{DAILY_RESET_AMOUNT_INR}</p>
             )}
           </div>
@@ -785,6 +821,14 @@ export default function ShopPage() {
   const isMax = !!user?.isMax;
 
   const [tab, setTab] = useState<ShopTab>("membership");
+  const [weeklyOffers, setWeeklyOffers] = useState<{ pro?: { discountPercent: number }; max?: { discountPercent: number }; daily_reset?: { discountPercent: number }; coins?: { discountPercent: number } }>({});
+
+  useEffect(() => {
+    fetch("/api/admin/weekly-offer")
+      .then((r) => r.json())
+      .then((data) => { if (data && typeof data === "object") setWeeklyOffers(data); })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-4xl mx-auto">
@@ -837,9 +881,9 @@ export default function ShopPage() {
         </button>
       </div>
 
-      {tab === "membership" && <MembershipTab isPro={isPro} isMax={isMax} />}
-      {tab === "coins" && <BuyCoinsTab />}
-      {tab === "reset" && <DailyResetTab />}
+      {tab === "membership" && <MembershipTab isPro={isPro} isMax={isMax} proDiscountPct={weeklyOffers.pro?.discountPercent} maxDiscountPct={weeklyOffers.max?.discountPercent} />}
+      {tab === "coins" && <BuyCoinsTab coinsDiscountPct={weeklyOffers.coins?.discountPercent} />}
+      {tab === "reset" && <DailyResetTab dailyResetDiscountPct={weeklyOffers.daily_reset?.discountPercent} />}
       {tab === "streak" && <StreakFreezeTab />}
     </div>
   );
