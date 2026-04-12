@@ -59,32 +59,39 @@ function extractRichContent(text: string) {
 function SoundButton({ slug, url }: { slug: string; url: string }) {
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const resolvedUrl = useRef<string | null>(null);
   const color = hashColor(slug);
   const isPlaying = state === "playing";
   const isLoading = state === "loading";
 
-  const toggle = async () => {
+  // Pre-fetch the real audio URL on mount so toggle() stays synchronous (required for iOS Safari)
+  useEffect(() => {
+    fetch(`/api/myinstants-proxy?slug=${encodeURIComponent(slug)}`)
+      .then((r) => r.json())
+      .then((d) => { if (d.audioUrl) resolvedUrl.current = d.audioUrl; })
+      .catch(() => {});
+  }, [slug]);
+
+  const toggle = () => {
     if (isPlaying) {
       audioRef.current?.pause();
       audioRef.current = null;
       setState("idle");
       return;
     }
-    setState("loading");
-    try {
-      const res = await fetch(`/api/myinstants-proxy?slug=${encodeURIComponent(slug)}`);
-      if (!res.ok) throw new Error("proxy failed");
-      const { audioUrl } = await res.json();
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-      audio.onplaying = () => setState("playing");
-      audio.onended = () => setState("idle");
-      audio.onerror = () => { setState("idle"); window.open(url, "_blank"); };
-      audio.play().catch(() => { setState("idle"); window.open(url, "_blank"); });
-    } catch {
-      setState("idle");
+    const audioUrl = resolvedUrl.current;
+    if (!audioUrl) {
+      // URL not yet resolved — fall back to opening the page
       window.open(url, "_blank");
+      return;
     }
+    setState("loading");
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+    audio.onplaying = () => setState("playing");
+    audio.onended = () => setState("idle");
+    audio.onerror = () => { setState("idle"); window.open(url, "_blank"); };
+    audio.play().catch(() => { setState("idle"); window.open(url, "_blank"); });
   };
 
   const label = slug.replace(/-/g, " ");
