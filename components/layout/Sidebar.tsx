@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useState } from "react";
 import { useUnreadCount } from "@/components/layout/NotificationsProvider";
+import { useHasNewFeed } from "@/components/layout/FeedProvider";
 import {
   LayoutDashboard,
   Compass,
@@ -17,6 +18,7 @@ import {
   MessageSquare,
   Store,
   Bell,
+  Rss,
   PenLine,
   Users,
   CreditCard,
@@ -37,6 +39,7 @@ const NAV_ITEMS: { href: string; icon: LucideIcon; label: string; color: string 
   { href: "/marketplace", icon: ShoppingBag,      label: "Marketplace", color: "text-green-400"  },
   { href: "/quizlets",    icon: Layers,           label: "Quizlets",    color: "text-violet-400" },
   { href: "/milestones",  icon: Medal,            label: "Milestones",  color: "text-yellow-400" },
+  { href: "/feed",        icon: Rss,              label: "Feed",        color: "text-teal-400"   },
   { href: "/game",        icon: Gamepad2,         label: "Game Modes",  color: "text-orange-400" },
   { href: "/feedback",    icon: MessageSquare,    label: "Feedback",    color: "text-pink-400"   },
   { href: "/shop",        icon: Store,            label: "Shop",        color: "text-emerald-400"},
@@ -59,6 +62,7 @@ export default function Sidebar() {
   const isPro = !!user?.isPro;
 
   const unreadCount = useUnreadCount();
+  const hasNewFeed = useHasNewFeed();
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("bq_sidebar_collapsed") === "true";
@@ -127,10 +131,22 @@ export default function Sidebar() {
       <nav className={cn("flex-1 py-3 space-y-0.5 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
         {NAV_ITEMS.map(({ href, icon: Icon, label, color }) => {
           const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+          const isFeed = href === "/feed";
           return (
             <Link key={href} href={href} title={collapsed ? label : undefined} className={navItemClass(active)}>
-              <Icon size={collapsed ? 20 : 17} className={cn("shrink-0", active ? "opacity-100" : color)} />
-              {!collapsed && <span className="text-sm font-medium">{label}</span>}
+              <span className="relative shrink-0">
+                <Icon size={collapsed ? 20 : 17} className={cn("shrink-0", active ? "opacity-100" : color)} />
+                {isFeed && hasNewFeed && (
+                  <>
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping opacity-75" />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-teal-400" />
+                  </>
+                )}
+              </span>
+              {!collapsed && <span className="text-sm font-medium flex-1">{label}</span>}
+              {!collapsed && isFeed && hasNewFeed && (
+                <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse shrink-0" />
+              )}
             </Link>
           );
         })}

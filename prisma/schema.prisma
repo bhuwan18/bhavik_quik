@@ -44,6 +44,9 @@ model User {
   milestones           UserMilestone[]
   followers            UserFollow[]  @relation("UserFollowing")
   following            UserFollow[]  @relation("UserFollowers")
+  feedActivities       FeedActivity[]
+  feedLikes            FeedLike[]
+  feedComments         FeedComment[]
 
   @@index([totalCoinsEarned])
   @@index([lastSeenAt])
@@ -273,6 +276,45 @@ model UserFollow {
   @@unique([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+model FeedActivity {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String        // quiz_completed | milestone_earned | quizlet_earned | streak_milestone | user_returned | leaderboard_top3
+  data      Json
+  createdAt DateTime      @default(now())
+  likes     FeedLike[]
+  comments  FeedComment[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model FeedLike {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityId String
+  activity   FeedActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+
+  @@unique([userId, activityId])
+  @@index([activityId])
+}
+
+model FeedComment {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityId String
+  activity   FeedActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  text       String       @db.Text
+  createdAt  DateTime     @default(now())
+
+  @@index([activityId])
+  @@index([userId])
 }
 
 model DinoRexRoom {

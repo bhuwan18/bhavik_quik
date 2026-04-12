@@ -7,6 +7,7 @@ import { AudioProvider } from "@/lib/audio-context";
 import AudioPlayer from "@/components/AudioPlayer";
 import PushSubscriptionManager from "@/components/layout/PushSubscriptionManager";
 import { NotificationsProvider } from "@/components/layout/NotificationsProvider";
+import { FeedProvider } from "@/components/layout/FeedProvider";
 import SplashScreen from "@/components/SplashScreen";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
@@ -16,6 +17,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   return (
     <AudioProvider>
       <NotificationsProvider>
+      <FeedProvider>
       <div className="flex min-h-screen">
         {/* Sidebar hidden on mobile */}
         <div className="hidden md:flex sticky top-0 h-screen">
@@ -35,6 +37,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       <AudioPlayer />
       <PushSubscriptionManager />
       <SplashScreen />
+      </FeedProvider>
       </NotificationsProvider>
     </AudioProvider>
   );

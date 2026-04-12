@@ -150,6 +150,15 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Feed: quiz_completed activity (fire-and-forget)
+  prisma.feedActivity.create({
+    data: {
+      userId: session.user.id,
+      type: "quiz_completed",
+      data: { quizTitle: quiz.title, category: quiz.category, score, total, coinsEarned },
+    },
+  }).catch(() => {});
+
   // Update user atomically
   await prisma.user.update({
     where: { id: session.user.id },
@@ -231,6 +240,11 @@ export async function POST(req: NextRequest) {
         sendPushToUser(session.user.id, `🔥 ${highest}-Day Streak!`, `You've kept your streak alive for ${highest} days!`, "/dashboard").catch(() => {});
       }).catch(() => {});
 
+      // Feed: streak_milestone activity
+      prisma.feedActivity.create({
+        data: { userId: session.user.id, type: "streak_milestone", data: { days: highest } },
+      }).catch(() => {});
+
       // Notify followers about streak milestone
       const streakFollowers = await prisma.userFollow.findMany({
         where: { followingId: session.user.id },
@@ -277,6 +291,15 @@ export async function POST(req: NextRequest) {
       });
       import("@/lib/push").then(({ sendPushToUser }) => {
         sendPushToUser(session.user.id, "Milestone unlocked! 🏅", badge.name, "/milestones").catch(() => {});
+      }).catch(() => {});
+
+      // Feed: milestone_earned activity
+      prisma.feedActivity.create({
+        data: {
+          userId: session.user.id,
+          type: "milestone_earned",
+          data: { milestoneName: badge.name, milestoneType: "coins", threshold: highest, tier: badge.tier },
+        },
       }).catch(() => {});
 
       // Notify followers about coin milestone
@@ -369,6 +392,14 @@ export async function POST(req: NextRequest) {
         import("@/lib/push").then(({ sendPushToUser }) => {
           sendPushToUser(session.user.id, "Milestone unlocked! 🏅", badge.name, "/milestones").catch(() => {});
         }).catch(() => {});
+        // Feed: milestone_earned activity
+        prisma.feedActivity.create({
+          data: {
+            userId: session.user.id,
+            type: "milestone_earned",
+            data: { milestoneName: badge.name, milestoneType: type, threshold: highest, tier: badge.tier },
+          },
+        }).catch(() => {});
       }
     }
   }
@@ -446,6 +477,14 @@ export async function POST(req: NextRequest) {
             },
           });
           mysticalGranted.push({ name: mq.name, icon: mq.icon, colorFrom: mq.colorFrom, colorTo: mq.colorTo, description: mq.description });
+          // Feed: quizlet_earned activity
+          prisma.feedActivity.create({
+            data: {
+              userId: session.user.id,
+              type: "quizlet_earned",
+              data: { quizletName: mq.name, rarity: "mystical", icon: mq.icon, colorFrom: mq.colorFrom, colorTo: mq.colorTo, source: "mystical" },
+            },
+          }).catch(() => {});
         }
       }
     }
@@ -499,6 +538,10 @@ export async function POST(req: NextRequest) {
           });
         }
       }
+      // Feed: leaderboard_top3 activity
+      prisma.feedActivity.create({
+        data: { userId: session.user.id, type: "leaderboard_top3", data: { rank: 3 } },
+      }).catch(() => {});
     }
 
     if (notificationsToCreate.length > 0) {

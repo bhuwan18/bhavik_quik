@@ -78,6 +78,16 @@ export async function POST(req: NextRequest) {
       data: newQuizlets.map((q) => ({ userId: session.user.id, quizletId: q.id })),
       skipDuplicates: true,
     });
+    // Feed: quizlet_earned activity for each newly obtained quizlet (fire-and-forget)
+    for (const q of newQuizlets) {
+      prisma.feedActivity.create({
+        data: {
+          userId: session.user.id,
+          type: "quizlet_earned",
+          data: { quizletName: q.name, rarity: q.rarity, icon: q.icon, colorFrom: q.colorFrom, colorTo: q.colorTo, source: "pack" },
+        },
+      }).catch(() => {});
+    }
   }
 
   await prisma.user.update({

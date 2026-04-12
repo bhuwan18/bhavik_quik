@@ -132,6 +132,7 @@ app/
 │   ├── info/page.tsx             Redirects to /quizlets (deprecated)
 │   ├── game/page.tsx             Game mode selection hub
 │   ├── notifications/page.tsx    View in-app notifications (feedback replies, leaderboard events, milestones, follow events)
+│   ├── feed/page.tsx             Social feed — own activity + followed users' activity; likes + comments
 │   ├── buy-coins/page.tsx        Redirects to /shop
 │   ├── shop/page.tsx             Buy Pro (₹250/mo) or Max (₹500/mo) via UPI + coin purchase + daily reset + streak freeze (coin-based)
 │   ├── milestones/page.tsx       Multi-type milestone badges (coins/quizzes/answers/categories/streak) — earned grid + progress to next
@@ -162,6 +163,9 @@ app/
     ├── user/submit-payment/      POST submit UTR number for UPI payment (coins/pro/max/reset)
     ├── push/subscribe/           POST/DELETE web push subscription (VAPID endpoint + keys)
     ├── notifications/            GET user in-app notifications
+    ├── feed/                     GET paginated social feed (own + followed users' FeedActivity, 20/page)
+    ├── feed/[id]/like/           POST toggle like on a feed activity
+    ├── feed/[id]/comments/       GET comments; POST new comment (max 280 chars)
     ├── leaderboard/              GET top 50 leaderboard data
     ├── dinorex/                  DinoRex multiplayer: create, join, start, answer, reveal, [code] (GET/DELETE)
     ├── admin/payments/
@@ -228,7 +232,7 @@ lib/
 └── utils.ts                      cn(), CATEGORIES (20 total), RARITY_COLORS, SELL_VALUES, CategorySlug
 
 prisma/
-├── schema.prisma                 Full DB schema — 19 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification, UserMilestone, UserFollow
+├── schema.prisma                 Full DB schema — 22 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification, UserMilestone, UserFollow, FeedActivity, FeedLike, FeedComment
 └── seed.ts                       ~178 official quizzes across 20 categories + all quizlets + packs
 ```
 
@@ -391,6 +395,21 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - Created by: admin feedback reply, admin direct message (admin/users), leaderboard overtake/top3 events, milestone unlock, streak milestone, follow fan-out (follow_milestone, follow_streak_milestone)
 - MobileNav "More" drawer shows red dot on Notifications if unread count > 0
 
+### Social Feed
+- `/feed` page — Duolingo-style social feed; replaces Notifications as the primary nav entry (Notifications still accessible)
+- Shows **own** activity + activity of **followed users**, newest first, paginated (20/page)
+- **Activity types** stored in `FeedActivity` model (`type` + `data` JSON):
+  - `quiz_completed` — `{ quizTitle, category, score, total, coinsEarned }` — created in `/api/attempt` on every quiz submission
+  - `milestone_earned` — `{ milestoneName, milestoneType, threshold, tier }` — created in `/api/attempt` when coin or non-coin milestone crossed
+  - `quizlet_earned` — `{ quizletName, rarity, icon, colorFrom, colorTo, source }` (`source: "pack" | "mystical"`) — created in `/api/packs/open` (new pack quizlets) and `/api/attempt` (mystical grants)
+  - `streak_milestone` — `{ days }` — created in `/api/attempt` when streak milestone crossed
+  - `leaderboard_top3` — `{ rank }` — created in `/api/attempt` when user first enters top 3
+  - `user_returned` — `{ daysMissed }` — created in `/api/user/ping` when `lastSeenAt` was >48 hours ago (fires once per return)
+- **Likes**: `FeedLike` model — `@@unique([userId, activityId])`; `POST /api/feed/[id]/like` toggles like and returns `{ liked, likeCount }`
+- **Comments**: `FeedComment` model; `GET /api/feed/[id]/comments` returns all; `POST` adds one (max 280 chars)
+- All feed activity creation is **fire-and-forget** (`.catch(() => {})`) — never blocks the main API response
+- Feed is **not a notification channel** — feed events do not create `Notification` records; they are separate systems
+
 ### Global Settings (AppSetting)
 - `AppSetting` DB model: `key` (unique), `value` (string), `updatedAt`
 - Admin UI at `/admin/settings` — currently exposes: `schoolHoursEnabled` (true/false)
@@ -441,8 +460,8 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - Those quiz cards show a green **✓ Completed** badge and green border
 
 ### Mobile Navigation
-- Desktop: full `Sidebar` — collapsible (state in localStorage `bq_sidebar_collapsed`)
-- Mobile: `MobileNav` — bottom tab bar (Home, Discover, Packs, Quizlets, More) + "More" drawer with (Leaderboard, Game Modes, Feedback, Upgrade/Shop, Notifications)
+- Desktop: full `Sidebar` — collapsible (state in localStorage `bq_sidebar_collapsed`); Feed is listed between Milestones and Game Modes
+- Mobile: `MobileNav` — bottom tab bar (Home, Discover, Packs, Quizlets, More) + "More" drawer with (Leaderboard, Milestones, Game Modes, Feedback, Upgrade/Shop, **Feed**, Notifications)
 - `/marketplace` is labelled "Packs"; `/shop` (Pro/Max) is labelled "Upgrade" — keep these distinct to avoid confusion
 - Main content has `pb-20 md:pb-0` to clear the mobile nav bar
 
@@ -518,6 +537,10 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `app/(main)/loading.tsx` | App-level loading screen — rotating game facts, shown during route transitions |
 | `app/(main)/shop/page.tsx` | Pro/Max membership + coin purchase + daily limit reset (replaces old /upgrade and /buy-coins) |
 | `app/(main)/notifications/page.tsx` | In-app notifications list |
+| `app/(main)/feed/page.tsx` | Social feed — paginated activity cards with likes + inline comments |
+| `app/api/feed/route.ts` | GET paginated feed (own + followed users' FeedActivity) |
+| `app/api/feed/[id]/like/route.ts` | POST toggle like — returns `{ liked, likeCount }` |
+| `app/api/feed/[id]/comments/route.ts` | GET + POST comments on a feed activity |
 | `app/(main)/admin/users/page.tsx` | User manager — lock/unlock, reset daily, grant/revoke tiers, send push |
 | `app/(main)/admin/settings/page.tsx` | Global admin settings — school hours toggle |
 | `components/SplashScreen.tsx` | Daily splash screen — edit/add promotions in `lib/promotions.ts`, not here |
@@ -596,3 +619,6 @@ npm run db:seed      # re-seed data (idempotent)
 - **SVG icons**: custom category icons live in `components/icons/` — import from there, not inline SVG
 - **Follow system**: `UserFollow` model with cascade deletes; `lib/profile.ts → getProfileData()` returns `null` for admins (→ `notFound()`); leaderboard sort is URL-param-driven (`sort`/`dir`/`page`); accuracy is computed and NOT sortable (no raw query needed)
 - **Leaderboard sort**: sort state lives in URL params — always preserve `sort`/`dir` when generating pagination links; podium renders only on default sort (coins desc, page 1)
+- **Feed vs Notifications**: these are completely separate systems — `FeedActivity` records public social events (quiz completions, milestones, quizlets, streaks, returns, top-3); `Notification` records private system messages (overtakes, admin replies, follow events). Never merge them or create `Notification` entries from feed logic.
+- **Feed activity creation**: always fire-and-forget (`.catch(() => {})`); never `await` feed writes in the hot path; new activity types need a matching card renderer in `app/(main)/feed/page.tsx → ActivityBody`
+- **user_returned trigger**: fires in `app/api/user/ping/route.ts` only when `lastSeenAt` was >48 hours ago — the first ping after return sets `lastSeenAt` to now, so subsequent pings won't re-trigger it

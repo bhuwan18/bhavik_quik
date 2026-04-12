@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useUnreadCount } from "@/components/layout/NotificationsProvider";
+import { useHasNewFeed } from "@/components/layout/FeedProvider";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -19,6 +20,7 @@ import {
   MessageSquare,
   Store,
   Bell,
+  Rss,
   Moon,
   Sun,
   LogOut,
@@ -40,7 +42,8 @@ const MORE_NAV: { href: string; icon: LucideIcon; label: string; color: string }
   { href: "/game",         icon: Gamepad2,      label: "Game Modes",  color: "text-orange-400" },
   { href: "/feedback",     icon: MessageSquare, label: "Feedback",    color: "text-pink-400"   },
   { href: "/shop",         icon: Store,         label: "Upgrade",     color: "text-emerald-400"},
-  { href: "/notifications",icon: Bell,          label: "Notifications",color: "text-red-400"   },
+  { href: "/feed",          icon: Rss,           label: "Feed",         color: "text-teal-400"  },
+  { href: "/notifications", icon: Bell,          label: "Notifications",color: "text-red-400"   },
 ];
 
 export default function MobileNav() {
@@ -55,6 +58,7 @@ export default function MobileNav() {
   const isPro = !!user?.isPro;
 
   const unreadCount = useUnreadCount();
+  const hasNewFeed = useHasNewFeed();
 
   const isMoreActive = MORE_NAV.some(
     ({ href }) => pathname === href || pathname.startsWith(href + "/")
@@ -156,6 +160,7 @@ export default function MobileNav() {
             {MORE_NAV.map(({ href, icon: Icon, label, color }) => {
               const active = pathname === href || pathname.startsWith(href + "/");
               const isNotif = href === "/notifications";
+              const isFeed = href === "/feed";
               return (
                 <Link
                   key={href}
@@ -174,6 +179,12 @@ export default function MobileNav() {
                       <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border border-black text-[8px] font-bold text-white flex items-center justify-center leading-none">
                         {unreadCount > 9 ? "9+" : unreadCount}
                       </span>
+                    )}
+                    {isFeed && hasNewFeed && (
+                      <>
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping opacity-75" />
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-teal-400" />
+                      </>
                     )}
                   </span>
                   <span className="text-center leading-tight">{label}</span>
@@ -228,6 +239,12 @@ export default function MobileNav() {
               }
               {!drawerOpen && unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />
+              )}
+              {!drawerOpen && hasNewFeed && unreadCount === 0 && (
+                <>
+                  <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-teal-400 animate-ping opacity-75" />
+                  <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-teal-400" />
+                </>
               )}
             </span>
             <span>More</span>
