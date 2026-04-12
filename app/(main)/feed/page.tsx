@@ -64,11 +64,15 @@ function SoundButton({ slug, url }: { slug: string; url: string }) {
   const isPlaying = state === "playing";
   const isLoading = state === "loading";
 
-  // Pre-fetch the real audio URL on mount so toggle() stays synchronous (required for iOS Safari)
+  // Pre-fetch the proxied audio URL on mount so toggle() stays fully synchronous.
+  // This is required for iOS Safari: audio.play() must be called within a synchronous
+  // user-gesture handler — any await before it causes iOS to reject the play() call.
+  // We also use our own proxy URL (same-origin) to avoid iOS CORS restrictions on the
+  // cross-origin myinstants audio files.
   useEffect(() => {
     fetch(`/api/myinstants-proxy?slug=${encodeURIComponent(slug)}`)
       .then((r) => r.json())
-      .then((d) => { if (d.audioUrl) resolvedUrl.current = d.audioUrl; })
+      .then((d) => { if (d.proxyUrl) resolvedUrl.current = d.proxyUrl; })
       .catch(() => {});
   }, [slug]);
 
@@ -81,7 +85,6 @@ function SoundButton({ slug, url }: { slug: string; url: string }) {
     }
     const audioUrl = resolvedUrl.current;
     if (!audioUrl) {
-      // URL not yet resolved — fall back to opening the page
       window.open(url, "_blank");
       return;
     }
@@ -90,8 +93,8 @@ function SoundButton({ slug, url }: { slug: string; url: string }) {
     audioRef.current = audio;
     audio.onplaying = () => setState("playing");
     audio.onended = () => setState("idle");
-    audio.onerror = () => { setState("idle"); window.open(url, "_blank"); };
-    audio.play().catch(() => { setState("idle"); window.open(url, "_blank"); });
+    audio.onerror = () => setState("idle");
+    audio.play().catch(() => setState("idle"));
   };
 
   const label = slug.replace(/-/g, " ");
