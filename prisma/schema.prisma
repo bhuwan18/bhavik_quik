@@ -288,7 +288,7 @@ model FeedActivity {
   likes     FeedLike[]
   comments  FeedComment[]
 
-  @@index([userId])
+  @@index([userId, createdAt])
   @@index([createdAt])
 }
 

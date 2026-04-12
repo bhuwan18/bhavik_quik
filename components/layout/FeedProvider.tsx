@@ -19,10 +19,11 @@ export function FeedProvider({ children }: { children: React.ReactNode }) {
 
   // When user visits /feed, mark as seen
   useEffect(() => {
-    if (pathname === "/feed") {
-      localStorage.setItem(STORAGE_KEY, new Date().toISOString());
-      setHasNew(false);
-    }
+    if (pathname !== "/feed") return;
+    localStorage.setItem(STORAGE_KEY, new Date().toISOString());
+    // Defer state update to avoid synchronous setState in effect body
+    const id = setTimeout(() => setHasNew(false), 0);
+    return () => clearTimeout(id);
   }, [pathname]);
 
   // On every route change, check if there's a newer feed activity than last seen

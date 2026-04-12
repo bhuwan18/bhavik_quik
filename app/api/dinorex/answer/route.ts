@@ -3,7 +3,15 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { pusherServer, dinorexChannel } from "@/lib/pusher";
 import type { DinoRexPlayer, DinoRexQuestion } from "@/lib/pusher";
-import { DINOREX_WIN_BONUS_COINS, GAME_COINS_PER_CORRECT } from "@/lib/game-config";
+import {
+  DINOREX_WIN_BONUS_COINS,
+  GAME_COINS_PER_CORRECT,
+  DAILY_LIMIT_REGULAR,
+  DAILY_LIMIT_PRO,
+  DAILY_LIMIT_MAX,
+  MULTIPLIER_PRO,
+  MULTIPLIER_MAX,
+} from "@/lib/game-config";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -111,24 +119,82 @@ async function advanceRound(
       data: { status: "ended", winner: winner?.userId ?? null },
     });
 
-    // Award coins to winner + participation coins to non-winners in parallel
+    // Award coins to winner + participation coins to non-winners, respecting daily limits
+    const participantIds = players.map((p) => p.userId);
+    const dbUsers = await prisma.user.findMany({
+      where: { id: { in: participantIds } },
+      select: {
+        id: true,
+        isPro: true,
+        proExpiresAt: true,
+        isMax: true,
+        maxExpiresAt: true,
+        dailyCoinsEarned: true,
+        dailyCoinsReset: true,
+      },
+    });
+    const dbUserMap = new Map(dbUsers.map((u) => [u.id, u]));
+
+    const now = new Date();
     const coinUpdates: Promise<unknown>[] = [];
+
+    function cappedCoins(userId: string, rawCoins: number): number {
+      const u = dbUserMap.get(userId);
+      if (!u || rawCoins <= 0) return 0;
+      const isMaxActive = u.isMax && (!u.maxExpiresAt || u.maxExpiresAt > now);
+      const isProActive = !isMaxActive && u.isPro && (!u.proExpiresAt || u.proExpiresAt > now);
+      const multiplier = isMaxActive ? MULTIPLIER_MAX : isProActive ? MULTIPLIER_PRO : 1;
+      const dailyLimit = isMaxActive ? DAILY_LIMIT_MAX : isProActive ? DAILY_LIMIT_PRO : DAILY_LIMIT_REGULAR;
+      const resetDate = new Date(u.dailyCoinsReset);
+      const isNewDay =
+        now.getUTCFullYear() !== resetDate.getUTCFullYear() ||
+        now.getUTCMonth() !== resetDate.getUTCMonth() ||
+        now.getUTCDate() !== resetDate.getUTCDate();
+      const currentDailyEarned = isNewDay ? 0 : u.dailyCoinsEarned;
+      const remaining = Math.max(0, dailyLimit - currentDailyEarned);
+      return Math.min(Math.round(rawCoins * multiplier), remaining);
+    }
+
     if (winner) {
-      const coinsWon = winner.score * 5 + DINOREX_WIN_BONUS_COINS;
-      coinUpdates.push(
-        prisma.user.update({
-          where: { id: winner.userId },
-          data: { coins: { increment: coinsWon }, totalCoinsEarned: { increment: coinsWon } },
-        })
-      );
+      const coinsWon = cappedCoins(winner.userId, winner.score * 5 + DINOREX_WIN_BONUS_COINS);
+      if (coinsWon > 0) {
+        const u = dbUserMap.get(winner.userId);
+        const resetDate = u ? new Date(u.dailyCoinsReset) : now;
+        const isNewDay =
+          now.getUTCFullYear() !== resetDate.getUTCFullYear() ||
+          now.getUTCMonth() !== resetDate.getUTCMonth() ||
+          now.getUTCDate() !== resetDate.getUTCDate();
+        coinUpdates.push(
+          prisma.user.update({
+            where: { id: winner.userId },
+            data: {
+              coins: { increment: coinsWon },
+              totalCoinsEarned: { increment: coinsWon },
+              dailyCoinsEarned: isNewDay ? coinsWon : { increment: coinsWon },
+              dailyCoinsReset: isNewDay ? now : undefined,
+            },
+          })
+        );
+      }
     }
     for (const p of alive.filter((p) => p.userId !== winner?.userId)) {
-      const coins = p.score * GAME_COINS_PER_CORRECT;
+      const coins = cappedCoins(p.userId, p.score * GAME_COINS_PER_CORRECT);
       if (coins > 0) {
+        const u = dbUserMap.get(p.userId);
+        const resetDate = u ? new Date(u.dailyCoinsReset) : now;
+        const isNewDay =
+          now.getUTCFullYear() !== resetDate.getUTCFullYear() ||
+          now.getUTCMonth() !== resetDate.getUTCMonth() ||
+          now.getUTCDate() !== resetDate.getUTCDate();
         coinUpdates.push(
           prisma.user.update({
             where: { id: p.userId },
-            data: { coins: { increment: coins }, totalCoinsEarned: { increment: coins } },
+            data: {
+              coins: { increment: coins },
+              totalCoinsEarned: { increment: coins },
+              dailyCoinsEarned: isNewDay ? coins : { increment: coins },
+              dailyCoinsReset: isNewDay ? now : undefined,
+            },
           })
         );
       }

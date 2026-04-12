@@ -30,39 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Fetch current user state from DB (not just token — authoritative source)
-  const dbUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      isLocked: true,
-      isPro: true,
-      proExpiresAt: true,
-      isMax: true,
-      maxExpiresAt: true,
-      schoolAccessOverride: true,
-      email: true,
-      dailyCoinsEarned: true,
-      dailyCoinsReset: true,
-      totalCoinsEarned: true,
-      name: true,
-      currentStreak: true,
-      longestStreak: true,
-      lastStreakDate: true,
-      streakFreezes: true,
-    },
-  });
-
-  if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
-  if (dbUser.isLocked) return NextResponse.json({ error: "Account is locked" }, { status: 403 });
-
-  // School hours check: Oberoi International School students
-  const isOberoi = (dbUser.email ?? "").endsWith(SCHOOL_EMAIL_DOMAIN);
-  const schoolHoursEnabled = await getSchoolHoursEnabled();
-  if (isOberoi && !dbUser.schoolAccessOverride && schoolHoursEnabled && isSchoolHours()) {
-    return NextResponse.json({ error: "School hours restriction active" }, { status: 403 });
-  }
-
-  // Validate request body
+  // Parse body first (sync) so we can parallelize all initial fetches
   let quizId: string;
   let answers: { questionId: string; selectedIndex: number }[];
   try {
@@ -72,7 +40,6 @@ export async function POST(req: NextRequest) {
     if (typeof quizId !== "string" || !quizId || !Array.isArray(answers)) {
       throw new Error("Invalid body");
     }
-    // Validate each answer shape
     for (const a of answers) {
       if (typeof a.questionId !== "string" || typeof a.selectedIndex !== "number") {
         throw new Error("Invalid answer shape");
@@ -82,10 +49,44 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const quiz = await prisma.quiz.findUnique({
-    where: { id: quizId },
-    include: { questions: true },
-  });
+  // FIX 1: Parallelize user fetch, quiz fetch, and both settings reads
+  const [dbUser, quiz, schoolHoursEnabled, retakeCoinsEnabled] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        isLocked: true,
+        isPro: true,
+        proExpiresAt: true,
+        isMax: true,
+        maxExpiresAt: true,
+        schoolAccessOverride: true,
+        email: true,
+        dailyCoinsEarned: true,
+        dailyCoinsReset: true,
+        totalCoinsEarned: true,
+        name: true,
+        currentStreak: true,
+        longestStreak: true,
+        lastStreakDate: true,
+        streakFreezes: true,
+      },
+    }),
+    prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { questions: true },
+    }),
+    getSchoolHoursEnabled(),
+    getRetakeCoinsEnabled(),
+  ]);
+
+  if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
+  if (dbUser.isLocked) return NextResponse.json({ error: "Account is locked" }, { status: 403 });
+
+  // School hours check
+  const isOberoi = (dbUser.email ?? "").endsWith(SCHOOL_EMAIL_DOMAIN);
+  if (isOberoi && !dbUser.schoolAccessOverride && schoolHoursEnabled && isSchoolHours()) {
+    return NextResponse.json({ error: "School hours restriction active" }, { status: 403 });
+  }
 
   if (!quiz) return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
 
@@ -122,8 +123,6 @@ export async function POST(req: NextRequest) {
   const existingIds = new Set(existing.map((e) => e.questionId));
   const newCorrectIds = correctQuestionIds.filter((id) => !existingIds.has(id));
 
-  // Award coins for all correct answers or only new ones, depending on admin setting
-  const retakeCoinsEnabled = await getRetakeCoinsEnabled();
   const coinsBase = retakeCoinsEnabled ? correctQuestionIds.length : newCorrectIds.length;
   const rawCoinsEarned = Math.round(coinsBase * coinsPerCorrect * multiplier);
 
@@ -139,40 +138,7 @@ export async function POST(req: NextRequest) {
   const remaining = Math.max(0, dailyLimit - currentDailyEarned);
   const coinsEarned = Math.min(rawCoinsEarned, remaining);
 
-  // Record attempt
-  await prisma.quizAttempt.create({
-    data: {
-      userId: session.user.id,
-      quizId,
-      score,
-      total,
-      coinsEarned,
-    },
-  });
-
-  // Feed: quiz_completed activity (fire-and-forget)
-  prisma.feedActivity.create({
-    data: {
-      userId: session.user.id,
-      type: "quiz_completed",
-      data: { quizTitle: quiz.title, category: quiz.category, score, total, coinsEarned },
-    },
-  }).catch(() => {});
-
-  // Update user atomically
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      coins: { increment: coinsEarned },
-      totalCoinsEarned: { increment: coinsEarned },
-      totalCorrect: { increment: score },
-      totalAnswered: { increment: total },
-      dailyCoinsEarned: isNewDay ? coinsEarned : { increment: coinsEarned },
-      dailyCoinsReset: isNewDay ? now : undefined,
-    },
-  });
-
-  // ── Streak update ──────────────────────────────────────────────────────────
+  // FIX 2: Compute streak synchronously so we can merge into a single user.update
   const todayIST = getISTDateString(now);
   const oldStreak = dbUser.currentStreak;
   let newStreak = oldStreak;
@@ -182,7 +148,6 @@ export async function POST(req: NextRequest) {
   let streakUpdated = false;
 
   if (!dbUser.lastStreakDate) {
-    // First ever quiz completion
     newStreak = 1;
     streakUpdated = true;
   } else {
@@ -196,14 +161,10 @@ export async function POST(req: NextRequest) {
       if (diffDays === 1) {
         newStreak = oldStreak + 1;
       } else {
-        // Missed at least one day
         if (dbUser.streakFreezes > 0) {
-          // Auto-apply one freeze
           newFreezes = dbUser.streakFreezes - 1;
           streakFreezeUsed = true;
-          // Streak count unchanged
         } else {
-          // Streak broken
           newStreak = 1;
         }
       }
@@ -212,55 +173,40 @@ export async function POST(req: NextRequest) {
 
   if (newStreak > newLongest) newLongest = newStreak;
 
-  if (streakUpdated) {
-    await prisma.user.update({
+  // Record attempt + update user in parallel (single user.update now covers coins + streak)
+  await Promise.all([
+    prisma.quizAttempt.create({
+      data: { userId: session.user.id, quizId, score, total, coinsEarned },
+    }),
+    prisma.user.update({
       where: { id: session.user.id },
       data: {
-        currentStreak: newStreak,
-        longestStreak: newLongest,
-        lastStreakDate: now,
-        ...(streakFreezeUsed ? { streakFreezes: newFreezes } : {}),
+        coins: { increment: coinsEarned },
+        totalCoinsEarned: { increment: coinsEarned },
+        totalCorrect: { increment: score },
+        totalAnswered: { increment: total },
+        dailyCoinsEarned: isNewDay ? coinsEarned : { increment: coinsEarned },
+        dailyCoinsReset: isNewDay ? now : undefined,
+        ...(streakUpdated
+          ? {
+              currentStreak: newStreak,
+              longestStreak: newLongest,
+              lastStreakDate: now,
+              ...(streakFreezeUsed ? { streakFreezes: newFreezes } : {}),
+            }
+          : {}),
       },
-    });
+    }),
+  ]);
 
-    // Streak milestone notifications
-    const crossedStreakMilestones = STREAK_MILESTONES.filter(
-      (t) => t > oldStreak && t <= newStreak
-    );
-    if (crossedStreakMilestones.length > 0) {
-      const highest = Math.max(...crossedStreakMilestones);
-      await prisma.notification.create({
-        data: {
-          userId: session.user.id,
-          type: "streak_milestone",
-          message: `🔥 ${highest}-day streak! You've been playing every day for ${highest} days!`,
-        },
-      });
-      import("@/lib/push").then(({ sendPushToUser }) => {
-        sendPushToUser(session.user.id, `🔥 ${highest}-Day Streak!`, `You've kept your streak alive for ${highest} days!`, "/dashboard").catch(() => {});
-      }).catch(() => {});
-
-      // Feed: streak_milestone activity
-      prisma.feedActivity.create({
-        data: { userId: session.user.id, type: "streak_milestone", data: { days: highest } },
-      }).catch(() => {});
-
-      // Notify followers about streak milestone
-      const streakFollowers = await prisma.userFollow.findMany({
-        where: { followingId: session.user.id },
-        select: { followerId: true },
-      });
-      if (streakFollowers.length > 0) {
-        await prisma.notification.createMany({
-          data: streakFollowers.map((f) => ({
-            userId: f.followerId,
-            type: "follow_streak_milestone",
-            message: `🔥 ${dbUser.name ?? "Someone"} just hit a ${highest}-day streak!`,
-          })),
-        });
-      }
-    }
-  }
+  // Feed: quiz_completed activity (fire-and-forget)
+  prisma.feedActivity.create({
+    data: {
+      userId: session.user.id,
+      type: "quiz_completed",
+      data: { quizTitle: quiz.title, category: quiz.category, score, total, coinsEarned },
+    },
+  }).catch(() => {});
 
   // Record new correct answers
   if (newCorrectIds.length > 0) {
@@ -270,7 +216,50 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Milestone rewards: check if any thresholds were crossed
+  // FIX 3: Streak milestone notifications — fire-and-forget (don't block response)
+  if (streakUpdated) {
+    const crossedStreakMilestones = STREAK_MILESTONES.filter(
+      (t) => t > oldStreak && t <= newStreak
+    );
+    if (crossedStreakMilestones.length > 0) {
+      const highest = Math.max(...crossedStreakMilestones);
+
+      Promise.resolve().then(async () => {
+        await prisma.notification.create({
+          data: {
+            userId: session.user.id,
+            type: "streak_milestone",
+            message: `🔥 ${highest}-day streak! You've been playing every day for ${highest} days!`,
+          },
+        });
+
+        const streakFollowers = await prisma.userFollow.findMany({
+          where: { followingId: session.user.id },
+          select: { followerId: true },
+        });
+        if (streakFollowers.length > 0) {
+          await prisma.notification.createMany({
+            data: streakFollowers.map((f) => ({
+              userId: f.followerId,
+              type: "follow_streak_milestone",
+              message: `🔥 ${dbUser.name ?? "Someone"} just hit a ${highest}-day streak!`,
+            })),
+          });
+        }
+      }).catch(() => {});
+
+      import("@/lib/push").then(({ sendPushToUser }) => {
+        sendPushToUser(session.user.id, `🔥 ${highest}-Day Streak!`, `You've kept your streak alive for ${highest} days!`, "/dashboard").catch(() => {});
+      }).catch(() => {});
+
+      // Feed: streak_milestone activity
+      prisma.feedActivity.create({
+        data: { userId: session.user.id, type: "streak_milestone", data: { days: highest } },
+      }).catch(() => {});
+    }
+  }
+
+  // Coin milestone rewards — fire-and-forget for notifications/followers
   if (coinsEarned > 0) {
     const oldTotal = dbUser.totalCoinsEarned;
     const newTotal = oldTotal + coinsEarned;
@@ -282,13 +271,32 @@ export async function POST(req: NextRequest) {
       });
       const highest = Math.max(...crossed);
       const badge = getMilestoneByThreshold(highest);
-      await prisma.notification.create({
-        data: {
-          userId: session.user.id,
-          type: "milestone",
-          message: `🏅 Milestone unlocked: ${badge.name}! You've earned ${highest.toLocaleString()} lifetime coins.`,
-        },
-      });
+
+      // FIX 3: notification + follower fan-out fire-and-forget
+      Promise.resolve().then(async () => {
+        await prisma.notification.create({
+          data: {
+            userId: session.user.id,
+            type: "milestone",
+            message: `🏅 Milestone unlocked: ${badge.name}! You've earned ${highest.toLocaleString()} lifetime coins.`,
+          },
+        });
+
+        const milestoneFollowers = await prisma.userFollow.findMany({
+          where: { followingId: session.user.id },
+          select: { followerId: true },
+        });
+        if (milestoneFollowers.length > 0) {
+          await prisma.notification.createMany({
+            data: milestoneFollowers.map((f) => ({
+              userId: f.followerId,
+              type: "follow_milestone",
+              message: `🏅 ${dbUser.name ?? "Someone"} just unlocked the "${badge.name}" milestone!`,
+            })),
+          });
+        }
+      }).catch(() => {});
+
       import("@/lib/push").then(({ sendPushToUser }) => {
         sendPushToUser(session.user.id, "Milestone unlocked! 🏅", badge.name, "/milestones").catch(() => {});
       }).catch(() => {});
@@ -301,32 +309,18 @@ export async function POST(req: NextRequest) {
           data: { milestoneName: badge.name, milestoneType: "coins", threshold: highest, tier: badge.tier },
         },
       }).catch(() => {});
-
-      // Notify followers about coin milestone
-      const milestoneFollowers = await prisma.userFollow.findMany({
-        where: { followingId: session.user.id },
-        select: { followerId: true },
-      });
-      if (milestoneFollowers.length > 0) {
-        await prisma.notification.createMany({
-          data: milestoneFollowers.map((f) => ({
-            userId: f.followerId,
-            type: "follow_milestone",
-            message: `🏅 ${dbUser.name ?? "Someone"} just unlocked the "${badge.name}" milestone!`,
-          })),
-        });
-      }
     }
   }
 
   // ── Non-coin milestone checks (quizzes, answers, categories, streak) ─────────
   {
-    const [totalQuizzes, totalCorrectCount, distinctQuizIdRows, earnedNonCoin] = await Promise.all([
+    // FIX 4: join quiz category in the same query — eliminates separate quiz.findMany
+    const [totalQuizzes, totalCorrectCount, distinctAttemptRows, earnedNonCoin] = await Promise.all([
       prisma.quizAttempt.count({ where: { userId: session.user.id } }),
       prisma.correctAnswer.count({ where: { userId: session.user.id } }),
       prisma.quizAttempt.findMany({
         where: { userId: session.user.id },
-        select: { quizId: true },
+        select: { quizId: true, quiz: { select: { category: true } } },
         distinct: ["quizId"],
       }),
       prisma.userMilestone.findMany({
@@ -335,11 +329,7 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
-    const quizCategories = await prisma.quiz.findMany({
-      where: { id: { in: distinctQuizIdRows.map((q) => q.quizId) } },
-      select: { category: true },
-    });
-    const distinctCategoryCount = new Set(quizCategories.map((q) => q.category)).size;
+    const distinctCategoryCount = new Set(distinctAttemptRows.map((r) => r.quiz.category)).size;
 
     const earnedByType = new Map<string, Set<number>>();
     for (const m of earnedNonCoin) {
@@ -379,20 +369,22 @@ export async function POST(req: NextRequest) {
         if (!byType.has(m.milestoneType)) byType.set(m.milestoneType, []);
         byType.get(m.milestoneType)!.push(m.threshold);
       }
+
+      // FIX 3: batch all non-coin milestone notifications, fire-and-forget
+      const nonCoinNotifications: { userId: string; type: string; message: string }[] = [];
       for (const [type, thresholds] of byType) {
         const highest = Math.max(...thresholds);
         const badge = getMilestone(type as MilestoneType, highest);
-        await prisma.notification.create({
-          data: {
-            userId: session.user.id,
-            type: "milestone",
-            message: `🏅 Milestone unlocked: ${badge.name}! ${badge.description}`,
-          },
+        nonCoinNotifications.push({
+          userId: session.user.id,
+          type: "milestone",
+          message: `🏅 Milestone unlocked: ${badge.name}! ${badge.description}`,
         });
+
         import("@/lib/push").then(({ sendPushToUser }) => {
           sendPushToUser(session.user.id, "Milestone unlocked! 🏅", badge.name, "/milestones").catch(() => {});
         }).catch(() => {});
-        // Feed: milestone_earned activity
+
         prisma.feedActivity.create({
           data: {
             userId: session.user.id,
@@ -400,6 +392,10 @@ export async function POST(req: NextRequest) {
             data: { milestoneName: badge.name, milestoneType: type, threshold: highest, tier: badge.tier },
           },
         }).catch(() => {});
+      }
+
+      if (nonCoinNotifications.length > 0) {
+        prisma.notification.createMany({ data: nonCoinNotifications }).catch(() => {});
       }
     }
   }
@@ -438,8 +434,6 @@ export async function POST(req: NextRequest) {
             select: { quizId: true },
           })
         : Promise.resolve(null),
-      // Count attempts for this specific quiz AFTER recording.
-      // If it's 1, it had 0 plays before this attempt — definitively the least played.
       quiz.isOfficial
         ? prisma.quizAttempt.count({ where: { quizId } })
         : Promise.resolve(null),
@@ -451,7 +445,6 @@ export async function POST(req: NextRequest) {
       mysticalToGrant.push(mysticalQuizletName);
     }
     if (thisQuizAttemptCount === 1) {
-      // This quiz had 0 plays before this attempt — it was the least played
       mysticalToGrant.push("Atypical Choices");
     }
 
@@ -461,23 +454,31 @@ export async function POST(req: NextRequest) {
         select: { id: true, name: true, icon: true, colorFrom: true, colorTo: true, description: true },
       });
 
-      for (const mq of mysticalQuizlets) {
-        const alreadyOwned = await prisma.userQuizlet.findUnique({
-          where: { userId_quizletId: { userId: session.user.id, quizletId: mq.id } },
+      // FIX 5: batch ownership check — one query instead of N individual findUnique calls
+      const alreadyOwned = await prisma.userQuizlet.findMany({
+        where: { userId: session.user.id, quizletId: { in: mysticalQuizlets.map((q) => q.id) } },
+        select: { quizletId: true },
+      });
+      const ownedIds = new Set(alreadyOwned.map((o) => o.quizletId));
+      const toGrant = mysticalQuizlets.filter((mq) => !ownedIds.has(mq.id));
+
+      if (toGrant.length > 0) {
+        await prisma.userQuizlet.createMany({
+          data: toGrant.map((mq) => ({ userId: session.user.id, quizletId: mq.id })),
+          skipDuplicates: true,
         });
-        if (!alreadyOwned) {
-          await prisma.userQuizlet.create({
-            data: { userId: session.user.id, quizletId: mq.id },
-          });
-          await prisma.notification.create({
-            data: {
-              userId: session.user.id,
-              type: "milestone",
-              message: `✨ Mystical Quizlet unlocked: "${mq.name}"! A rare achievement quizlet is now in your collection.`,
-            },
-          });
+
+        // Fire-and-forget notification batch
+        prisma.notification.createMany({
+          data: toGrant.map((mq) => ({
+            userId: session.user.id,
+            type: "milestone",
+            message: `✨ Mystical Quizlet unlocked: "${mq.name}"! A rare achievement quizlet is now in your collection.`,
+          })),
+        }).catch(() => {});
+
+        for (const mq of toGrant) {
           mysticalGranted.push({ name: mq.name, icon: mq.icon, colorFrom: mq.colorFrom, colorTo: mq.colorTo, description: mq.description });
-          // Feed: quizlet_earned activity
           prisma.feedActivity.create({
             data: {
               userId: session.user.id,
@@ -490,74 +491,71 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Leaderboard notifications: fire-and-forget (don't block response)
+  // FIX 3: Leaderboard notifications — fully fire-and-forget (only affects other users)
   if (coinsEarned > 0) {
     const oldTotal = dbUser.totalCoinsEarned;
     const newTotal = oldTotal + coinsEarned;
     const userName = dbUser.name ?? "Someone";
 
-    // Two targeted queries instead of a full table scan:
-    // 1) users whose total was between oldTotal+1 and newTotal (just overtaken)
-    // 2) top 3 users by totalCoinsEarned (for top-3 join notification)
-    const [overtakenUsers, top3Before] = await Promise.all([
-      prisma.user.findMany({
-        where: {
-          id: { not: session.user.id },
-          totalCoinsEarned: { gt: oldTotal, lte: newTotal },
-        },
-        select: { id: true, totalCoinsEarned: true },
-      }),
-      prisma.user.findMany({
-        where: { id: { not: session.user.id } },
-        orderBy: { totalCoinsEarned: "desc" },
-        take: 3,
-        select: { id: true, totalCoinsEarned: true },
-      }),
-    ]);
+    Promise.resolve().then(async () => {
+      const [overtakenUsers, top3Before] = await Promise.all([
+        prisma.user.findMany({
+          where: {
+            id: { not: session.user.id },
+            totalCoinsEarned: { gt: oldTotal, lte: newTotal },
+          },
+          select: { id: true, totalCoinsEarned: true },
+        }),
+        prisma.user.findMany({
+          where: { id: { not: session.user.id } },
+          orderBy: { totalCoinsEarned: "desc" },
+          take: 3,
+          select: { id: true, totalCoinsEarned: true },
+        }),
+      ]);
 
-    const notificationsToCreate: { userId: string; type: string; message: string }[] = [];
+      const notificationsToCreate: { userId: string; type: string; message: string }[] = [];
 
-    for (const u of overtakenUsers) {
-      notificationsToCreate.push({
-        userId: u.id,
-        type: "overtaken",
-        message: `${userName} just overtook you on the leaderboard! Keep playing to reclaim your spot.`,
-      });
-    }
-
-    const wasInTop3 = top3Before.length < 3 ? false : oldTotal > top3Before[2].totalCoinsEarned;
-    const isInTop3Now = top3Before.length < 3 || newTotal > top3Before[2].totalCoinsEarned;
-
-    if (isInTop3Now && !wasInTop3) {
-      for (const u of top3Before) {
-        if (!notificationsToCreate.some((n) => n.userId === u.id)) {
-          notificationsToCreate.push({
-            userId: u.id,
-            type: "top3_join",
-            message: `${userName} just joined the top 3 on the leaderboard!`,
-          });
-        }
+      for (const u of overtakenUsers) {
+        notificationsToCreate.push({
+          userId: u.id,
+          type: "overtaken",
+          message: `${userName} just overtook you on the leaderboard! Keep playing to reclaim your spot.`,
+        });
       }
-      // Feed: leaderboard_top3 activity
-      prisma.feedActivity.create({
-        data: { userId: session.user.id, type: "leaderboard_top3", data: { rank: 3 } },
-      }).catch(() => {});
-    }
 
-    if (notificationsToCreate.length > 0) {
-      await prisma.notification.createMany({ data: notificationsToCreate });
+      const wasInTop3 = top3Before.length < 3 ? false : oldTotal > top3Before[2].totalCoinsEarned;
+      const isInTop3Now = top3Before.length < 3 || newTotal > top3Before[2].totalCoinsEarned;
 
-      // Fire-and-forget push notifications — do not block the response
-      import("@/lib/push").then(({ sendPushToUser }) => {
-        for (const n of notificationsToCreate) {
-          const title =
-            n.type === "overtaken"
-              ? "You've been overtaken! 😱"
-              : "Someone joined the Top 3! 🏆";
-          sendPushToUser(n.userId, title, n.message).catch(() => {});
+      if (isInTop3Now && !wasInTop3) {
+        for (const u of top3Before) {
+          if (!notificationsToCreate.some((n) => n.userId === u.id)) {
+            notificationsToCreate.push({
+              userId: u.id,
+              type: "top3_join",
+              message: `${userName} just joined the top 3 on the leaderboard!`,
+            });
+          }
         }
-      }).catch(() => {});
-    }
+        prisma.feedActivity.create({
+          data: { userId: session.user.id, type: "leaderboard_top3", data: { rank: 3 } },
+        }).catch(() => {});
+      }
+
+      if (notificationsToCreate.length > 0) {
+        await prisma.notification.createMany({ data: notificationsToCreate });
+
+        import("@/lib/push").then(({ sendPushToUser }) => {
+          for (const n of notificationsToCreate) {
+            const title =
+              n.type === "overtaken"
+                ? "You've been overtaken! 😱"
+                : "Someone joined the Top 3! 🏆";
+            sendPushToUser(n.userId, title, n.message).catch(() => {});
+          }
+        }).catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   return NextResponse.json({

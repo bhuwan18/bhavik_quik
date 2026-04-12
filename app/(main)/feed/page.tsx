@@ -136,14 +136,13 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
 function CommentsPanel({ activityId, initialCount }: { activityId: string; initialCount: number }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (loaded) return;
-    setLoading(true);
     fetch(`/api/feed/${activityId}/comments`)
       .then((r) => r.json())
       .then((data) => { setComments(data); setLoaded(true); setLoading(false); })

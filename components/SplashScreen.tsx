@@ -13,12 +13,17 @@ const SPLASH_KEY = "bq_splash_date";
 const DURATION_S = 10;
 
 export default function SplashScreen() {
-  const [visible, setVisible] = useState(false);
+  // Lazy initializer: check localStorage immediately to avoid an extra render cycle
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const today = getISTDateString(new Date());
+    return localStorage.getItem(SPLASH_KEY) !== today;
+  });
   const [secondsLeft, setSecondsLeft] = useState(DURATION_S);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Computed once on mount — safe for SSR because visible starts false
+  // Computed once on mount — safe because this is a client component
   const [offers] = useState(() => {
     const promos = getActivePromotions();
     const festival = getTodaysFestival();
@@ -28,12 +33,13 @@ export default function SplashScreen() {
     return { promos, festival, festivalPack };
   });
 
-  useEffect(() => {
+  function dismiss() {
+    clearTimeout(timerRef.current!);
+    clearInterval(intervalRef.current!);
     const today = getISTDateString(new Date());
-    const last = localStorage.getItem(SPLASH_KEY);
-    if (last === today) return; // already shown today
-    setVisible(true);
-  }, []);
+    localStorage.setItem(SPLASH_KEY, today);
+    setVisible(false);
+  }
 
   useEffect(() => {
     if (!visible) return;
@@ -56,16 +62,7 @@ export default function SplashScreen() {
       clearTimeout(timerRef.current!);
       clearInterval(intervalRef.current!);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
-
-  function dismiss() {
-    clearTimeout(timerRef.current!);
-    clearInterval(intervalRef.current!);
-    const today = getISTDateString(new Date());
-    localStorage.setItem(SPLASH_KEY, today);
-    setVisible(false);
-  }
 
   return (
     <AnimatePresence>

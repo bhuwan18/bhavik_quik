@@ -87,7 +87,6 @@ const UNIT_SHORT: Record<MilestoneType, string> = {
 function BadgeCard({
   badge,
   earnedAt,
-  currentStat,
   onLockedClick,
 }: {
   badge: MilestoneDef;

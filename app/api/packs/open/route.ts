@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
   const dbUser = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { isLocked: true, coins: true },
+    select: { isLocked: true },
   });
   if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
   if (dbUser.isLocked) return NextResponse.json({ error: "Account is locked" }, { status: 403 });
@@ -30,11 +30,16 @@ export async function POST(req: NextRequest) {
   const pack = await prisma.pack.findUnique({ where: { slug: packSlug } });
   if (!pack) return NextResponse.json({ error: "Pack not found" }, { status: 404 });
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
   const totalCost = pack.cost * quantity;
-  if (user.coins < totalCost) {
+
+  // Atomic conditional debit — only succeeds if the user has enough coins right now.
+  // This prevents a TOCTOU race where two concurrent requests both pass a balance check
+  // and both deduct, resulting in a negative balance.
+  const deducted = await prisma.user.updateMany({
+    where: { id: session.user.id, coins: { gte: totalCost } },
+    data: { coins: { decrement: totalCost } },
+  });
+  if (deducted.count === 0) {
     return NextResponse.json({ error: "Not enough coins" }, { status: 400 });
   }
 
@@ -90,10 +95,13 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { coins: { increment: refundCoins - totalCost } },
-  });
+  // Credit back refund coins for duplicates (initial debit already applied above)
+  if (refundCoins > 0) {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { coins: { increment: refundCoins } },
+    });
+  }
 
   return NextResponse.json({
     results: [

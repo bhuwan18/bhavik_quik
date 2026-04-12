@@ -18,12 +18,7 @@ function getOrderBy(sort: SortCol, dir: SortDir) {
   }
 }
 
-function sortHref(
-  col: SortCol,
-  currentSort: SortCol,
-  currentDir: SortDir,
-  currentPage: number,
-) {
+function sortHref(col: SortCol, currentSort: SortCol, currentDir: SortDir) {
   const newDir: SortDir =
     currentSort === col ? (currentDir === "asc" ? "desc" : "asc") : "desc";
   const params = new URLSearchParams({ sort: col, dir: newDir, page: "1" });
@@ -76,7 +71,7 @@ export default async function LeaderboardPage({
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const MEDALS = ["🥇", "🥈", "🥉"];
-  const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const fiveMinsAgo = new Date(new Date().getTime() - 5 * 60 * 1000);
   const isOnline = (lastSeen: Date | null) => !!lastSeen && lastSeen > fiveMinsAgo;
 
   // Sort indicator helpers
@@ -177,14 +172,14 @@ export default async function LeaderboardPage({
 
                 {/* Coins Earned */}
                 <th className={thClass("coins", "")} aria-sort={sort === "coins" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("coins", sort, dir, page)} className="hover:text-white transition-colors">
+                  <Link href={sortHref("coins", sort, dir)} className="hover:text-white transition-colors">
                     Coins{arrow("coins")}
                   </Link>
                 </th>
 
                 {/* Correct */}
                 <th className={thClass("correct", "hidden sm:table-cell")} aria-sort={sort === "correct" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("correct", sort, dir, page)} className="hover:text-white transition-colors">
+                  <Link href={sortHref("correct", sort, dir)} className="hover:text-white transition-colors">
                     Correct{arrow("correct")}
                   </Link>
                 </th>
@@ -196,21 +191,21 @@ export default async function LeaderboardPage({
 
                 {/* Followers */}
                 <th className={thClass("followers", "hidden sm:table-cell")} aria-sort={sort === "followers" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("followers", sort, dir, page)} className="hover:text-white transition-colors">
+                  <Link href={sortHref("followers", sort, dir)} className="hover:text-white transition-colors">
                     Followers{arrow("followers")}
                   </Link>
                 </th>
 
                 {/* Quizlets */}
                 <th className={thClass("quizlets", "hidden md:table-cell")} aria-sort={sort === "quizlets" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("quizlets", sort, dir, page)} className="hover:text-white transition-colors">
+                  <Link href={sortHref("quizlets", sort, dir)} className="hover:text-white transition-colors">
                     Quizlets{arrow("quizlets")}
                   </Link>
                 </th>
 
                 {/* Quizzes */}
                 <th className={thClass("quizzes", "hidden md:table-cell")} aria-sort={sort === "quizzes" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("quizzes", sort, dir, page)} className="hover:text-white transition-colors">
+                  <Link href={sortHref("quizzes", sort, dir)} className="hover:text-white transition-colors">
                     Quizzes{arrow("quizzes")}
                   </Link>
                 </th>
