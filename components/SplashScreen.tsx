@@ -10,7 +10,7 @@ import { getActivePromotions, type Promotion } from "@/lib/promotions";
 import { PRO_AMOUNT_INR, MAX_AMOUNT_INR } from "@/lib/game-config";
 
 const SPLASH_KEY = "bq_splash_date";
-const DURATION_S = 5;
+const DURATION_S = 10;
 
 export default function SplashScreen() {
   const [visible, setVisible] = useState(false);

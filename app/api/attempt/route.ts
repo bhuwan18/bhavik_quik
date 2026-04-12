@@ -373,6 +373,84 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Mystical Quizlet grants ────────────────────────────────────────────────
+  const mysticalGranted: { name: string; icon: string; colorFrom: string; colorTo: string; description: string }[] = [];
+  {
+    const CATEGORY_MYSTICAL_MAP: Record<string, string> = {
+      "harry-potter": "Hogwarts Legend",
+      "avengers": "Arc Reactor",
+      "math": "Mathematician",
+      "geography": "Global Expert",
+      "world-travel": "Master of Travel",
+      "memes": "Lord of Laughs",
+      "technology": "Technological Wonder",
+      "gaming": "Technoblade Never Dies",
+      "science": "Newton's Spirit",
+      "football": "Back of the Net",
+      "cricket": "Out of the Park",
+      "flags": "Flag of India",
+      "anime": "Senku Ishigami",
+      "physics": "Laws of Physics",
+      "animals": "Animal Lover",
+      "grade-6": "Ready",
+      "artists": "Picasso",
+      "musicians": "Prodigy",
+    };
+
+    const mysticalQuizletName = CATEGORY_MYSTICAL_MAP[quiz.category];
+
+    const [categoryAttempts, thisQuizAttemptCount] = await Promise.all([
+      mysticalQuizletName
+        ? prisma.quizAttempt.findMany({
+            where: { userId: session.user.id, quiz: { category: quiz.category } },
+            distinct: ["quizId"],
+            select: { quizId: true },
+          })
+        : Promise.resolve(null),
+      // Count attempts for this specific quiz AFTER recording.
+      // If it's 1, it had 0 plays before this attempt — definitively the least played.
+      quiz.isOfficial
+        ? prisma.quizAttempt.count({ where: { quizId } })
+        : Promise.resolve(null),
+    ]);
+
+    const mysticalToGrant: string[] = [];
+
+    if (mysticalQuizletName && categoryAttempts && categoryAttempts.length >= 10) {
+      mysticalToGrant.push(mysticalQuizletName);
+    }
+    if (thisQuizAttemptCount === 1) {
+      // This quiz had 0 plays before this attempt — it was the least played
+      mysticalToGrant.push("Atypical Choices");
+    }
+
+    if (mysticalToGrant.length > 0) {
+      const mysticalQuizlets = await prisma.quizlet.findMany({
+        where: { name: { in: mysticalToGrant } },
+        select: { id: true, name: true, icon: true, colorFrom: true, colorTo: true, description: true },
+      });
+
+      for (const mq of mysticalQuizlets) {
+        const alreadyOwned = await prisma.userQuizlet.findUnique({
+          where: { userId_quizletId: { userId: session.user.id, quizletId: mq.id } },
+        });
+        if (!alreadyOwned) {
+          await prisma.userQuizlet.create({
+            data: { userId: session.user.id, quizletId: mq.id },
+          });
+          await prisma.notification.create({
+            data: {
+              userId: session.user.id,
+              type: "milestone",
+              message: `✨ Mystical Quizlet unlocked: "${mq.name}"! A rare achievement quizlet is now in your collection.`,
+            },
+          });
+          mysticalGranted.push({ name: mq.name, icon: mq.icon, colorFrom: mq.colorFrom, colorTo: mq.colorTo, description: mq.description });
+        }
+      }
+    }
+  }
+
   // Leaderboard notifications: fire-and-forget (don't block response)
   if (coinsEarned > 0) {
     const oldTotal = dbUser.totalCoinsEarned;
@@ -449,5 +527,6 @@ export async function POST(req: NextRequest) {
     dailyEarned: currentDailyEarned + coinsEarned,
     currentStreak: newStreak,
     streakFreezeUsed,
+    mysticalQuizletsGranted: mysticalGranted,
   });
 }

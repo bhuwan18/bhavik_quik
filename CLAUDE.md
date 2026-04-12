@@ -26,7 +26,7 @@ This file provides guidance for AI assistants working in this repository.
 | Real-time | Pusher Channels (DinoRex multiplayer; socket.io installed but unused for game logic) |
 | Animations | Framer Motion |
 | Icons | Lucide React + Emoji |
-| Theming | next-themes (dark/light toggle, class-based) |
+| Theming | next-themes (dark-only, `forcedTheme="dark"`) |
 | Email | Nodemailer v7 (SMTP — new user alerts only; feedback is DB-stored) |
 | Analytics | Vercel Analytics + Speed Insights |
 
@@ -51,7 +51,7 @@ cp .env.example .env
 # Push database schema
 npm run db:push
 
-# Seed with ~170 official quizzes + all quizlets + packs
+# Seed with ~178 official quizzes + all quizlets + packs
 npm run db:seed
 
 # Start development server
@@ -116,7 +116,7 @@ app/
 ├── page.tsx                      Redirects: logged in → /dashboard, else → /login
 ├── login/page.tsx                Google sign-in screen
 ├── certificate/page.tsx          Completion certificate (only if all quizlets owned)
-├── globals.css                   CSS variables for dark/light theme + Tailwind overrides
+├── globals.css                   CSS variables (dark-only) + animation keyframes + Tailwind overrides
 ├── (main)/                       Auth-guarded area (sidebar layout + AudioProvider)
 │   ├── layout.tsx                Auth guard + Sidebar (desktop) + MobileNav + OnlinePing + AudioPlayer + PushSubscriptionManager + SplashScreen + NotificationsProvider
 │   ├── loading.tsx               App-level loading screen with rotating game facts
@@ -148,7 +148,7 @@ app/
     ├── feedback/                 POST — saves feedback to DB (Feedback model)
     ├── quizzes/                  GET quizzes list, POST create quiz
     ├── quizzes/[id]/             GET single quiz; PATCH (admin) update quiz + questions
-    ├── attempt/                  POST quiz attempt — awards coins with multiplier, daily cap, dedup; auto-grants milestones; updates streak
+    ├── attempt/                  POST quiz attempt — awards coins with multiplier, daily cap, dedup; auto-grants milestones; updates streak; grants mystical quizlets on category/rarity conditions
     ├── milestones/               GET user's earned milestones
     ├── packs/                    GET active packs (incl. festival packs)
     ├── packs/open/               POST open pack, roll characters
@@ -181,13 +181,13 @@ components/
 │   ├── SoccerBallIcon.tsx        SVG soccer ball (Football category)
 │   ├── CricketWicketIcon.tsx     SVG cricket wicket (Cricket category)
 │   └── AvengersIcon.tsx          SVG Avengers logo (Avengers category)
-├── layout/Sidebar.tsx            Collapsible desktop sidebar — theme toggle + admin nav; collapse stored in localStorage `bq_sidebar_collapsed`
+├── layout/Sidebar.tsx            Collapsible desktop sidebar — admin nav; collapse stored in localStorage `bq_sidebar_collapsed`
 ├── layout/MobileNav.tsx          Bottom tab bar (mobile only, md:hidden) — 5 tabs + "More" drawer
 ├── layout/OnlinePing.tsx         Client component — silently POSTs /api/user/ping every 2 min
 ├── layout/PushSubscriptionManager.tsx  Registers sw.js, shows push opt-in banner, saves subscription
 ├── layout/NotificationsProvider.tsx    React context — fetches unread notification count on every route change; exposes useUnreadCount()
 ├── ThemeProvider.tsx             next-themes wrapper (class-based, default: dark)
-├── SplashScreen.tsx              Daily splash shown once per IST day (localStorage key bq_splash_date) — active promotions, festival pack, Pro/Max pitch; 5s auto-dismiss
+├── SplashScreen.tsx              Daily splash shown once per IST day (localStorage key bq_splash_date) — active promotions, festival pack, Pro/Max pitch; 10s auto-dismiss
 ├── IntroOverlay.tsx              First-visit onboarding overlay (5 steps, localStorage key bq_intro_seen_v1)
 ├── AudioPlayer.tsx               Floating music player (bottom-right) — volume + on/off
 ├── quiz/QuizPlayer.tsx           Interactive quiz — answers shuffled randomly each session
@@ -197,7 +197,7 @@ components/
 │   └── PackOpeningModal.tsx      Animated pack reveal (tap cards)
 ├── discover/DiscoverGrid.tsx     Quiz grid component used by the Discover page
 ├── quizlets/QuizletsClient.tsx   Toggle: "My Collection" (owned, sell, Hidden section) + "All Quizlets" dex view (all non-hidden, owned highlighted)
-├── milestones/MilestonesClient.tsx  Milestone grid — earned badges with tier colors + progress bar to next unlock
+├── milestones/MilestonesClient.tsx  Milestone grid — earned badges with tier colors + progress bar to next unlock; tapping a locked badge opens a ProgressModal showing current stat, % bar, and remaining count
 ├── profile/
 │   ├── FollowButton.tsx          Optimistic follow/unfollow toggle — POST/DELETE /api/user/follow/[id]; rollback on failure
 │   └── FollowListModal.tsx       Modal to browse followers/following — fetches /api/user/[id]/follow-list; admin + own profile only
@@ -217,7 +217,7 @@ lib/
 ├── push.ts                       Web Push helper — sendPushToUser(userId, title, body, url)
 ├── pusher.ts                     Pusher server instance + DinoRex shared types (DinoRexPlayer, etc.)
 ├── audio-context.tsx             React context for background music state + controls
-├── quizlets-data.ts              All 84 quizlet definitions (9 standard packs + 3 global uniques + 6 festival)
+├── quizlets-data.ts              All 103 quizlet definitions (9 standard packs + 3 global uniques + 6 festival + 19 mystical)
 ├── packs-data.ts                 All 15 pack definitions (9 standard + 6 festival)
 ├── promotions.ts                 Time-limited promotions (PROMOTIONS array + getActivePromotions() — returns promos active on today's IST date)
 ├── festivals.ts                  Festival calendar (6 festivals)
@@ -229,7 +229,7 @@ lib/
 
 prisma/
 ├── schema.prisma                 Full DB schema — 19 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification, UserMilestone, UserFollow
-└── seed.ts                       ~175 official quizzes across 20 categories + all quizlets + packs
+└── seed.ts                       ~178 official quizzes across 20 categories + all quizlets + packs
 ```
 
 ---
@@ -238,10 +238,11 @@ prisma/
 
 ### Quizlets (Characters)
 - Called "Quizlets" in-game (not "characters")
-- **84 total**: 9 standard packs (Tech/Sports/Magic/Hero/Music/Science × 9, Math × 8, English × 8, Rainbow × 5) + 3 global uniques + 6 festival pack quizlets
+- **103 total**: 9 standard packs (Tech/Sports/Magic/Hero/Music/Science × 9, Math × 8, English × 8, Rainbow × 5) + 3 global uniques + 6 festival pack quizlets + 19 mystical achievement quizlets
 - Each has: name, rarity, pack, icon (emoji), color gradient, description
-- Rarities: `common` | `uncommon` | `rare` | `epic` | `legendary` | `secret` | `unique` | `impossible`
+- Rarities: `common` | `uncommon` | `rare` | `epic` | `legendary` | `secret` | `unique` | `mystical` | `impossible`
 - Secret/Unique/Impossible have `isHidden: true` — shown in a separate "Hidden" section in the Quizlets tab (My Collection view only), not in the All Quizlets dex view or pack descriptions
+- Mystical quizlets have `isHidden: false` and `pack: "mystical"` — visible in the dex view; granted automatically via `/api/attempt`, never sold in packs
 
 ### Rarity Visual System
 Defined in `lib/utils.ts → RARITY_COLORS`:
@@ -252,7 +253,18 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - Legendary: gold border, animated pulse (`legendary-card` CSS class)
 - Secret: dark/red border
 - Unique: pink border, rainbow animation (`rainbow-card`)
+- Mystical: teal border, shimmer animation (`mystical-card` CSS class) — achievement-only
 - Impossible: full rainbow animation
+
+### Mystical Quizlets (Achievement-Based)
+- 19 mystical quizlets exist — **not obtainable from packs**; granted automatically by `/api/attempt` when conditions are met
+- `CATEGORY_MYSTICAL_MAP` in `app/api/attempt/route.ts` maps 18 categories → a quizlet name (world-languages + brand-logos are the only unmapped categories)
+- **Category condition**: complete 10+ distinct quizzes (`distinct: ["quizId"]`) in that category → grants the mapped mystical quizlet
+- **Atypical Choices**: granted when the user completes the single least-attempted official quiz (lowest `quiz.attempts` count)
+- On grant: creates a `UserQuizlet` record + an in-app `Notification` (type `milestone`)
+- Already-owned quizlets are silently skipped (no duplicate check needed — `userQuizlet.findUnique` guards it)
+- Sell value: 500 coins each (same as `SELL_VALUES.mystical`)
+- `lib/quizlets-data.ts` is the source of truth for all 19 definitions (`pack: "mystical"`, `isHidden: false`)
 
 ### Coin Economy
 - Coins per correct answer vary by difficulty: 1→3, 2→5, 3→8, 4→12, 5→20 (defined in `lib/game-config.ts`)
@@ -283,9 +295,9 @@ If user already owns a quizlet: refund coins equal to its sell value.
 the festival pack slug. No DB change needed — pure date comparison at request time.
 
 ### Pre-made Quiz Content
-All 20 categories are seeded via `prisma/seed.ts` — approximately 175 official quizzes total.
+All 20 categories are seeded via `prisma/seed.ts` — approximately 178 official quizzes total.
 Seeded categories: football, cricket, harry-potter, technology, avengers, artists, musicians, math, science, physics, world-languages, flags, brand-logos, animals, anime, grade-6, geography, world-travel, gaming, memes.
-Category quiz counts vary: technology (22), science/math/harry-potter/football/cricket/avengers (12 each), physics/musicians/gaming/artists/world-travel (7 each), grade-6 (10+), flags (6), others (5 each).
+Category quiz counts vary: technology (22), science/math/football/cricket/avengers (12 each), harry-potter (15), physics/musicians/gaming/artists/world-travel (7 each), grade-6 (10+), flags (6), others (5 each).
 Premium categories (`premiumTier` field on `CATEGORIES`): grade-6 (tier 1), geography (tier 1), world-travel (tier 2), gaming (tier 2), memes (tier 3).
 
 ### Promotions & Splash Screen
@@ -434,13 +446,12 @@ QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates 
 - `/marketplace` is labelled "Packs"; `/shop` (Pro/Max) is labelled "Upgrade" — keep these distinct to avoid confusion
 - Main content has `pb-20 md:pb-0` to clear the mobile nav bar
 
-### Dark/Light Theme
-- Managed by `next-themes` with `attribute="class"` — adds `dark` or `light` to `<html>`
-- CSS custom properties in `globals.css` define `--background`, `--surface`, `--main-bg`, `--sidebar-*`, `--text-base`
+### Theme (Dark Only)
+- App is **dark-only** — `ThemeProvider` uses `forcedTheme="dark"`, no light mode toggle exists
+- CSS custom properties in `globals.css` define `--background`, `--surface`, `--main-bg`, `--sidebar-*`, `--text-base` (all dark values on `:root, .dark`)
 - Structural elements use `style={{ background: "var(--main-bg)" }}` etc.
-- Light mode overrides for Tailwind utility classes (`text-white`, `bg-white/5`, `border-white/10`, etc.) are in `globals.css`
 - **Do not use hardcoded dark colors** (`bg-[#0d0a22]`, `bg-gray-900`, `bg-[#070511]`) — use `bg-white/5` or CSS variables instead
-- Select/input/textarea elements are globally overridden in `.light` to show white bg + dark text
+- No `.light` overrides exist in `globals.css` — do not add any
 
 ### Background Music
 - `AudioProvider` in `lib/audio-context.tsx` wraps `(main)/layout.tsx`
@@ -488,7 +499,7 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 |------|---------|
 | `lib/profile.ts` | Server-only profile data fetcher — `getProfileData(userId, viewerUserId)` — returns `null` for admins; parallel queries via `Promise.all` |
 | `lib/milestones-data.ts` | Multi-type milestone definitions + `ALL_MILESTONES` + `TIER_COLORS` (6 tiers incl. cosmic) — edit names/tiers here |
-| `lib/quizlets-data.ts` | All 84 quizlet definitions (9 standard packs + 3 global uniques + 6 festival) |
+| `lib/quizlets-data.ts` | All 103 quizlet definitions (9 standard packs + 3 global uniques + 6 festival + 19 mystical) |
 | `lib/packs-data.ts` | All 15 pack definitions (9 standard + 6 festival) |
 | `lib/roll.ts` | Pack opening RNG — edit drop rates here |
 | `lib/festivals.ts` | Add/modify festival dates here |
@@ -503,7 +514,7 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `lib/audio-context.tsx` | Background music context + state |
 | `public/sw.js` | Service worker — receives push events and shows browser notifications |
 | `app/icon.svg` | App favicon — SVG lightning bolt on purple-to-pink gradient (auto-served by Next.js) |
-| `app/globals.css` | Theme CSS variables + font config + light mode Tailwind overrides |
+| `app/globals.css` | Dark-only theme CSS variables + font config + animation keyframes |
 | `app/(main)/loading.tsx` | App-level loading screen — rotating game facts, shown during route transitions |
 | `app/(main)/shop/page.tsx` | Pro/Max membership + coin purchase + daily limit reset (replaces old /upgrade and /buy-coins) |
 | `app/(main)/notifications/page.tsx` | In-app notifications list |
@@ -520,7 +531,7 @@ Never hardcode a year — always use `new Date().getFullYear()`.
 | `components/game/SurvivalGame.tsx` | Survival mode — streak until first wrong answer |
 | `components/game/DailyChallengeGame.tsx` | Daily challenge — 5 deterministic questions per day |
 | `prisma/schema.prisma` | DB schema — run `npm run db:push` after changes |
-| `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed (~175 quizzes, all 20 categories) |
+| `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed (~178 quizzes, all 20 categories) |
 
 ---
 
@@ -561,7 +572,7 @@ npm run db:seed      # re-seed data (idempotent)
 - **Security**: no SQL injection, no exposed secrets, validate at API boundaries
 - **Prisma**: use `prisma.user.update` with `increment` for coin updates (not read-modify-write); after schema changes run both `db:push` AND `prisma generate`
 - **Auth**: all `(main)` routes auto-guard via `app/(main)/layout.tsx`; admin routes additionally check `isAdmin` flag
-- **Theming**: structural backgrounds → CSS variables; Tailwind utility overrides already in `globals.css`
+- **Theming**: app is dark-only (`forcedTheme="dark"`); structural backgrounds → CSS variables; do NOT add `.light` overrides or a theme toggle
 - **Email**: `lib/email.ts` is only used for new-user signup alerts; feedback replies use push notifications via `lib/push.ts` — do not re-add email to the feedback flow
 - **DinoRex multiplayer**: uses Pusher Channels (not Socket.io); room state in `DinoRexRoom` DB model; types in `lib/pusher.ts`
 - **Web Push**: `sendPushToUser()` is fire-and-forget (errors logged, never thrown); requires VAPID env vars set
@@ -574,6 +585,7 @@ npm run db:seed      # re-seed data (idempotent)
 - **Notifications context**: `useUnreadCount()` from `components/layout/NotificationsProvider.tsx` gives the current unread count client-side; already available everywhere inside `(main)/layout.tsx`
 - **isMax**: always check `isMax && (!maxExpiresAt || maxExpiresAt > new Date())` for active Max status, same pattern for Pro
 - **CorrectAnswer**: never skip the dedup check in `/api/attempt` — it prevents infinite coin farming
+- **Mystical quizlets**: never add them to packs or the pack-opening flow — they're granted exclusively via `CATEGORY_MYSTICAL_MAP` logic in `/api/attempt`; to add a new one, add to `lib/quizlets-data.ts` (rarity `mystical`, pack `mystical`) AND add to `CATEGORY_MYSTICAL_MAP` in `app/api/attempt/route.ts`
 - **School hours**: IST = UTC+5:30; use `lib/time.ts → isSchoolHours()` rather than inline time math; check `getSchoolHoursEnabled()` from `lib/app-settings.ts` before enforcing
 - **Categories**: CATEGORIES has 20 entries — all are seeded; grade-6/geography (premiumTier 1), world-travel/gaming (premiumTier 2), memes (premiumTier 3) are premium-gated
 - **Notifications**: use `Notification` model for in-app messages; use `lib/push.ts → sendPushToUser()` for browser push — these are separate channels

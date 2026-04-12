@@ -232,7 +232,7 @@ export default async function DashboardPage() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-yellow-400 font-semibold text-sm">All 50 milestones unlocked!</p>
+                  <p className="text-yellow-400 font-semibold text-sm">All {MILESTONES.length} coin milestones unlocked!</p>
                 )}
               </div>
 

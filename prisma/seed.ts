@@ -1769,6 +1769,50 @@ const QUIZZES = [
     ],
   },
 
+  // ── HARRY POTTER EXTRA ─────────────────────────────────────────
+  {
+    title: "The Order of the Phoenix",
+    description: "Dumbledore's secret army and the war against Voldemort.",
+    category: "harry-potter",
+    difficulty: 3,
+    isNew: true,
+    questions: [
+      { text: "What is the name of Dumbledore's secret organisation?", options: ["The Death Eaters", "The Order of the Phoenix", "The Auror Corps", "The Ministry Guard"], correctIndex: 1 },
+      { text: "What is 'Umbridge's' full name?", options: ["Dolores Umbridge", "Dolores Lestrange", "Dorothea Umbridge", "Dolores Flint"], correctIndex: 0 },
+      { text: "What defensive group did Harry secretly teach at Hogwarts?", options: ["The Wizard's Alliance", "Defence Club", "Dumbledore's Army", "The Phoenix Order"], correctIndex: 2 },
+      { text: "Where does Dumbledore's Army meet to practice?", options: ["The Forbidden Forest", "The Room of Requirement", "The Chamber of Secrets", "The Shrieking Shack"], correctIndex: 1 },
+      { text: "What spell does Harry use to fight the Death Eaters at the Ministry of Magic?", options: ["Avada Kedavra", "Crucio", "Expelliarmus", "Stupefy"], correctIndex: 3 },
+    ],
+  },
+  {
+    title: "Ministry of Magic",
+    description: "Bureaucracy, power, and secrets in the wizarding world.",
+    category: "harry-potter",
+    difficulty: 2,
+    isNew: true,
+    questions: [
+      { text: "Where is the Ministry of Magic located?", options: ["Under Diagon Alley", "Beneath central London", "Inside Hogwarts", "In Hogsmeade"], correctIndex: 1 },
+      { text: "How do wizards enter the Ministry of Magic?", options: ["Through a fireplace", "Via a red telephone box", "Through Platform 9¾", "Via the Leaky Cauldron"], correctIndex: 1 },
+      { text: "Who is the Minister for Magic when Voldemort returns?", options: ["Rufus Scrimgeour", "Cornelius Fudge", "Kingsley Shacklebolt", "Percy Weasley"], correctIndex: 1 },
+      { text: "Which department deals with magical law enforcement?", options: ["Department of Mysteries", "Auror Office", "Department of Magical Law Enforcement", "Improper Use of Magic Office"], correctIndex: 2 },
+      { text: "What does the Department of Mysteries contain?", options: ["Banned artefacts", "Prophecies, time-turners, and other mysterious objects", "Ministry records", "Dangerous creatures"], correctIndex: 1 },
+    ],
+  },
+  {
+    title: "Hogwarts Founders",
+    description: "The four founders who built the greatest school of witchcraft.",
+    category: "harry-potter",
+    difficulty: 4,
+    isNew: true,
+    questions: [
+      { text: "Who founded Hogwarts alongside the other three founders?", options: ["Godric Gryffindor, Salazar Slytherin, Rowena Ravenclaw, Helga Hufflepuff", "Merlin, Dumbledore, Flamel, Morgana", "Godric Gryffindor, Tom Riddle, Rowena Ravenclaw, Helga Hufflepuff", "Salazar Slytherin, Merlin, Helga Hufflepuff, Rowena Ravenclaw"], correctIndex: 0 },
+      { text: "What animal is associated with Ravenclaw?", options: ["Raven", "Eagle", "Owl", "Swan"], correctIndex: 1 },
+      { text: "What is Helga Hufflepuff's famous magical artefact?", options: ["A locket", "A ring", "A cup", "A diadem"], correctIndex: 2 },
+      { text: "Why did Salazar Slytherin leave Hogwarts?", options: ["He was expelled by the other founders", "He disagreed about teaching Muggle-borns", "He wanted to build his own school", "He was defeated in a duel"], correctIndex: 1 },
+      { text: "What is Rowena Ravenclaw's famous lost artefact?", options: ["Her wand", "Her diadem", "Her mirror", "Her quill"], correctIndex: 1 },
+    ],
+  },
+
   // ── TECHNOLOGY EXTRA ───────────────────────────────────────────
   {
     title: "Internet & Networking",

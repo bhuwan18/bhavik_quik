@@ -15,7 +15,8 @@ type Props = {
 };
 
 const HIDDEN_RARITIES = new Set(["secret", "unique", "impossible"]);
-const RARITIES = ["all", "common", "uncommon", "rare", "epic", "legendary"];
+const MYSTICAL_PACK = "mystical";
+const RARITIES = ["all", "common", "uncommon", "rare", "epic", "legendary", "mystical"];
 
 const RARITY_DOT: Record<string, string> = {
   common: "bg-gray-400",
@@ -23,6 +24,7 @@ const RARITY_DOT: Record<string, string> = {
   rare: "bg-blue-400",
   epic: "bg-purple-500",
   legendary: "bg-yellow-400",
+  mystical: "bg-teal-400",
 };
 
 const RARITY_SORT_ORDER: Record<string, number> = {
@@ -46,8 +48,9 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
 
   const ownedIds = useMemo(() => new Set(quizlets.map((q) => q.id)), [quizlets]);
 
-  const regularQuizlets = useMemo(() => quizlets.filter((q) => !HIDDEN_RARITIES.has(q.rarity)), [quizlets]);
+  const regularQuizlets = useMemo(() => quizlets.filter((q) => !HIDDEN_RARITIES.has(q.rarity) && q.pack !== MYSTICAL_PACK), [quizlets]);
   const hiddenQuizlets = useMemo(() => quizlets.filter((q) => HIDDEN_RARITIES.has(q.rarity)), [quizlets]);
+  const mysticalQuizlets = useMemo(() => quizlets.filter((q) => q.pack === MYSTICAL_PACK), [quizlets]);
 
   // Group regular owned quizlets by pack, following PACKS_DATA order
   const packSections = useMemo(() => {
@@ -71,10 +74,14 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
       .filter((s) => s.cards.length > 0 || rarityFilter === "all");
   }, [regularQuizlets, rarityFilter]);
 
-  // Group all (non-hidden) quizlets by pack for dex view
+  // All mystical quizlets for dex view
+  const dexMysticalAll = useMemo(() => allQuizlets.filter((q) => q.pack === MYSTICAL_PACK), [allQuizlets]);
+
+  // Group all (non-hidden, non-mystical) quizlets by pack for dex view
   const dexPackSections = useMemo(() => {
     const byPack: Record<string, Quizlet[]> = {};
     for (const q of allQuizlets) {
+      if (q.pack === MYSTICAL_PACK) continue;
       if (!byPack[q.pack]) byPack[q.pack] = [];
       byPack[q.pack].push(q);
     }
@@ -120,9 +127,10 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
     const rarityInfo = RARITY_COLORS[quizlet.rarity] ?? RARITY_COLORS.common;
     const isLegendary = quizlet.rarity === "legendary";
     const isRainbow = ["unique", "impossible"].includes(quizlet.rarity);
+    const isMystical = quizlet.rarity === "mystical";
     return (
       <div
-        className={`relative border-2 rounded-2xl overflow-hidden ${rarityInfo.border} ${rarityInfo.glow} ${isLegendary ? "legendary-card" : ""} ${isRainbow ? "rainbow-card" : ""}`}
+        className={`relative border-2 rounded-2xl overflow-hidden ${rarityInfo.border} ${rarityInfo.glow} ${isLegendary ? "legendary-card" : ""} ${isRainbow ? "rainbow-card" : ""} ${isMystical ? "mystical-card" : ""}`}
         style={{ background: `linear-gradient(135deg, ${quizlet.colorFrom}, ${quizlet.colorTo})` }}
       >
         <div className="p-4 flex flex-col items-center text-center">
@@ -147,9 +155,10 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
     const owned = ownedIds.has(quizlet.id);
     const isLegendary = quizlet.rarity === "legendary";
     const isRainbow = ["unique", "impossible"].includes(quizlet.rarity);
+    const isMystical = quizlet.rarity === "mystical";
     return (
       <div
-        className={`relative border-2 rounded-2xl overflow-hidden transition-all ${rarityInfo.border} ${owned ? rarityInfo.glow : "opacity-50 grayscale"} ${owned && isLegendary ? "legendary-card" : ""} ${owned && isRainbow ? "rainbow-card" : ""}`}
+        className={`relative border-2 rounded-2xl overflow-hidden transition-all ${rarityInfo.border} ${owned ? rarityInfo.glow : "opacity-50 grayscale"} ${owned && isLegendary ? "legendary-card" : ""} ${owned && isRainbow ? "rainbow-card" : ""} ${owned && isMystical ? "mystical-card" : ""}`}
         style={{
           background: owned
             ? `linear-gradient(135deg, ${quizlet.colorFrom}, ${quizlet.colorTo})`
@@ -172,7 +181,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
     );
   };
 
-  const hasAnyVisible = packSections.some((s) => s.cards.length > 0) || hiddenQuizlets.length > 0;
+  const hasAnyVisible = packSections.some((s) => s.cards.length > 0) || hiddenQuizlets.length > 0 || mysticalQuizlets.length > 0;
   const totalOwned = allQuizlets.filter((q) => ownedIds.has(q.id)).length;
 
   return (
@@ -228,7 +237,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
           return (
             <span key={r} className="flex items-center gap-1.5 text-xs text-gray-400">
               <span className={`w-2 h-2 rounded-full shrink-0 ${RARITY_DOT[r]}`} />
-              {info.label}
+              {info.label}{r === "mystical" ? " ✨" : ""}
             </span>
           );
         })}
@@ -303,6 +312,30 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
             </div>
           )}
 
+          {mysticalQuizlets.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-px flex-1 bg-teal-500/20" />
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">✨</span>
+                  <h2 className="text-lg font-bold text-teal-300">Mystical Achievements</h2>
+                  <span className="text-xs bg-teal-500/20 border border-teal-500/30 text-teal-300 px-2 py-0.5 rounded-full font-semibold">
+                    {mysticalQuizlets.length}
+                  </span>
+                </div>
+                <div className="h-px flex-1 bg-teal-500/20" />
+              </div>
+              <p className="text-sm text-gray-500 mb-5 text-center">
+                Earned by mastering specific categories or completing rare challenges.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {mysticalQuizlets.map((quizlet) => (
+                  <QuizletCard key={quizlet.id} quizlet={quizlet} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {hiddenQuizlets.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -361,6 +394,30 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
               </div>
             </div>
           ))}
+
+          {dexMysticalAll.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-px flex-1 bg-teal-500/20" />
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">✨</span>
+                  <h2 className="text-base font-bold text-teal-300">Mystical Achievements</h2>
+                  <span className="text-xs bg-teal-500/20 border border-teal-500/30 text-teal-300 px-2 py-0.5 rounded-full font-semibold">
+                    {dexMysticalAll.filter((q) => ownedIds.has(q.id)).length} / {dexMysticalAll.length}
+                  </span>
+                </div>
+                <div className="h-px flex-1 bg-teal-500/20" />
+              </div>
+              <p className="text-sm text-gray-500 mb-5 text-center">
+                Earned through mastery — not purchasable in packs.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {dexMysticalAll.map((quizlet) => (
+                  <DexCard key={quizlet.id} quizlet={quizlet} />
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

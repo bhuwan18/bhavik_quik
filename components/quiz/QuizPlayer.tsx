@@ -16,6 +16,14 @@ type Question = {
 
 const COINS_BY_DIFFICULTY: Record<number, number> = { 1: 3, 2: 5, 3: 8, 4: 12, 5: 20 };
 
+type MysticalGrant = {
+  name: string;
+  icon: string;
+  colorFrom: string;
+  colorTo: string;
+  description: string;
+};
+
 type Quiz = {
   id: string;
   title: string;
@@ -40,8 +48,10 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null); // visual index
   const [answers, setAnswers] = useState<{ questionId: string; selectedIndex: number }[]>([]);
-  const [result, setResult] = useState<{ score: number; total: number; coinsEarned: number } | null>(null);
+  const [result, setResult] = useState<{ score: number; total: number; coinsEarned: number; mysticalQuizletsGranted?: MysticalGrant[] } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [mysticalQueue, setMysticalQueue] = useState<MysticalGrant[]>([]);
+  const [showingMystical, setShowingMystical] = useState(false);
 
   // Generate shuffled display orders for every question once at mount
   const shuffledOrders = useMemo(() => {
@@ -81,6 +91,10 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
           body: JSON.stringify({ quizId: quiz.id, answers: newAnswers }),
         });
         const data = await res.json();
+        if (data.mysticalQuizletsGranted?.length > 0) {
+          setMysticalQueue(data.mysticalQuizletsGranted);
+          setShowingMystical(true);
+        }
         setResult(data);
       } catch {
         setResult({ score: 0, total, coinsEarned: 0 });
@@ -89,6 +103,76 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
       }
     }
   };
+
+  if (showingMystical && mysticalQueue.length > 0) {
+    const mq = mysticalQueue[0];
+    const isLast = mysticalQueue.length === 1;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        {/* Floating particles */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {[...Array(18)].map((_, i) => (
+            <span
+              key={i}
+              className="absolute text-xl animate-bounce"
+              style={{
+                left: `${5 + (i * 17) % 90}%`,
+                top: `${10 + (i * 13) % 75}%`,
+                animationDelay: `${(i * 0.15) % 1.5}s`,
+                animationDuration: `${1.2 + (i % 4) * 0.3}s`,
+                opacity: 0.7,
+              }}
+            >
+              {["✨", "⭐", "💫", "🌟", "✦"][i % 5]}
+            </span>
+          ))}
+        </div>
+
+        <div className="relative max-w-sm w-full text-center">
+          {/* Header */}
+          <div className="mb-6">
+            <p className="text-teal-400 font-bold text-sm uppercase tracking-widest mb-2">Mystical Quizlet Unlocked</p>
+            <h2 className="text-3xl font-bold text-white">✨ Achievement!</h2>
+          </div>
+
+          {/* Quizlet card */}
+          <div
+            className="mx-auto w-48 h-64 rounded-3xl border-2 border-teal-400 shadow-2xl mystical-card flex flex-col items-center justify-center gap-3 p-5 mb-6"
+            style={{ background: `linear-gradient(135deg, ${mq.colorFrom}, ${mq.colorTo})` }}
+          >
+            <span className="text-5xl">{mq.icon}</span>
+            <p className="text-white font-bold text-lg leading-tight">{mq.name}</p>
+            <span className="text-teal-200 text-xs font-semibold uppercase tracking-wider">Mystical</span>
+            <p className="text-white/70 text-xs text-center leading-snug">{mq.description}</p>
+          </div>
+
+          <p className="text-gray-300 text-sm mb-6">
+            This achievement quizlet is now in your collection.
+          </p>
+
+          <button
+            onClick={() => {
+              if (isLast) {
+                setMysticalQueue([]);
+                setShowingMystical(false);
+              } else {
+                setMysticalQueue((q) => q.slice(1));
+              }
+            }}
+            className="w-full py-3 bg-teal-500 hover:bg-teal-400 text-black font-bold rounded-xl transition-colors text-base"
+          >
+            {isLast ? "Continue →" : `Next (${mysticalQueue.length - 1} more)`}
+          </button>
+          <button
+            onClick={() => router.push("/quizlets")}
+            className="mt-3 w-full py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-xl transition-colors"
+          >
+            View Collection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (result) {
     const pct = Math.round((result.score / result.total) * 100);

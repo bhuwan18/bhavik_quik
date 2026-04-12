@@ -24,52 +24,22 @@ A comprehensive reference for the visual language, tokens, and component pattern
 
 ## Theme & Color Tokens
 
-All theme tokens are defined as CSS custom properties in `app/globals.css`. The app is **dark-first** with an opt-in light mode managed by `next-themes` (class-based toggling on `<html>`).
+All theme tokens are defined as CSS custom properties in `app/globals.css`. The app is **dark-first** with a deep navy + amber/gold color scheme. Light mode is not currently defined — `--background` and related variables apply to both `:root` and `.dark`.
 
 ### Dark Theme (Default)
 
-| Token              | Value                        | Usage                        |
-|--------------------|------------------------------|------------------------------|
-| `--background`     | `#070511`                    | Page background              |
-| `--surface`        | `#110d2a`                    | Cards, panels, elevated UI   |
-| `--border`         | `#2d1f5e`                    | Borders, dividers            |
-| `--accent`         | `#8b5cf6` (purple-500)       | Primary accent               |
-| `--accent2`        | `#ec4899` (pink-500)         | Secondary accent             |
-| `--text-base`      | `#f0f0ff`                    | Primary text                 |
-| `--sidebar-from`   | `#1a0a3e`                    | Sidebar gradient start       |
-| `--sidebar-mid`    | `#110830`                    | Sidebar gradient midpoint    |
-| `--sidebar-to`     | `#0d0622`                    | Sidebar gradient end         |
-| `--main-bg`        | gradient `#070511 → #0d0822` | Main content area background |
-
-### Light Theme
-
-| Token              | Value                        | Usage                        |
-|--------------------|------------------------------|------------------------------|
-| `--background`     | `#f0ebff`                    | Page background              |
-| `--surface`        | `#e9e0ff`                    | Cards, panels, elevated UI   |
-| `--border`         | `#c4b5fd`                    | Borders, dividers            |
-| `--accent`         | `#7c3aed` (purple-600)       | Primary accent               |
-| `--accent2`        | `#db2777` (pink-600)         | Secondary accent             |
-| `--text-base`      | `#1e1b4b`                    | Primary text                 |
-| `--sidebar-from`   | `#ede9fe`                    | Sidebar gradient start       |
-| `--sidebar-mid`    | `#ddd6fe`                    | Sidebar gradient midpoint    |
-| `--sidebar-to`     | `#c4b5fd`                    | Sidebar gradient end         |
-| `--main-bg`        | gradient `#f5f3ff → #ede9fe` | Main content area background |
-
-### Light Mode Overrides
-
-In light mode, Tailwind utility classes are globally remapped in `globals.css`:
-
-| Dark Utility          | Light Override         |
-|-----------------------|------------------------|
-| `text-white`          | `#1e1b4b`              |
-| `text-gray-300`       | `#374151`              |
-| `text-gray-400`       | `#4b5563`              |
-| `text-gray-500`       | `#6b7280`              |
-| `bg-white/5`          | `rgba(124,58,237,0.05)`|
-| `bg-white/10`         | `rgba(124,58,237,0.08)`|
-| `border-white/10`     | `rgba(124,58,237,0.15)`|
-| `border-white/20`     | `rgba(124,58,237,0.2)` |
+| Token              | Value                                                 | Usage                        |
+|--------------------|-------------------------------------------------------|------------------------------|
+| `--background`     | `#08091c`                                             | Page background              |
+| `--surface`        | `#0d1230`                                             | Cards, panels, elevated UI   |
+| `--border`         | `#1c2550`                                             | Borders, dividers            |
+| `--accent`         | `#f59e0b` (amber-500)                                 | Primary accent               |
+| `--accent2`        | `#60a5fa` (blue-400)                                  | Secondary accent             |
+| `--text-base`      | `#eef2ff`                                             | Primary text                 |
+| `--sidebar-from`   | `#0d1435`                                             | Sidebar gradient start       |
+| `--sidebar-mid`    | `#090e25`                                             | Sidebar gradient midpoint    |
+| `--sidebar-to`     | `#060b1c`                                             | Sidebar gradient end         |
+| `--main-bg`        | `linear-gradient(135deg, #08091c 0%, #0d1230 50%, #08091c 100%)` | Main content area background |
 
 > **Rule:** Never use hardcoded dark colors (`bg-[#0d0a22]`, `bg-gray-900`). Use `bg-white/5`, `bg-white/10`, or CSS variables instead.
 
@@ -81,19 +51,19 @@ Fonts are loaded via `next/font/google` in `app/layout.tsx`.
 
 ### Font Stack
 
-| Role     | Family            | CSS Variable       | Weights             |
-|----------|-------------------|--------------------|--------------------|
-| Body     | Plus Jakarta Sans  | `--font-jakarta`   | 400, 500, 600, 700, 800 |
-| Headings | Space Grotesk      | `--font-grotesk`   | 400, 500, 600, 700      |
+| Role     | Family            | CSS Variable       | Weights                  |
+|----------|-------------------|--------------------|--------------------------|
+| Body     | Plus Jakarta Sans  | `--font-jakarta`   | 400, 500, 600, 700, 800  |
+| Headings | Space Grotesk      | `--font-grotesk`   | 400, 500, 600, 700       |
 
 ### Application
 
 ```css
 /* Body text */
-font-family: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+font-family: var(--font-jakarta), "Nunito", system-ui, sans-serif;
 
 /* Headings (h1–h6, .font-display) */
-font-family: var(--font-grotesk), "Space Grotesk", var(--font-jakarta), system-ui, sans-serif;
+font-family: var(--font-grotesk), "Rubik", var(--font-jakarta), sans-serif;
 letter-spacing: -0.025em;
 ```
 
@@ -105,16 +75,17 @@ letter-spacing: -0.025em;
 
 Defined in `lib/utils.ts` → `RARITY_COLORS`. Used for quizlet cards, pack reveals, and marketplace items.
 
-| Rarity       | Border              | Glow                                  | Text Color        | CSS Class       |
-|-------------|---------------------|---------------------------------------|-------------------|-----------------|
-| Common       | `border-gray-400`   | none                                  | `text-gray-400`   | —               |
-| Uncommon     | `border-green-400`  | `shadow-green-400/30 shadow-lg`       | `text-green-400`  | —               |
-| Rare         | `border-blue-400`   | `shadow-blue-400/40 shadow-xl`        | `text-blue-400`   | —               |
-| Epic         | `border-purple-500` | `shadow-purple-500/50 shadow-xl`      | `text-purple-500` | —               |
-| Legendary    | `border-yellow-400` | `shadow-yellow-400/60 shadow-2xl`     | `text-yellow-400` | `legendary-card`|
-| Secret       | `border-red-800`    | `shadow-red-800/50 shadow-2xl`        | `text-red-500`    | —               |
-| Unique       | `border-pink-400`   | `shadow-pink-400/50 shadow-2xl`       | `text-pink-400`   | `rainbow-card`  |
-| Impossible   | `border-transparent`| `shadow-2xl` + rainbow border         | gradient text     | `rainbow-card`  |
+| Rarity       | Border               | Glow                                           | Text Color         | CSS Class        |
+|-------------|----------------------|------------------------------------------------|--------------------|------------------|
+| Common       | `border-gray-400`    | none                                           | `text-gray-400`    | —                |
+| Uncommon     | `border-green-400`   | `shadow-green-400/30 shadow-lg`                | `text-green-400`   | —                |
+| Rare         | `border-blue-400`    | `shadow-blue-400/40 shadow-xl`                 | `text-blue-400`    | —                |
+| Epic         | `border-purple-500`  | `shadow-purple-500/50 shadow-xl`               | `text-purple-500`  | —                |
+| Legendary    | `border-yellow-400`  | `shadow-yellow-400/60 shadow-2xl`              | `text-yellow-400`  | `legendary-card` |
+| Secret       | `border-red-800`     | `shadow-red-800/50 shadow-2xl`                 | `text-red-500`     | —                |
+| Mystical     | `border-teal-400`    | `shadow-teal-400/60 shadow-2xl mystical-card`  | `text-teal-400`    | `mystical-card`  |
+| Unique       | `border-pink-400`    | `shadow-pink-400/50 shadow-2xl`                | `text-pink-400`    | `rainbow-card`   |
+| Impossible   | `border-transparent` | `shadow-2xl rainbow-border`                    | gradient text      | `rainbow-card`   |
 
 ### Sell Values (coins)
 
@@ -126,6 +97,7 @@ Defined in `lib/utils.ts` → `RARITY_COLORS`. Used for quizlet cards, pack reve
 | Epic       | 150     |
 | Legendary  | 400     |
 | Secret     | 1,000   |
+| Mystical   | 500     |
 | Unique     | 5,000   |
 | Impossible | 99,999  |
 
@@ -133,15 +105,18 @@ Defined in `lib/utils.ts` → `RARITY_COLORS`. Used for quizlet cards, pack reve
 
 ## Milestone Tier Colors
 
-Defined in `lib/milestones-data.ts` → `TIER_COLORS`. 50 milestones at 1K–50K thresholds.
+Defined in `lib/milestones-data.ts` → `TIER_COLORS`. 6 tiers spanning coin milestones from 1K to 100K, plus multi-type milestone tiers (quizzes, answers, categories, streak).
 
-| Tier      | Range       | Border              | Text Color         | Animation Class |
-|-----------|-------------|---------------------|--------------------|-----------------|
-| Bronze    | 1K – 5K     | `border-amber-600`  | `text-amber-500`   | —               |
-| Silver    | 6K – 10K    | `border-slate-400`  | `text-slate-300`   | —               |
-| Gold      | 11K – 20K   | `border-yellow-400` | `text-yellow-400`  | `legendary-card`|
-| Platinum  | 21K – 35K   | `border-cyan-400`   | `text-cyan-400`    | —               |
-| Diamond   | 36K – 50K   | `border-purple-400` | `text-purple-400`  | `rainbow-card`  |
+| Tier      | Coin Range        | Border               | Text Color         | Animation Class |
+|-----------|-------------------|----------------------|--------------------|-----------------|
+| Bronze    | 1K – 5K           | `border-amber-600`   | `text-amber-500`   | —               |
+| Silver    | 6K – 10K          | `border-slate-400`   | `text-slate-300`   | —               |
+| Gold      | 11K – 20K         | `border-yellow-400`  | `text-yellow-400`  | `legendary-card`|
+| Platinum  | 21K – 35K         | `border-cyan-400`    | `text-cyan-400`    | —               |
+| Diamond   | 36K – 50K         | `border-purple-400`  | `text-purple-400`  | `rainbow-card`  |
+| Cosmic    | 51K – 100K        | `border-pink-400`    | `text-pink-400`    | `rainbow-card`  |
+
+**Coin milestone thresholds:** 1K–60K (every 1K) + 65K, 70K, 75K, 85K, 100K — 65 total coin milestones.
 
 Milestone badge gradients use per-milestone `colorFrom` / `colorTo` values (hex) applied as inline `background: linear-gradient(...)`.
 
@@ -149,38 +124,42 @@ Milestone badge gradients use per-milestone `colorFrom` / `colorTo` values (hex)
 
 ## Category Colors
 
-Defined in `lib/utils.ts` → `CATEGORIES`. Each category has a Tailwind text color for its icon.
+Defined in `lib/utils.ts` → `CATEGORIES`. 20 categories total; 5 are premium-gated.
 
-| Category         | Icon Color         |
-|------------------|--------------------|
-| Football         | `text-green-400`   |
-| Cricket          | `text-orange-400`  |
-| Harry Potter     | `text-purple-400`  |
-| Technology       | `text-blue-400`    |
-| Avengers         | `text-red-400`     |
-| Artists          | `text-pink-400`    |
-| Musicians        | `text-violet-400`  |
-| Math             | `text-cyan-400`    |
-| Science          | `text-emerald-400` |
-| Physics          | `text-sky-400`     |
-| World Languages  | `text-amber-400`   |
-| Flags            | `text-rose-400`    |
-| Brand Logos      | `text-lime-400`    |
-| Animals          | `text-yellow-400`  |
-| Anime            | `text-fuchsia-400` |
-| Grade 6          | `text-teal-400`    |
+| Category         | Icon Color          | Premium Tier |
+|------------------|---------------------|-------------|
+| Football         | `text-green-400`    | —           |
+| Cricket          | `text-orange-400`   | —           |
+| Harry Potter     | `text-purple-400`   | —           |
+| Technology       | `text-blue-400`     | —           |
+| Avengers         | `text-red-400`      | —           |
+| Artists          | `text-pink-400`     | —           |
+| Musicians        | `text-violet-400`   | —           |
+| Math             | `text-cyan-400`     | —           |
+| Science          | `text-emerald-400`  | —           |
+| Physics          | `text-sky-400`      | —           |
+| World Languages  | `text-amber-400`    | —           |
+| Flags            | `text-rose-400`     | —           |
+| Brand Logos      | `text-lime-400`     | —           |
+| Animals          | `text-yellow-400`   | —           |
+| Anime            | `text-fuchsia-400`  | —           |
+| Grade 6          | `text-teal-400`     | Tier 1      |
+| Geography        | `text-green-600`    | Tier 1      |
+| World Travel     | `text-sky-500`      | Tier 2      |
+| Gaming           | `text-indigo-400`   | Tier 2      |
+| Memes            | `text-yellow-400`   | Tier 3      |
 
 ---
 
 ## Gradients
 
-### Primary Brand Gradient
+### Primary Brand Gradient (Buttons, CTAs)
 
 ```
 purple-600 → pink-600
 ```
 
-Used for: primary buttons, avatar fallbacks, scrollbar thumb, audio player, mobile nav active states.
+Used for: primary buttons, avatar fallbacks, mobile nav active states.
 
 ```css
 /* CSS */
@@ -199,7 +178,8 @@ background: linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-mid) 5
 ### Main Background Gradient
 
 ```css
-background: linear-gradient(135deg, var(--background) 0%, <mid> 50%, var(--background) 100%);
+background: var(--main-bg);
+/* = linear-gradient(135deg, #08091c 0%, #0d1230 50%, #08091c 100%) */
 ```
 
 ### Active Nav Item Gradient
@@ -271,6 +251,9 @@ bg-white/3 border border-white/5 rounded-xl p-3 md:p-5
 
 /* Premium/locked overlay */
 bg-black/40 backdrop-blur-sm
+
+/* Glow card hover (amber accent) */
+.glow-card:hover → box-shadow: 0 0 28px rgba(245,158,11,0.25), 0 0 56px rgba(245,158,11,0.1)
 ```
 
 ### Buttons
@@ -333,29 +316,48 @@ All keyframes are defined in `app/globals.css`.
 
 ### Keyframes
 
-| Name            | Duration | Timing          | Description                                      |
-|-----------------|----------|-----------------|--------------------------------------------------|
-| `rainbow-spin`  | 2s       | linear infinite | Border color cycles through full rainbow spectrum |
-| `glow-pulse`    | 2s       | ease-in-out     | Box-shadow oscillates (golden glow)               |
-| `rainbow-glow`  | 3s       | ease-in-out     | Box-shadow cycles red → blue → purple             |
-| `float`         | 3s       | ease-in-out     | `translateY` oscillates 0 to -8px                 |
-| `shimmer`       | 3s       | linear          | Background position slides for text shimmer       |
+| Name                | Duration | Timing                          | Description                                           |
+|---------------------|----------|---------------------------------|-------------------------------------------------------|
+| `rainbow-spin`      | 2s       | linear infinite                 | Border color cycles through full rainbow spectrum      |
+| `glow-pulse`        | 2s       | ease-in-out infinite            | Box-shadow oscillates (golden glow)                   |
+| `rainbow-glow`      | 3s       | ease-in-out infinite            | Box-shadow cycles red → blue → purple                 |
+| `float`             | 3s       | ease-in-out infinite            | `translateY` oscillates 0 to -8px                     |
+| `mystical-shimmer`  | 2.5s     | ease-in-out infinite            | Box-shadow pulses with teal glow (Mystical rarity)    |
+| `legendary-burst`   | 0.5s     | cubic-bezier(0.34,1.56,0.64,1) | Scale entrance (0.82→1.1→1) for legendary card reveal |
+| `card-shimmer`      | 1.6s     | ease-in-out infinite            | Opacity + subtle scale pulse on unrevealed card backs |
+| `card-flip-in`      | 0.4s     | cubic-bezier(0.34,1.2,0.64,1)  | Staggered entrance: rotateY(-90°) → 0 + scale 0.8→1  |
 
 ### Utility Classes
 
-| Class              | Animation                                         | Used For                     |
-|--------------------|---------------------------------------------------|------------------------------|
-| `.legendary-card`  | `glow-pulse 2s ease-in-out infinite`              | Legendary rarity, gold tier  |
-| `.rainbow-card`    | `rainbow-spin 2s` + `rainbow-glow 3s`            | Unique/impossible, diamond   |
-| `.float-anim`      | `float 3s ease-in-out infinite`                   | Floating UI elements         |
-| `.shimmer-text`    | Gradient text with `shimmer 3s linear infinite`   | Promotional/highlight text   |
+| Class                 | Animation                                          | Used For                              |
+|-----------------------|----------------------------------------------------|---------------------------------------|
+| `.legendary-card`     | `glow-pulse 2s ease-in-out infinite`               | Legendary rarity, gold milestone tier |
+| `.rainbow-card`       | `rainbow-spin 2s` + `rainbow-glow 3s`             | Unique/impossible, diamond/cosmic     |
+| `.float-anim`         | `float 3s ease-in-out infinite`                    | Floating UI elements                  |
+| `.mystical-card`      | `mystical-shimmer 2.5s ease-in-out infinite`       | Mystical rarity quizlet cards         |
+| `.legendary-reveal`   | `legendary-burst 0.5s … forwards`                 | Pack opening — legendary card reveal  |
+| `.card-shimmer`       | `card-shimmer 1.6s ease-in-out infinite`           | Unrevealed pack card backs            |
+| `.bulk-card-reveal`   | `card-flip-in 0.4s … forwards` (opacity: 0 init)  | Staggered entrance of bulk pack cards |
 
 ### Pack Opening
 
 ```css
-.pack-reveal     { perspective: 1000px; }
-.pack-card-flip  { transition: transform 0.6s ease; transform-style: preserve-3d; }
+.pack-reveal { perspective: 1200px; }
+.pack-card-flip {
+  transition: transform 0.65s cubic-bezier(0.45, 0, 0.25, 1);
+  transform-style: preserve-3d;
+  position: relative;
+}
 .pack-card-flip.flipped { transform: rotateY(180deg); }
+.pack-card-back,
+.pack-card-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.pack-card-face { transform: rotateY(180deg); }
 ```
 
 ### Interaction Transitions
@@ -402,7 +404,8 @@ Categories and quizlets use emoji as primary identifiers (e.g., category icon, q
 ```css
 ::-webkit-scrollbar       { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--background); }
-::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #8b5cf6, #ec4899); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+/* = amber #f59e0b in dark theme */
 ```
 
 ### Hidden Scrollbar
@@ -416,23 +419,25 @@ Categories and quizlets use emoji as primary identifiers (e.g., category icon, q
 
 ## Accessibility & Interaction
 
-| Concern                | Approach                                                    |
-|------------------------|-------------------------------------------------------------|
-| Theme contrast         | Light mode uses `#1e1b4b` text on light purple backgrounds  |
-| Disabled state         | `opacity-60` + `cursor-not-allowed`                         |
-| Focus                  | Browser default focus rings (not overridden)                 |
-| Touch targets          | Mobile nav items are full-width tap areas                    |
-| Motion                 | Animations are decorative (glow, float); no motion-reduce override currently |
-| Scale feedback         | `hover:scale-[1.02]` / `active:scale-[0.98]` on interactive cards |
+| Concern                | Approach                                                                      |
+|------------------------|-------------------------------------------------------------------------------|
+| Focus rings            | `outline: 2px solid var(--accent)` with 2px offset + 4px border-radius (`:focus-visible` only) |
+| Unfocused              | `:focus:not(:focus-visible)` has no outline — keyboard-only users get clear rings |
+| Disabled state         | `opacity-60` + `cursor-not-allowed`                                           |
+| Touch targets          | Mobile nav items are full-width tap areas                                     |
+| Reduced motion         | `@media (prefers-reduced-motion: reduce)` disables all animations and transitions |
+| Scale feedback         | `hover:scale-[1.02]` / `active:scale-[0.98]` on interactive cards            |
 
 ---
 
 ## Design Principles
 
-1. **Dark-first** — The app is designed for dark mode; light mode is a mapped inversion, not a separate design.
-2. **Purple-pink brand identity** — The gradient `purple-600 → pink-600` is the visual signature across buttons, nav, scrollbar, and avatars.
-3. **Glassmorphism** — Cards and surfaces use `bg-white/{opacity}` with subtle borders for depth, not solid backgrounds.
-4. **Rarity-driven hierarchy** — Color, glow intensity, and animation escalate with rarity tier, creating natural visual hierarchy.
-5. **CSS variables for theming** — Structural backgrounds use variables (`var(--surface)`, `var(--main-bg)`); Tailwind utilities handle component-level styling.
-6. **Responsive by default** — Mobile-first with `md:` breakpoint for desktop sidebar; `pb-20 md:pb-0` clears mobile nav.
-7. **Minimal custom CSS** — Animations and theme overrides live in `globals.css`; everything else uses Tailwind utilities.
+1. **Dark navy-first** — The app uses a deep navy (`#08091c`) base. Light mode is not currently implemented.
+2. **Amber/gold accent system** — `--accent` (`#f59e0b`) drives scrollbar, focus rings, and hover glows; `--accent2` (`#60a5fa`) is the secondary blue accent.
+3. **Purple-pink for primary actions** — Buttons, CTAs, avatar fallbacks, and nav active states still use `purple-600 → pink-600` gradient for strong call-to-action contrast against the navy base.
+4. **Glassmorphism** — Cards and surfaces use `bg-white/{opacity}` with subtle borders for depth, not solid backgrounds.
+5. **Rarity-driven hierarchy** — Color, glow intensity, and animation escalate with rarity tier, creating natural visual hierarchy.
+6. **CSS variables for theming** — Structural backgrounds use variables (`var(--surface)`, `var(--main-bg)`); Tailwind utilities handle component-level styling.
+7. **Responsive by default** — Mobile-first with `md:` breakpoint for desktop sidebar; `pb-20 md:pb-0` clears mobile nav.
+8. **Minimal custom CSS** — Animations and theme tokens live in `globals.css`; everything else uses Tailwind utilities.
+9. **Reduced-motion respect** — All animations are disabled via `@media (prefers-reduced-motion: reduce)`.

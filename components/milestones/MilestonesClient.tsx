@@ -76,24 +76,35 @@ function getStatForType(type: MilestoneType, props: Props): number {
   }
 }
 
-function BadgeCard({ badge, earnedAt }: { badge: MilestoneDef; earnedAt?: string }) {
+const UNIT_SHORT: Record<MilestoneType, string> = {
+  coins:      "coins",
+  quizzes:    "quizzes",
+  answers:    "answers",
+  categories: "categories",
+  streak:     "day streak",
+};
+
+function BadgeCard({
+  badge,
+  earnedAt,
+  currentStat,
+  onLockedClick,
+}: {
+  badge: MilestoneDef;
+  earnedAt?: string;
+  currentStat: number;
+  onLockedClick?: () => void;
+}) {
   const tierStyle = TIER_COLORS[badge.tier];
   const isEarned = !!earnedAt;
 
-  const unitShort: Record<MilestoneType, string> = {
-    coins:      "coins",
-    quizzes:    "quizzes",
-    answers:    "answers",
-    categories: "categories",
-    streak:     "day streak",
-  };
-
   return (
     <div
+      onClick={!isEarned ? onLockedClick : undefined}
       className={`relative rounded-2xl border-2 overflow-hidden transition-all duration-300 ${
         isEarned
           ? `${tierStyle.border} ${badge.animationClass ?? ""}`
-          : "border-white/10 grayscale opacity-40"
+          : "border-white/10 grayscale opacity-40 cursor-pointer hover:opacity-60 hover:border-white/25 hover:scale-[1.02]"
       }`}
       style={
         isEarned
@@ -114,15 +125,95 @@ function BadgeCard({ badge, earnedAt }: { badge: MilestoneDef; earnedAt?: string
           {tierStyle.label}
         </p>
         <p className="text-white/70 text-xs">
-          {badge.threshold.toLocaleString()} {unitShort[badge.milestoneType]}
+          {badge.threshold.toLocaleString()} {UNIT_SHORT[badge.milestoneType]}
         </p>
         {isEarned ? (
           <p className="text-white/50 text-[10px] mt-0.5">
             {new Date(earnedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
           </p>
         ) : (
-          <p className="text-gray-600 text-[10px] mt-0.5">Locked</p>
+          <p className="text-gray-600 text-[10px] mt-0.5">Tap for progress</p>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ProgressModal({
+  badge,
+  currentStat,
+  onClose,
+}: {
+  badge: MilestoneDef;
+  currentStat: number;
+  onClose: () => void;
+}) {
+  const tierStyle = TIER_COLORS[badge.tier];
+  const pct = Math.min(100, Math.round((currentStat / badge.threshold) * 100));
+  const remaining = badge.threshold - currentStat;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-sm rounded-2xl border-2 border-white/20 overflow-hidden shadow-2xl"
+        style={{ background: "var(--surface, #1a1a2e)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Gradient header */}
+        <div
+          className="p-6 flex flex-col items-center gap-2 text-center"
+          style={{ background: `linear-gradient(135deg, ${badge.colorFrom}33, ${badge.colorTo}33)` }}
+        >
+          <span className="text-5xl grayscale opacity-50">🔒</span>
+          <h2 className="text-white font-bold text-lg leading-tight">{badge.name}</h2>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${tierStyle.border} ${tierStyle.text}`}>
+            {tierStyle.label}
+          </span>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {/* Stats row */}
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Your progress</span>
+            <span className="text-white font-semibold">
+              {currentStat.toLocaleString()} / {badge.threshold.toLocaleString()} {UNIT_SHORT[badge.milestoneType]}
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div>
+            <div className="h-3 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <p className="text-gray-500 text-xs mt-1 text-right">{pct}% complete</p>
+          </div>
+
+          {/* Remaining */}
+          <p className="text-center text-sm text-gray-300">
+            {remaining <= 0 ? (
+              <span className="text-green-400 font-semibold">Ready to unlock!</span>
+            ) : (
+              <>
+                <span className="text-white font-semibold">{remaining.toLocaleString()}</span>{" "}
+                more {UNIT_SHORT[badge.milestoneType]} to go
+              </>
+            )}
+          </p>
+
+          <button
+            onClick={onClose}
+            className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition-colors"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -177,6 +268,7 @@ export default function MilestonesClient({
 }: Props) {
   const [activeType, setActiveType] = useState<TypeFilter>("all");
   const [activeTier, setActiveTier] = useState<MilestoneTier | "all">("all");
+  const [focusedBadge, setFocusedBadge] = useState<MilestoneDef | null>(null);
 
   const props: Props = { earned, totalCoinsEarned, longestStreak, totalQuizzes, totalCorrectAnswers, distinctCategories };
 
@@ -306,14 +398,28 @@ export default function MilestonesClient({
 
       {/* Badge Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {displayed.map((badge) => (
-          <BadgeCard
-            key={`${badge.milestoneType}-${badge.threshold}`}
-            badge={badge}
-            earnedAt={earnedKey.get(`${badge.milestoneType}-${badge.threshold}`)}
-          />
-        ))}
+        {displayed.map((badge) => {
+          const isEarned = !!earnedKey.get(`${badge.milestoneType}-${badge.threshold}`);
+          return (
+            <BadgeCard
+              key={`${badge.milestoneType}-${badge.threshold}`}
+              badge={badge}
+              earnedAt={earnedKey.get(`${badge.milestoneType}-${badge.threshold}`)}
+              currentStat={getStatForType(badge.milestoneType as MilestoneType, props)}
+              onLockedClick={!isEarned ? () => setFocusedBadge(badge) : undefined}
+            />
+          );
+        })}
       </div>
+
+      {/* Progress modal for locked badges */}
+      {focusedBadge && (
+        <ProgressModal
+          badge={focusedBadge}
+          currentStat={getStatForType(focusedBadge.milestoneType as MilestoneType, props)}
+          onClose={() => setFocusedBadge(null)}
+        />
+      )}
     </div>
   );
 }

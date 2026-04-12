@@ -45,6 +45,7 @@ export const RARITY_COLORS: Record<string, { border: string; glow: string; label
   legendary: { border: "border-yellow-400", glow: "shadow-yellow-400/60 shadow-2xl", label: "Legendary", text: "text-yellow-400" },
   secret: { border: "border-red-800", glow: "shadow-red-800/50 shadow-2xl", label: "Secret", text: "text-red-500" },
   unique: { border: "border-pink-400", glow: "shadow-pink-400/50 shadow-2xl", label: "Unique", text: "text-pink-400" },
+  mystical: { border: "border-teal-400", glow: "shadow-teal-400/60 shadow-2xl mystical-card", label: "Mystical", text: "text-teal-400" },
   impossible: { border: "border-transparent", glow: "shadow-2xl rainbow-border", label: "Impossible", text: "text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-yellow-400 to-blue-400" },
 };
 
@@ -55,6 +56,7 @@ export const SELL_VALUES: Record<string, number> = {
   epic: 150,
   legendary: 400,
   secret: 1000,
+  mystical: 500,
   unique: 5000,
   impossible: 99999,
 };
