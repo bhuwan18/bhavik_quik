@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const body = await req.json();
     text = String(body.text ?? "").trim();
     if (!text) throw new Error("Empty");
-    if (text.length > 280) throw new Error("Too long");
+    if (text.length > 500) throw new Error("Too long");
   } catch {
     return NextResponse.json({ error: "Invalid comment" }, { status: 400 });
   }

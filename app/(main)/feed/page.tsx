@@ -27,6 +27,101 @@ type Comment = {
   user: FeedUser;
 };
 
+const SOUND_COLORS = ["#d32f2f","#212121","#5d4037","#c2185b","#00acc1","#f0f0dc","#43a047","#1a237e","#c6d400"];
+
+function hashColor(slug: string): string {
+  let h = 0;
+  for (const ch of slug) h = (h * 31 + ch.charCodeAt(0)) & 0xfffffff;
+  return SOUND_COLORS[h % SOUND_COLORS.length];
+}
+
+function extractRichContent(text: string) {
+  const trimmed = text.trim();
+
+  const soundMatch = trimmed.match(/https:\/\/www\.myinstants\.com\/(?:en\/)?instant\/([^/?#\s]+)[^\s]*/);
+  if (soundMatch) {
+    const slug = soundMatch[1];
+    const isPure = trimmed === soundMatch[0];
+    return { displayText: isPure ? null : text.replace(soundMatch[0], "").trim() || null, gifUrl: null, soundUrl: `https://www.myinstants.com/en/instant/${slug}/`, soundSlug: slug };
+  }
+
+  const gifMatch = trimmed.match(/https:\/\/\S+\.gif(?:\?\S*)?/) ||
+    trimmed.match(/https:\/\/(?:media\.tenor\.com|c\.tenor\.com|media\.giphy\.com|i\.giphy\.com|media[12]\.giphy\.com)\/\S+/);
+  if (gifMatch) {
+    const gifUrl = gifMatch[0];
+    const isPure = trimmed === gifUrl;
+    return { displayText: isPure ? null : text.replace(gifUrl, "").trim() || null, gifUrl, soundUrl: null, soundSlug: null };
+  }
+
+  return { displayText: text, gifUrl: null, soundUrl: null, soundSlug: null };
+}
+
+function SoundButton({ slug, url }: { slug: string; url: string }) {
+  const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const color = hashColor(slug);
+  const isPlaying = state === "playing";
+  const isLoading = state === "loading";
+
+  const toggle = async () => {
+    if (isPlaying) {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setState("idle");
+      return;
+    }
+    setState("loading");
+    try {
+      const res = await fetch(`/api/myinstants-proxy?slug=${encodeURIComponent(slug)}`);
+      if (!res.ok) throw new Error("proxy failed");
+      const { audioUrl } = await res.json();
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.onplaying = () => setState("playing");
+      audio.onended = () => setState("idle");
+      audio.onerror = () => { setState("idle"); window.open(url, "_blank"); };
+      audio.play().catch(() => { setState("idle"); window.open(url, "_blank"); });
+    } catch {
+      setState("idle");
+      window.open(url, "_blank");
+    }
+  };
+
+  const label = slug.replace(/-/g, " ");
+
+  return (
+    <div className="flex flex-col items-center gap-1.5 mt-2" style={{ width: 80 }}>
+      <button
+        onClick={toggle}
+        aria-label={`Play ${label}`}
+        style={{
+          width: 72,
+          height: 72,
+          borderRadius: "50%",
+          background: `radial-gradient(circle at 38% 32%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 55%), radial-gradient(circle at 50% 50%, ${color}, color-mix(in srgb, ${color} 55%, black))`,
+          boxShadow: isPlaying
+            ? "0 2px 6px rgba(0,0,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.5)"
+            : "0 6px 18px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.35), inset 0 2px 6px rgba(255,255,255,0.15)",
+          transform: isPlaying ? "scale(0.92) translateY(2px)" : "scale(1)",
+          transition: "transform 0.08s ease, box-shadow 0.08s ease",
+          cursor: "pointer",
+          border: "none",
+          outline: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 22,
+        }}
+      >
+        {isLoading ? "⏳" : ""}
+      </button>
+      <span className="text-[10px] text-gray-400 text-center leading-tight capitalize" style={{ maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -171,24 +266,32 @@ function CommentsPanel({ activityId, initialCount }: { activityId: string; initi
       {!loading && comments.length === 0 && initialCount === 0 && (
         <p className="text-xs text-gray-600 text-center py-1">No comments yet — be the first!</p>
       )}
-      {comments.map((c) => (
-        <div key={c.id} className="flex gap-2">
-          {c.user.image ? (
-            <Image src={c.user.image} alt="" width={24} height={24} className="w-6 h-6 rounded-full shrink-0 mt-0.5" />
-          ) : (
-            <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5">
-              {c.user.name?.[0] ?? "?"}
+      {comments.map((c) => {
+        const { displayText, gifUrl, soundUrl, soundSlug } = extractRichContent(c.text);
+        return (
+          <div key={c.id} className="flex gap-2">
+            {c.user.image ? (
+              <Image src={c.user.image} alt="" width={24} height={24} className="w-6 h-6 rounded-full shrink-0 mt-0.5" />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5">
+                {c.user.name?.[0] ?? "?"}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="inline-flex items-baseline gap-1.5 flex-wrap">
+                <span className="text-xs font-semibold text-white">{c.user.name ?? "Unknown"}</span>
+                {displayText && <span className="text-xs text-gray-400 break-words">{displayText}</span>}
+              </div>
+              {gifUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={gifUrl} alt="gif" className="mt-1 rounded-lg max-w-[200px] max-h-[150px] object-contain block" />
+              )}
+              {soundUrl && soundSlug && <SoundButton slug={soundSlug} url={soundUrl} />}
+              <p className="text-[10px] text-gray-600 mt-0.5">{timeAgo(c.createdAt)}</p>
             </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="inline-flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-xs font-semibold text-white">{c.user.name ?? "Unknown"}</span>
-              <span className="text-xs text-gray-400 break-words">{c.text}</span>
-            </div>
-            <p className="text-[10px] text-gray-600 mt-0.5">{timeAgo(c.createdAt)}</p>
           </div>
-        </div>
-      ))}
+        );
+      })}
       <div className="flex gap-2 items-center">
         <input
           ref={inputRef}
@@ -197,7 +300,7 @@ function CommentsPanel({ activityId, initialCount }: { activityId: string; initi
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="Add a comment…"
-          maxLength={280}
+          maxLength={500}
           className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50"
         />
         <button
@@ -208,6 +311,9 @@ function CommentsPanel({ activityId, initialCount }: { activityId: string; initi
           <Send size={14} />
         </button>
       </div>
+      {!text && (
+        <p className="text-[10px] text-gray-600 px-1">Tip: paste a .gif URL or myinstants link to embed</p>
+      )}
     </div>
   );
 }
