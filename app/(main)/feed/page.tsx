@@ -251,7 +251,7 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
       const { milestoneName, milestoneType, tier } = data as {
         milestoneName: string; milestoneType: string; tier?: string;
       };
-      const tierStyle = (tier && TIER_BADGE[tier]) ?? TIER_BADGE.bronze;
+      const tierStyle = (tier ? TIER_BADGE[tier] : undefined) ?? TIER_BADGE.bronze;
       return (
         <div className="space-y-1.5" style={feedFont}>
           <p className="text-sm text-gray-200">Earned a new milestone badge 🏅</p>
