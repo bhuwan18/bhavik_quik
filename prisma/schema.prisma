@@ -39,6 +39,7 @@ model User {
   paymentRequests      PaymentRequest[]
   feedbacks            Feedback[]
   correctAnswers       CorrectAnswer[]
+  explanationReads     ExplanationRead[]
   notifications        Notification[]
   pushSubscriptions    PushSubscription[]
   milestones           UserMilestone[]
@@ -209,6 +210,17 @@ model CorrectAnswer {
   createdAt  DateTime @default(now())
 
   @@unique([userId, questionId])
+}
+
+model ExplanationRead {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, questionId])
+  @@index([userId])
 }
 
 model Notification {

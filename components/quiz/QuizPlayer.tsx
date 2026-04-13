@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -52,6 +52,11 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
   const [submitting, setSubmitting] = useState(false);
   const [mysticalQueue, setMysticalQueue] = useState<MysticalGrant[]>([]);
   const [showingMystical, setShowingMystical] = useState(false);
+  const [readTimer, setReadTimer] = useState(7);
+  const [canMarkRead, setCanMarkRead] = useState(false);
+  const [markingRead, setMarkingRead] = useState(false);
+  const [explanationMarked, setExplanationMarked] = useState(false);
+  const [explanationCoins, setExplanationCoins] = useState<number | null>(null);
 
   // Generate shuffled display orders for every question once at mount
   const shuffledOrders = useMemo(() => {
@@ -68,9 +73,50 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
   // Which visual index shows the correct answer?
   const correctVisualIdx = order.indexOf(question.correctIndex);
 
+  // 7-second timer — starts when an answer is selected and an explanation exists
+  useEffect(() => {
+    if (selected === null || !question.explanation) return;
+    setReadTimer(7);
+    setCanMarkRead(false);
+    setExplanationMarked(false);
+    setExplanationCoins(null);
+
+    const interval = setInterval(() => {
+      setReadTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setCanMarkRead(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [selected, question.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSelect = (visualIdx: number) => {
     if (selected !== null) return;
     setSelected(visualIdx);
+  };
+
+  const handleMarkRead = async () => {
+    if (!canMarkRead || explanationMarked || markingRead) return;
+    setMarkingRead(true);
+    try {
+      const res = await fetch("/api/explanation-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questionId: question.id }),
+      });
+      const data = await res.json();
+      setExplanationCoins(data.coinsEarned ?? 0);
+    } catch {
+      setExplanationCoins(0);
+    } finally {
+      setExplanationMarked(true);
+      setMarkingRead(false);
+    }
   };
 
   const handleNext = async () => {
@@ -82,6 +128,11 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
     if (current + 1 < total) {
       setCurrent(current + 1);
       setSelected(null);
+      setReadTimer(7);
+      setCanMarkRead(false);
+      setMarkingRead(false);
+      setExplanationMarked(false);
+      setExplanationCoins(null);
     } else {
       setSubmitting(true);
       try {
@@ -324,6 +375,37 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
             >
               Read more →
             </a>
+          )}
+          {question.explanation && (
+            <div className="mt-3 flex items-center gap-2">
+              {!explanationMarked ? (
+                <button
+                  onClick={handleMarkRead}
+                  disabled={!canMarkRead || markingRead}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                    canMarkRead
+                      ? "bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-600/40 cursor-pointer"
+                      : "bg-white/5 text-gray-600 border border-white/10 cursor-not-allowed"
+                  }`}
+                >
+                  {markingRead
+                    ? "Marking..."
+                    : canMarkRead
+                    ? "✅ Mark as Read (+2 coins)"
+                    : `Mark as Read (${readTimer}s)`}
+                </button>
+              ) : (
+                <div className="inline-flex items-center gap-2">
+                  <span className="text-xs text-gray-500">✅ Read</span>
+                  {explanationCoins !== null && explanationCoins > 0 && (
+                    <span className="text-xs text-yellow-400 font-semibold">+{explanationCoins} coins</span>
+                  )}
+                  {explanationCoins === 0 && (
+                    <span className="text-xs text-gray-600">(limit reached)</span>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

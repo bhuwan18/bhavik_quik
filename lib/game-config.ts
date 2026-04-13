@@ -41,6 +41,9 @@ export const COINS_BY_DIFFICULTY: Record<number, number> = {
   5: 20,
 };
 
+/** Flat coins awarded for marking a question explanation as read (before multiplier) */
+export const EXPLANATION_READ_COINS = 2;
+
 export const DAILY_LIMIT_REGULAR = 500;
 export const DAILY_LIMIT_PRO = 1000;
 export const DAILY_LIMIT_MAX = 1500;
