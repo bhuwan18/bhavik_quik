@@ -24,6 +24,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json(quiz);
 }
 
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!adminOnly(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { id } = await params;
+
+  const quiz = await prisma.quiz.findUnique({ where: { id }, select: { isOfficial: true } });
+  if (!quiz) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (quiz.isOfficial) return NextResponse.json({ error: "Cannot delete official quizzes" }, { status: 403 });
+
+  // QuizAttempt has no cascade — delete before the quiz
+  await prisma.quizAttempt.deleteMany({ where: { quizId: id } });
+  await prisma.quiz.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!adminOnly(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
