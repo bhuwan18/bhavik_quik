@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { Nunito } from "next/font/google";
 import Sidebar from "@/components/layout/Sidebar";
 import MobileNav from "@/components/layout/MobileNav";
 import OnlinePing from "@/components/layout/OnlinePing";
@@ -10,6 +11,8 @@ import { NotificationsProvider } from "@/components/layout/NotificationsProvider
 import { FeedProvider } from "@/components/layout/FeedProvider";
 import SplashScreen from "@/components/SplashScreen";
 
+const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito", display: "swap" });
+
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session) redirect("/login");
@@ -18,7 +21,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     <AudioProvider>
       <NotificationsProvider>
       <FeedProvider>
-      <div className="flex min-h-screen">
+      <div className={`flex min-h-screen ${nunito.variable}`}>
         {/* Sidebar hidden on mobile */}
         <div className="hidden md:flex sticky top-0 h-screen">
           <Sidebar />

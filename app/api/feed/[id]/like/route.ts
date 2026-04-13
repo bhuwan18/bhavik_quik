@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { sendPushToUser } from "@/lib/push";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const activity = await prisma.feedActivity.findUnique({
     where: { id: activityId },
-    select: { id: true, _count: { select: { likes: true } } },
+    select: { id: true, userId: true },
   });
   if (!activity) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -25,6 +26,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } else {
     await prisma.feedLike.create({ data: { userId: session.user.id, activityId } });
     liked = true;
+
+    // Notify activity owner (not self-likes)
+    if (activity.userId !== session.user.id) {
+      const liker = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { name: true },
+      });
+      const name = liker?.name ?? "Someone";
+      prisma.notification.create({
+        data: {
+          userId: activity.userId,
+          type: "feed_like",
+          message: `${name} liked your activity ❤️`,
+        },
+      }).catch(() => {});
+      sendPushToUser(activity.userId, "New like ❤️", `${name} liked your activity`, "/feed").catch(() => {});
+    }
   }
 
   const likeCount = await prisma.feedLike.count({ where: { activityId } });

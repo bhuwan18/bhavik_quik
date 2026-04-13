@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getISOWeek } from "@/lib/time";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -28,11 +29,13 @@ function sortHref(col: SortCol, currentSort: SortCol, currentDir: SortDir) {
 export default async function LeaderboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; sort?: string; dir?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; dir?: string; tab?: string }>;
 }) {
   const session = await auth();
   const isAdmin = session?.user?.isAdmin ?? false;
   const params = await searchParams;
+  const tab = params.tab === "weekly" ? "weekly" : "alltime";
+  const currentWeek = getISOWeek(new Date());
   const page = Math.max(1, parseInt(params.page ?? "1", 10));
   const sort = (["coins", "correct", "quizlets", "quizzes", "followers"].includes(params.sort ?? "")
     ? params.sort
@@ -42,27 +45,24 @@ export default async function LeaderboardPage({
 
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@bittsquiz.internal";
   const EXCLUDED_EMAILS = ["test@bittsquiz.internal"];
-  const where = { isAdmin: false, NOT: { email: { in: [...EXCLUDED_EMAILS, adminEmail] } } };
+  const baseWhere = { isAdmin: false, NOT: { email: { in: [...EXCLUDED_EMAILS, adminEmail] } } };
+  const where = tab === "weekly"
+    ? { ...baseWhere, weeklyCoinsWeek: currentWeek }
+    : baseWhere;
+
+  const userSelect = {
+    id: true, name: true, image: true, email: true,
+    coins: true, totalCoinsEarned: true, weeklyCoins: true,
+    totalCorrect: true, totalAnswered: true,
+    lastSeenAt: true, createdAt: true, isPro: true, isMax: true,
+    _count: { select: { ownedQuizlets: true, quizAttempts: true, followers: true } },
+  } as const;
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       where,
-      select: {
-        id: true,
-        name: true,
-        image: true,
-        email: true,
-        coins: true,
-        totalCoinsEarned: true,
-        totalCorrect: true,
-        totalAnswered: true,
-        lastSeenAt: true,
-        createdAt: true,
-        isPro: true,
-        isMax: true,
-        _count: { select: { ownedQuizlets: true, quizAttempts: true, followers: true } },
-      },
-      orderBy: getOrderBy(sort, dir),
+      select: userSelect,
+      orderBy: tab === "weekly" ? { weeklyCoins: "desc" } : getOrderBy(sort, dir),
       skip,
       take: PAGE_SIZE,
     }),
@@ -82,24 +82,54 @@ export default async function LeaderboardPage({
       sort === col ? "text-purple-400" : "text-gray-500"
     }`;
 
-  // Pagination href — preserve sort/dir
+  // Pagination href — preserve sort/dir/tab
   function pageHref(p: number) {
-    const ps = new URLSearchParams({ sort, dir, page: String(p) });
+    const ps = new URLSearchParams(
+      tab === "weekly"
+        ? { tab: "weekly", page: String(p) }
+        : { sort, dir, page: String(p) }
+    );
     return `?${ps}`;
   }
 
   return (
     <div className="p-4 pb-24 md:p-8 md:pb-0 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-5">
         <h1 className="text-2xl md:text-3xl font-bold text-white">🏆 Leaderboard</h1>
         <p className="text-gray-400 mt-1 text-sm">
-          Top players ranked by total coins ever earned &middot; click a column to sort
+          {tab === "weekly"
+            ? "Top players this week — resets every Monday"
+            : "Top players ranked by total coins ever earned · click a column to sort"}
         </p>
       </div>
 
-      {/* Top 3 podium — page 1 + default sort only */}
-      {page === 1 && sort === "coins" && dir === "desc" && users.length >= 3 && (
+      {/* Tab switcher */}
+      <div className="flex gap-2 mb-5">
+        <Link
+          href="?"
+          className={`px-4 py-1.5 rounded-xl text-sm font-bold border transition-colors ${
+            tab === "alltime"
+              ? "bg-purple-500/20 border-purple-500/30 text-purple-200"
+              : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          🏆 All Time
+        </Link>
+        <Link
+          href="?tab=weekly"
+          className={`px-4 py-1.5 rounded-xl text-sm font-bold border transition-colors ${
+            tab === "weekly"
+              ? "bg-yellow-500/20 border-yellow-500/30 text-yellow-200"
+              : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          📅 This Week
+        </Link>
+      </div>
+
+      {/* Top 3 podium — page 1 + default alltime sort only */}
+      {tab === "alltime" && page === 1 && sort === "coins" && dir === "desc" && users.length >= 3 && (
         <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
           {([users[1], users[0], users[2]] as (typeof users)[number][]).map((user, i) => {
             const actualRank = i === 0 ? 2 : i === 1 ? 1 : 3;
@@ -172,9 +202,13 @@ export default async function LeaderboardPage({
 
                 {/* Coins Earned */}
                 <th className={thClass("coins", "")} aria-sort={sort === "coins" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("coins", sort, dir)} className="hover:text-white transition-colors">
-                    Coins{arrow("coins")}
-                  </Link>
+                  {tab === "weekly" ? (
+                    <span className="text-yellow-400">Coins (Week)</span>
+                  ) : (
+                    <Link href={sortHref("coins", sort, dir)} className="hover:text-white transition-colors">
+                      Coins{arrow("coins")}
+                    </Link>
+                  )}
                 </th>
 
                 {/* Correct */}
@@ -294,7 +328,7 @@ export default async function LeaderboardPage({
 
                     {/* Coins */}
                     <td className="px-3 md:px-4 py-3.5 text-sm text-yellow-400 font-bold text-right whitespace-nowrap tabular-nums">
-                      🪙 {user.totalCoinsEarned.toLocaleString()}
+                      🪙 {tab === "weekly" ? user.weeklyCoins.toLocaleString() : user.totalCoinsEarned.toLocaleString()}
                     </td>
 
                     {/* Correct */}
@@ -350,8 +384,12 @@ export default async function LeaderboardPage({
 
         {users.length === 0 && (
           <div className="p-12 text-center text-gray-500">
-            <p className="text-4xl mb-3">🏆</p>
-            <p>No players yet. Be the first to earn coins!</p>
+            <p className="text-4xl mb-3">{tab === "weekly" ? "📅" : "🏆"}</p>
+            <p>
+              {tab === "weekly"
+                ? "No one has played yet this week — be the first!"
+                : "No players yet. Be the first to earn coins!"}
+            </p>
           </div>
         )}
       </div>
@@ -414,7 +452,7 @@ export default async function LeaderboardPage({
             <span className="w-2 h-2 bg-green-400 rounded-full inline-block shadow-sm shadow-green-400/60" />
             Online now
           </div>
-          {sort !== "coins" || dir !== "desc" ? (
+          {tab === "alltime" && (sort !== "coins" || dir !== "desc") ? (
             <Link
               href="?"
               className="text-xs text-purple-400 hover:text-purple-300 underline underline-offset-2"

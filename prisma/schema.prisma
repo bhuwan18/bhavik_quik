@@ -47,6 +47,11 @@ model User {
   feedActivities       FeedActivity[]
   feedLikes            FeedLike[]
   feedComments         FeedComment[]
+  feedReactions        FeedReaction[]
+  nudgesSent           Nudge[] @relation("NudgeSender")
+  nudgesReceived       Nudge[] @relation("NudgeRecipient")
+  weeklyCoins          Int     @default(0)
+  weeklyCoinsWeek      String  @default("")
 
   @@index([totalCoinsEarned])
   @@index([lastSeenAt])
@@ -287,6 +292,7 @@ model FeedActivity {
   createdAt DateTime      @default(now())
   likes     FeedLike[]
   comments  FeedComment[]
+  reactions FeedReaction[]
 
   @@index([userId, createdAt])
   @@index([createdAt])
@@ -315,6 +321,31 @@ model FeedComment {
 
   @@index([activityId])
   @@index([userId])
+}
+
+model FeedReaction {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityId String
+  activity   FeedActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  emoji      String       // "🔥" | "🎉" | "👏" | "😱"
+  createdAt  DateTime     @default(now())
+
+  @@unique([userId, activityId, emoji])
+  @@index([activityId])
+}
+
+model Nudge {
+  id          String   @id @default(cuid())
+  senderId    String
+  recipientId String
+  createdAt   DateTime @default(now())
+
+  sender    User @relation("NudgeSender",    fields: [senderId],    references: [id], onDelete: Cascade)
+  recipient User @relation("NudgeRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, recipientId, createdAt])
 }
 
 model DinoRexRoom {

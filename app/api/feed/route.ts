@@ -27,24 +27,39 @@ export async function GET(req: NextRequest) {
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE + 1,
     include: {
-      user: { select: { id: true, name: true, image: true } },
+      user: { select: { id: true, name: true, image: true, lastSeenAt: true } },
       _count: { select: { likes: true, comments: true } },
       likes: { where: { userId: session.user.id }, select: { id: true } },
+      reactions: { select: { emoji: true, userId: true } },
     },
   });
 
   const hasMore = raw.length > PAGE_SIZE;
-  const activities = raw.slice(0, PAGE_SIZE).map((a) => ({
-    id: a.id,
-    type: a.type,
-    data: a.data,
-    createdAt: a.createdAt,
-    user: a.user,
-    likeCount: a._count.likes,
-    commentCount: a._count.comments,
-    liked: a.likes.length > 0,
-    isOwn: a.userId === session.user.id,
-  }));
+  const activities = raw.slice(0, PAGE_SIZE).map((a) => {
+    // Aggregate reactions by emoji
+    const reactionMap = new Map<string, { count: number; reacted: boolean }>();
+    for (const r of a.reactions) {
+      const cur = reactionMap.get(r.emoji) ?? { count: 0, reacted: false };
+      reactionMap.set(r.emoji, {
+        count: cur.count + 1,
+        reacted: cur.reacted || r.userId === session.user.id,
+      });
+    }
+    const reactions = Array.from(reactionMap.entries()).map(([emoji, v]) => ({ emoji, ...v }));
+
+    return {
+      id: a.id,
+      type: a.type,
+      data: a.data,
+      createdAt: a.createdAt,
+      user: a.user,
+      likeCount: a._count.likes,
+      commentCount: a._count.comments,
+      liked: a.likes.length > 0,
+      reactions,
+      isOwn: a.userId === session.user.id,
+    };
+  });
 
   return NextResponse.json({ activities, hasMore, nextPage: hasMore ? page + 1 : null });
 }

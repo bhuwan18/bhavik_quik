@@ -20,3 +20,13 @@ export function isSchoolHours(): boolean {
   const hour = istTime.getUTCHours();
   return day >= 1 && day <= 5 && hour >= SCHOOL_HOURS_START && hour < SCHOOL_HOURS_END;
 }
+
+/** Returns ISO 8601 week string for a date, e.g. "2026-W15" (weeks start Monday) */
+export function getISOWeek(date: Date): string {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayOfWeek = d.getUTCDay() || 7; // Sun=0 → 7, Mon=1
+  d.setUTCDate(d.getUTCDate() + 4 - dayOfWeek); // Thursday of the ISO week
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}

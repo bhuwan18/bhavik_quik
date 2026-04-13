@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { SCHOOL_EMAIL_DOMAIN, isSchoolHours, getISTDateString } from "@/lib/time";
+import { SCHOOL_EMAIL_DOMAIN, isSchoolHours, getISTDateString, getISOWeek } from "@/lib/time";
 import { getSchoolHoursEnabled, getRetakeCoinsEnabled } from "@/lib/app-settings";
 import {
   COINS_BY_DIFFICULTY,
@@ -69,6 +69,8 @@ export async function POST(req: NextRequest) {
         longestStreak: true,
         lastStreakDate: true,
         streakFreezes: true,
+        weeklyCoins: true,
+        weeklyCoinsWeek: true,
       },
     }),
     prisma.quiz.findUnique({
@@ -173,6 +175,10 @@ export async function POST(req: NextRequest) {
 
   if (newStreak > newLongest) newLongest = newStreak;
 
+  // Weekly coins tracking
+  const currentISOWeek = getISOWeek(now);
+  const weekChanged = dbUser.weeklyCoinsWeek !== currentISOWeek;
+
   // Record attempt + update user in parallel (single user.update now covers coins + streak)
   await Promise.all([
     prisma.quizAttempt.create({
@@ -187,6 +193,8 @@ export async function POST(req: NextRequest) {
         totalAnswered: { increment: total },
         dailyCoinsEarned: isNewDay ? coinsEarned : { increment: coinsEarned },
         dailyCoinsReset: isNewDay ? now : undefined,
+        weeklyCoins: weekChanged ? coinsEarned : { increment: coinsEarned },
+        ...(weekChanged ? { weeklyCoinsWeek: currentISOWeek } : {}),
         ...(streakUpdated
           ? {
               currentStreak: newStreak,
@@ -204,7 +212,7 @@ export async function POST(req: NextRequest) {
     data: {
       userId: session.user.id,
       type: "quiz_completed",
-      data: { quizTitle: quiz.title, category: quiz.category, score, total, coinsEarned },
+      data: { quizId: quiz.id, quizTitle: quiz.title, category: quiz.category, score, total, coinsEarned },
     },
   }).catch(() => {});
 
