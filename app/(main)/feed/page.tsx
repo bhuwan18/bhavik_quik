@@ -57,23 +57,32 @@ function extractRichContent(text: string) {
 }
 
 function SoundButton({ slug, url }: { slug: string; url: string }) {
-  const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
+  // "resolving" = pre-fetching the proxy URL (button disabled)
+  // "idle"      = URL ready, waiting for tap
+  // "loading"   = audio buffering after tap
+  // "playing"   = audio playing
+  // "error"     = proxy fetch failed
+  const [state, setState] = useState<"resolving" | "idle" | "loading" | "playing" | "error">("resolving");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const resolvedUrl = useRef<string | null>(null);
   const color = hashColor(slug);
   const isPlaying = state === "playing";
-  const isLoading = state === "loading";
 
-  // Pre-fetch the proxied audio URL on mount so toggle() stays fully synchronous.
-  // This is required for iOS Safari: audio.play() must be called within a synchronous
-  // user-gesture handler — any await before it causes iOS to reject the play() call.
-  // We also use our own proxy URL (same-origin) to avoid iOS CORS restrictions on the
-  // cross-origin myinstants audio files.
+  // Pre-fetch the proxied (same-origin) audio URL on mount.
+  // Must complete BEFORE the user taps so toggle() is fully synchronous —
+  // iOS Safari rejects audio.play() if called after any await.
   useEffect(() => {
     fetch(`/api/myinstants-proxy?slug=${encodeURIComponent(slug)}`)
       .then((r) => r.json())
-      .then((d) => { if (d.proxyUrl) resolvedUrl.current = d.proxyUrl; })
-      .catch(() => {});
+      .then((d) => {
+        if (d.proxyUrl) {
+          resolvedUrl.current = d.proxyUrl;
+          setState("idle");
+        } else {
+          setState("error");
+        }
+      })
+      .catch(() => setState("error"));
   }, [slug]);
 
   const toggle = () => {
@@ -83,13 +92,9 @@ function SoundButton({ slug, url }: { slug: string; url: string }) {
       setState("idle");
       return;
     }
-    const audioUrl = resolvedUrl.current;
-    if (!audioUrl) {
-      window.open(url, "_blank");
-      return;
-    }
+    if (state !== "idle" || !resolvedUrl.current) return;
     setState("loading");
-    const audio = new Audio(audioUrl);
+    const audio = new Audio(resolvedUrl.current);
     audioRef.current = audio;
     audio.onplaying = () => setState("playing");
     audio.onended = () => setState("idle");
@@ -109,10 +114,12 @@ function SoundButton({ slug, url }: { slug: string; url: string }) {
           height: 72,
           borderRadius: "50%",
           background: `radial-gradient(circle at 38% 32%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 55%), radial-gradient(circle at 50% 50%, ${color}, color-mix(in srgb, ${color} 55%, black))`,
+          opacity: state === "resolving" ? 0.5 : 1,
           boxShadow: isPlaying
             ? "0 2px 6px rgba(0,0,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.5)"
             : "0 6px 18px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.35), inset 0 2px 6px rgba(255,255,255,0.15)",
           transform: isPlaying ? "scale(0.92) translateY(2px)" : "scale(1)",
+          cursor: state === "resolving" ? "wait" : "pointer",
           transition: "transform 0.08s ease, box-shadow 0.08s ease",
           cursor: "pointer",
           border: "none",
@@ -123,7 +130,9 @@ function SoundButton({ slug, url }: { slug: string; url: string }) {
           fontSize: 22,
         }}
       >
-        {isLoading ? "⏳" : ""}
+        {state === "resolving" && <span style={{ fontSize: 16, opacity: 0.6 }}>⏳</span>}
+        {state === "loading"   && <span style={{ fontSize: 16 }}>⏳</span>}
+        {state === "error"     && <span style={{ fontSize: 16 }}>⚠️</span>}
       </button>
       <span className="text-[10px] text-gray-400 text-center leading-tight capitalize" style={{ maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {label}
