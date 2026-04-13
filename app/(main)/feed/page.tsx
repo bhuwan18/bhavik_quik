@@ -121,7 +121,6 @@ function SoundButton({ slug, url }: { slug: string; url: string }) {
           transform: isPlaying ? "scale(0.92) translateY(2px)" : "scale(1)",
           cursor: state === "resolving" ? "wait" : "pointer",
           transition: "transform 0.08s ease, box-shadow 0.08s ease",
-          cursor: "pointer",
           border: "none",
           outline: "none",
           display: "flex",
