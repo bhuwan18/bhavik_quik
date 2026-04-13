@@ -53,6 +53,8 @@ model User {
   nudgesReceived       Nudge[] @relation("NudgeRecipient")
   weeklyCoins          Int     @default(0)
   weeklyCoinsWeek      String  @default("")
+  dailyCoinsSpent      Int     @default(0)
+  dailySpentReset      DateTime @default(now())
 
   @@index([totalCoinsEarned])
   @@index([lastSeenAt])

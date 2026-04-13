@@ -15,8 +15,6 @@ const TYPE_META: Record<string, { icon: string; label: string; color: string }> 
   top3_join:              { icon: "🏆", label: "Top 3",            color: "bg-yellow-500/15 border-yellow-500/30" },
   feedback_reply:         { icon: "💬", label: "Admin Reply",      color: "bg-purple-500/15 border-purple-500/30" },
   admin_message:          { icon: "📣", label: "Admin",            color: "bg-blue-500/15 border-blue-500/30" },
-  milestone:              { icon: "🏅", label: "Milestone",        color: "bg-amber-500/15 border-amber-500/30" },
-  streak_milestone:       { icon: "🔥", label: "Streak",           color: "bg-orange-500/15 border-orange-500/30" },
   follow_milestone:       { icon: "👥", label: "Following",        color: "bg-amber-500/15 border-amber-500/30" },
   follow_streak_milestone:{ icon: "✨", label: "Following Streak", color: "bg-orange-500/15 border-orange-500/30" },
   feed_like:              { icon: "❤️", label: "Feed Like",        color: "bg-red-500/15 border-red-500/30" },

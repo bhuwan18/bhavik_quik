@@ -201,48 +201,92 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
 
   switch (type) {
     case "quiz_completed": {
-      const { quizId, quizTitle, category, score, total, coinsEarned } = data as {
-        quizId?: string; quizTitle: string; category?: string; score: number; total: number; coinsEarned: number;
-      };
-      const isPerfect = score === total;
-      const dotCount = Math.min(total, 10);
-      const filledDots = Math.round((score / total) * dotCount);
-      return (
-        <div className="space-y-2" style={feedFont}>
-          <p className="text-sm text-gray-200 leading-snug font-semibold">
-            Completed <span className="text-white">{quizTitle}</span>
-          </p>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex gap-1 items-center">
-              {Array.from({ length: dotCount }).map((_, i) => (
-                <span key={i} className={cn("w-2 h-2 rounded-full inline-block", i < filledDots ? "bg-green-400" : "bg-white/15")} />
-              ))}
+      type QuizItem = { quizId?: string; quizTitle: string; category?: string; score: number; total: number; coinsEarned: number };
+      // Support both new grouped format (data.quizzes[]) and old single-object records
+      const quizzes: QuizItem[] = (data.quizzes as QuizItem[] | undefined) ??
+        [data as unknown as QuizItem];
+      const totalCoins = quizzes.reduce((s, q) => s + (q.coinsEarned ?? 0), 0);
+
+      if (quizzes.length === 1) {
+        const { quizId, quizTitle, category, score, total, coinsEarned } = quizzes[0];
+        const isPerfect = score === total;
+        const dotCount = Math.min(total, 10);
+        const filledDots = Math.round((score / total) * dotCount);
+        return (
+          <div className="space-y-2" style={feedFont}>
+            <p className="text-sm text-gray-200 leading-snug font-semibold">
+              Completed <span className="text-white">{quizTitle}</span>
+            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex gap-1 items-center">
+                {Array.from({ length: dotCount }).map((_, i) => (
+                  <span key={i} className={cn("w-2 h-2 rounded-full inline-block", i < filledDots ? "bg-green-400" : "bg-white/15")} />
+                ))}
+              </div>
+              <span className="text-blue-400 font-bold text-sm">{score}/{total}</span>
+              {isPerfect && (
+                <span className="text-[10px] font-extrabold text-green-400 bg-green-400/15 border border-green-400/25 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                  Perfect! ✓
+                </span>
+              )}
+              {coinsEarned > 0 && (
+                <span className="text-yellow-400 text-xs font-bold bg-yellow-400/10 border border-yellow-400/20 px-1.5 py-0.5 rounded-full">
+                  +{coinsEarned} 🪙
+                </span>
+              )}
+              {category && (
+                <span className="text-[10px] text-gray-500 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full capitalize">
+                  {category.replace(/-/g, " ")}
+                </span>
+              )}
             </div>
-            <span className="text-blue-400 font-bold text-sm">{score}/{total}</span>
-            {isPerfect && (
-              <span className="text-[10px] font-extrabold text-green-400 bg-green-400/15 border border-green-400/25 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
-                Perfect! ✓
-              </span>
-            )}
-            {coinsEarned > 0 && (
-              <span className="text-yellow-400 text-xs font-bold bg-yellow-400/10 border border-yellow-400/20 px-1.5 py-0.5 rounded-full">
-                +{coinsEarned} 🪙
-              </span>
-            )}
-            {category && (
-              <span className="text-[10px] text-gray-500 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full capitalize">
-                {category.replace(/-/g, " ")}
-              </span>
+            {quizId && (
+              <Link
+                href={`/quiz/${quizId}`}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/25 px-2.5 py-1 rounded-xl transition-colors"
+              >
+                <Play size={11} className="fill-current" />
+                Challenge — beat this score!
+              </Link>
             )}
           </div>
-          {quizId && (
-            <Link
-              href={`/quiz/${quizId}`}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/25 px-2.5 py-1 rounded-xl transition-colors"
-            >
-              <Play size={11} className="fill-current" />
-              Challenge — beat this score!
-            </Link>
+        );
+      }
+
+      // Grouped: multiple quizzes in one window
+      return (
+        <div className="space-y-2" style={feedFont}>
+          <p className="text-sm text-gray-200 font-semibold">
+            Played <span className="text-white">{quizzes.length} quizzes</span>
+          </p>
+          <div className="space-y-1.5">
+            {quizzes.map((q, i) => {
+              const dotCount = Math.min(q.total, 8);
+              const filledDots = Math.round((q.score / q.total) * dotCount);
+              const isPerfect = q.score === q.total;
+              return (
+                <div key={i} className="flex items-center gap-2 flex-wrap text-xs">
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: dotCount }).map((_, d) => (
+                      <span key={d} className={cn("w-1.5 h-1.5 rounded-full inline-block", d < filledDots ? "bg-green-400" : "bg-white/15")} />
+                    ))}
+                  </div>
+                  <span className="text-blue-400 font-bold">{q.score}/{q.total}</span>
+                  {isPerfect && (
+                    <span className="text-[9px] font-extrabold text-green-400 bg-green-400/15 border border-green-400/25 px-1 py-0.5 rounded-full uppercase tracking-wide">✓</span>
+                  )}
+                  <span className="text-gray-300 truncate max-w-[140px]">{q.quizTitle}</span>
+                  {q.coinsEarned > 0 && (
+                    <span className="text-yellow-400 font-bold ml-auto shrink-0">+{q.coinsEarned} 🪙</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {totalCoins > 0 && (
+            <p className="text-xs text-yellow-400 font-bold border-t border-white/10 pt-1.5">
+              Total: +{totalCoins} 🪙
+            </p>
           )}
         </div>
       );

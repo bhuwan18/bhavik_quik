@@ -207,14 +207,27 @@ export async function POST(req: NextRequest) {
     }),
   ]);
 
-  // Feed: quiz_completed activity (fire-and-forget)
-  prisma.feedActivity.create({
-    data: {
-      userId: session.user.id,
-      type: "quiz_completed",
-      data: { quizId: quiz.id, quizTitle: quiz.title, category: quiz.category, score, total, coinsEarned },
-    },
-  }).catch(() => {});
+  // Feed: quiz_completed — merge into 2-hour window or create new (fire-and-forget)
+  (async () => {
+    const windowStart = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const existing = await prisma.feedActivity.findFirst({
+      where: { userId: session.user.id, type: "quiz_completed", createdAt: { gte: windowStart } },
+      orderBy: { createdAt: "desc" },
+    });
+    const newQuiz = { quizId: quiz.id, quizTitle: quiz.title, category: quiz.category, score, total, coinsEarned };
+    if (existing) {
+      const prev = existing.data as Record<string, unknown>;
+      const quizzes = (prev.quizzes as typeof newQuiz[]) ?? [];
+      await prisma.feedActivity.update({
+        where: { id: existing.id },
+        data: { data: { quizzes: [...quizzes, newQuiz] } },
+      });
+    } else {
+      await prisma.feedActivity.create({
+        data: { userId: session.user.id, type: "quiz_completed", data: { quizzes: [newQuiz] } },
+      });
+    }
+  })().catch(() => {});
 
   // Record new correct answers
   if (newCorrectIds.length > 0) {
@@ -233,14 +246,6 @@ export async function POST(req: NextRequest) {
       const highest = Math.max(...crossedStreakMilestones);
 
       Promise.resolve().then(async () => {
-        await prisma.notification.create({
-          data: {
-            userId: session.user.id,
-            type: "streak_milestone",
-            message: `🔥 ${highest}-day streak! You've been playing every day for ${highest} days!`,
-          },
-        });
-
         const streakFollowers = await prisma.userFollow.findMany({
           where: { followingId: session.user.id },
           select: { followerId: true },
@@ -280,16 +285,8 @@ export async function POST(req: NextRequest) {
       const highest = Math.max(...crossed);
       const badge = getMilestoneByThreshold(highest);
 
-      // FIX 3: notification + follower fan-out fire-and-forget
+      // Follower fan-out fire-and-forget
       Promise.resolve().then(async () => {
-        await prisma.notification.create({
-          data: {
-            userId: session.user.id,
-            type: "milestone",
-            message: `🏅 Milestone unlocked: ${badge.name}! You've earned ${highest.toLocaleString()} lifetime coins.`,
-          },
-        });
-
         const milestoneFollowers = await prisma.userFollow.findMany({
           where: { followingId: session.user.id },
           select: { followerId: true },
@@ -378,16 +375,9 @@ export async function POST(req: NextRequest) {
         byType.get(m.milestoneType)!.push(m.threshold);
       }
 
-      // FIX 3: batch all non-coin milestone notifications, fire-and-forget
-      const nonCoinNotifications: { userId: string; type: string; message: string }[] = [];
       for (const [type, thresholds] of byType) {
         const highest = Math.max(...thresholds);
         const badge = getMilestone(type as MilestoneType, highest);
-        nonCoinNotifications.push({
-          userId: session.user.id,
-          type: "milestone",
-          message: `🏅 Milestone unlocked: ${badge.name}! ${badge.description}`,
-        });
 
         import("@/lib/push").then(({ sendPushToUser }) => {
           sendPushToUser(session.user.id, "Milestone unlocked! 🏅", badge.name, "/milestones").catch(() => {});
@@ -400,10 +390,6 @@ export async function POST(req: NextRequest) {
             data: { milestoneName: badge.name, milestoneType: type, threshold: highest, tier: badge.tier },
           },
         }).catch(() => {});
-      }
-
-      if (nonCoinNotifications.length > 0) {
-        prisma.notification.createMany({ data: nonCoinNotifications }).catch(() => {});
       }
     }
   }
@@ -434,7 +420,7 @@ export async function POST(req: NextRequest) {
 
     const mysticalQuizletName = CATEGORY_MYSTICAL_MAP[quiz.category];
 
-    const [categoryAttempts, thisQuizAttemptCount] = await Promise.all([
+    const [categoryAttempts, thisQuizAttemptCount, topAttemptedQuiz] = await Promise.all([
       mysticalQuizletName
         ? prisma.quizAttempt.findMany({
             where: { userId: session.user.id, quiz: { category: quiz.category } },
@@ -442,9 +428,13 @@ export async function POST(req: NextRequest) {
             select: { quizId: true },
           })
         : Promise.resolve(null),
-      quiz.isOfficial
-        ? prisma.quizAttempt.count({ where: { quizId } })
-        : Promise.resolve(null),
+      prisma.quizAttempt.count({ where: { quizId } }),
+      prisma.quizAttempt.groupBy({
+        by: ["quizId"],
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+        take: 1,
+      }),
     ]);
 
     const mysticalToGrant: string[] = [];
@@ -454,6 +444,9 @@ export async function POST(req: NextRequest) {
     }
     if (thisQuizAttemptCount === 1) {
       mysticalToGrant.push("Atypical Choices");
+    }
+    if (topAttemptedQuiz.length > 0 && topAttemptedQuiz[0].quizId === quizId) {
+      mysticalToGrant.push("Follow the Path");
     }
 
     if (mysticalToGrant.length > 0) {
@@ -475,15 +468,6 @@ export async function POST(req: NextRequest) {
           data: toGrant.map((mq) => ({ userId: session.user.id, quizletId: mq.id })),
           skipDuplicates: true,
         });
-
-        // Fire-and-forget notification batch
-        prisma.notification.createMany({
-          data: toGrant.map((mq) => ({
-            userId: session.user.id,
-            type: "milestone",
-            message: `✨ Mystical Quizlet unlocked: "${mq.name}"! A rare achievement quizlet is now in your collection.`,
-          })),
-        }).catch(() => {});
 
         for (const mq of toGrant) {
           mysticalGranted.push({ name: mq.name, icon: mq.icon, colorFrom: mq.colorFrom, colorTo: mq.colorTo, description: mq.description });
