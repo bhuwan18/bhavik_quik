@@ -178,7 +178,8 @@ export default async function DiscoverPage({
 }
 
 async function fetchQuizzes(category?: string, search?: string) {
-  return prisma.quiz.findMany({
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const rows = await prisma.quiz.findMany({
     where: {
       ...(category ? { category } : {}),
       ...(search ? { title: { contains: search, mode: "insensitive" } } : {}),
@@ -190,4 +191,5 @@ async function fetchQuizzes(category?: string, search?: string) {
     orderBy: [{ attempts: { _count: "desc" } }],
     take: PAGE_SIZE + 1,
   });
+  return rows.map((q) => ({ ...q, isNew: q.createdAt >= sevenDaysAgo }));
 }

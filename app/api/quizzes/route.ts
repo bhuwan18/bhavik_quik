@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
   const search = rawSearch ? rawSearch.slice(0, 100) : null;
   const offset = Math.max(0, parseInt(rawOffset ?? "0", 10) || 0);
 
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const rows = await prisma.quiz.findMany({
     where: {
       ...(category ? { category } : {}),
@@ -36,7 +37,10 @@ export async function GET(req: NextRequest) {
   });
 
   const hasMore = rows.length > PAGE_SIZE;
-  const quizzes = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
+  const quizzes = (hasMore ? rows.slice(0, PAGE_SIZE) : rows).map((q) => ({
+    ...q,
+    isNew: q.createdAt >= sevenDaysAgo,
+  }));
 
   return NextResponse.json({ quizzes, hasMore });
 }
