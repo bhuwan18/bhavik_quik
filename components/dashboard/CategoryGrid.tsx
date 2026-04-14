@@ -58,8 +58,8 @@ export default function CategoryGrid({
                 title={`${tierName} — Earn ${required.toLocaleString()} coins to unlock`}
                 className="relative flex flex-col items-center gap-2 p-4 bg-white/5 border border-white/10 rounded-2xl transition-all hover:border-amber-500/30 hover:bg-amber-500/5 group"
               >
-                <span className="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40">
-                  <Lock size={10} className="text-amber-400" />
+                <span className="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full bg-rose-500/20 border border-rose-500/40">
+                  <Lock size={10} className="text-rose-400" />
                 </span>
                 <Icon size={36} className="text-gray-600 group-hover:text-gray-500 transition-colors" />
                 <span className="text-xs text-gray-500 group-hover:text-gray-400 text-center font-medium leading-tight transition-colors">

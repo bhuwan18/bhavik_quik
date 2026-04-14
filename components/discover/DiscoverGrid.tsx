@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { CATEGORIES, cn } from "@/lib/utils";
 import { PREMIUM_TIER_NAMES, PREMIUM_TIER_UNLOCK_COINS } from "@/lib/game-config";
 
@@ -101,7 +101,7 @@ export default function DiscoverGrid({
                 className="relative bg-white/3 border border-white/5 rounded-xl p-3 md:p-5 opacity-60 select-none"
               >
                 <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-black/40 backdrop-blur-sm gap-1.5 z-10">
-                  <span className="text-2xl">🔒</span>
+                  <Lock size={24} className="text-rose-400" />
                   <span className="text-xs font-semibold text-white">{tierName}</span>
                   <span className="text-xs text-gray-400 text-center px-2">
                     {requiredCoins.toLocaleString()} coins

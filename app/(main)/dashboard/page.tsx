@@ -7,6 +7,7 @@ import IntroOverlay from "@/components/IntroOverlay";
 import { MILESTONES, TIER_COLORS, getMilestoneByThreshold } from "@/lib/milestones-data";
 import { STREAK_MILESTONES } from "@/lib/game-config";
 import CategoryGrid from "@/components/dashboard/CategoryGrid";
+import { Lock } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -196,8 +197,8 @@ export default async function DashboardPage() {
                     {latestBadge.emoji}
                   </div>
                 ) : (
-                  <div className="w-12 h-12 rounded-xl border-2 border-white/10 bg-white/5 flex items-center justify-center text-xl shrink-0">
-                    🔒
+                  <div className="w-12 h-12 rounded-xl border-2 border-rose-500/40 bg-rose-500/10 flex items-center justify-center shrink-0">
+                    <Lock size={20} className="text-rose-400" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
