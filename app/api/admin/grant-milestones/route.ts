@@ -24,9 +24,38 @@ export async function POST() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const users = await prisma.user.findMany({
-    select: { id: true, totalCoinsEarned: true, longestStreak: true },
-  });
+  // Fetch everything in 4 parallel batch queries instead of N×4 sequential ones
+  const [users, quizCountRows, answerCountRows, distinctAttemptRows] = await Promise.all([
+    prisma.user.findMany({
+      select: { id: true, totalCoinsEarned: true, longestStreak: true },
+    }),
+    // Quiz count per user
+    prisma.quizAttempt.groupBy({
+      by: ["userId"],
+      _count: { id: true },
+    }),
+    // Unique correct answers per user
+    prisma.correctAnswer.groupBy({
+      by: ["userId"],
+      _count: { id: true },
+    }),
+    // Distinct (userId, quizId) pairs with category — for category coverage
+    prisma.quizAttempt.findMany({
+      select: { userId: true, quizId: true, quiz: { select: { category: true } } },
+      distinct: ["userId", "quizId"],
+    }),
+  ]);
+
+  // Build lookup maps
+  const quizCountMap = new Map(quizCountRows.map((r) => [r.userId, r._count.id]));
+  const answerCountMap = new Map(answerCountRows.map((r) => [r.userId, r._count.id]));
+
+  // Build category-count map: userId → Set<category>
+  const categoryMap = new Map<string, Set<string>>();
+  for (const row of distinctAttemptRows) {
+    if (!categoryMap.has(row.userId)) categoryMap.set(row.userId, new Set());
+    categoryMap.get(row.userId)!.add(row.quiz.category);
+  }
 
   let granted = 0;
 
@@ -35,41 +64,35 @@ export async function POST() {
 
     // Coins
     for (const t of MILESTONE_THRESHOLDS) {
-      if (user.totalCoinsEarned >= t) milestones.push({ userId: user.id, milestoneType: "coins", threshold: t });
+      if (user.totalCoinsEarned >= t)
+        milestones.push({ userId: user.id, milestoneType: "coins", threshold: t });
     }
 
     // Streak
     for (const t of STREAK_BADGE_MILESTONE_THRESHOLDS) {
-      if (user.longestStreak >= t) milestones.push({ userId: user.id, milestoneType: "streak", threshold: t });
+      if (user.longestStreak >= t)
+        milestones.push({ userId: user.id, milestoneType: "streak", threshold: t });
     }
 
     // Quizzes played
-    const quizCount = await prisma.quizAttempt.count({ where: { userId: user.id } });
+    const quizCount = quizCountMap.get(user.id) ?? 0;
     for (const t of QUIZ_MILESTONE_THRESHOLDS) {
-      if (quizCount >= t) milestones.push({ userId: user.id, milestoneType: "quizzes", threshold: t });
+      if (quizCount >= t)
+        milestones.push({ userId: user.id, milestoneType: "quizzes", threshold: t });
     }
 
     // Unique correct answers
-    const answerCount = await prisma.correctAnswer.count({ where: { userId: user.id } });
+    const answerCount = answerCountMap.get(user.id) ?? 0;
     for (const t of ANSWER_MILESTONE_THRESHOLDS) {
-      if (answerCount >= t) milestones.push({ userId: user.id, milestoneType: "answers", threshold: t });
+      if (answerCount >= t)
+        milestones.push({ userId: user.id, milestoneType: "answers", threshold: t });
     }
 
     // Category coverage
-    const attemptedQuizIds = await prisma.quizAttempt.findMany({
-      where: { userId: user.id },
-      select: { quizId: true },
-      distinct: ["quizId"],
-    });
-    if (attemptedQuizIds.length > 0) {
-      const quizCategories = await prisma.quiz.findMany({
-        where: { id: { in: attemptedQuizIds.map((q) => q.quizId) } },
-        select: { category: true },
-      });
-      const catCount = new Set(quizCategories.map((q) => q.category)).size;
-      for (const t of CATEGORY_MILESTONE_THRESHOLDS) {
-        if (catCount >= t) milestones.push({ userId: user.id, milestoneType: "categories", threshold: t });
-      }
+    const catCount = categoryMap.get(user.id)?.size ?? 0;
+    for (const t of CATEGORY_MILESTONE_THRESHOLDS) {
+      if (catCount >= t)
+        milestones.push({ userId: user.id, milestoneType: "categories", threshold: t });
     }
 
     if (milestones.length > 0) {

@@ -29,9 +29,10 @@ export default async function DiscoverPage({
     quizzes = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
 
     if (session?.user?.id) {
-      const [allAttempts, userData] = await Promise.all([
+      const pageQuizIds = quizzes.map((q) => q.id);
+      const [pageAttempts, userData] = await Promise.all([
         prisma.quizAttempt.findMany({
-          where: { userId: session.user.id },
+          where: { userId: session.user.id, quizId: { in: pageQuizIds } },
           select: { quizId: true, score: true, total: true },
         }),
         prisma.user.findUnique({
@@ -39,8 +40,8 @@ export default async function DiscoverPage({
           select: { totalCoinsEarned: true },
         }),
       ]);
-      completedQuizIds = allAttempts.filter((a) => a.score === a.total).map((a) => a.quizId);
-      attemptedQuizIds = allAttempts.map((a) => a.quizId);
+      completedQuizIds = pageAttempts.filter((a) => a.score === a.total).map((a) => a.quizId);
+      attemptedQuizIds = pageAttempts.map((a) => a.quizId);
       totalCoinsEarned = userData?.totalCoinsEarned ?? 0;
     }
   } catch {

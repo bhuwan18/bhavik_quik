@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { unstable_cache } from "next/cache";
 import { getISOWeek } from "@/lib/time";
 import Image from "next/image";
 import Link from "next/link";
@@ -58,16 +59,23 @@ export default async function LeaderboardPage({
     _count: { select: { ownedQuizlets: true, quizAttempts: true, followers: true } },
   } as const;
 
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      select: userSelect,
-      orderBy: tab === "weekly" ? { weeklyCoins: "desc" } : getOrderBy(sort, dir),
-      skip,
-      take: PAGE_SIZE,
-    }),
-    prisma.user.count({ where }),
-  ]);
+  const getCachedPage = unstable_cache(
+    async () =>
+      Promise.all([
+        prisma.user.findMany({
+          where,
+          select: userSelect,
+          orderBy: tab === "weekly" ? { weeklyCoins: "desc" } : getOrderBy(sort, dir),
+          skip,
+          take: PAGE_SIZE,
+        }),
+        prisma.user.count({ where }),
+      ]),
+    ["leaderboard-page", tab, sort, dir, String(page), currentWeek],
+    { revalidate: 30 }
+  );
+
+  const [users, total] = await getCachedPage();
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const MEDALS = ["🥇", "🥈", "🥉"];

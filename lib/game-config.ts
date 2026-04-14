@@ -91,5 +91,6 @@ export const PREMIUM_TIER_UNLOCK_COINS: Record<1 | 2 | 3, number> = {
 
 // ─── Online Presence ──────────────────────────────────────────────────────────
 
-export const ONLINE_PING_INTERVAL_MS = 2 * 60 * 1000; // Ping every 2 minutes
-export const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;     // Consider online if seen within 5 minutes
+export const ONLINE_PING_INTERVAL_MS = 5 * 60 * 1000;  // Ping every 5 minutes
+export const ONLINE_PING_DEBOUNCE_MS = 3 * 60 * 1000;  // Skip DB write if updated within 3 minutes
+export const ONLINE_THRESHOLD_MS = 6 * 60 * 1000;      // Consider online if seen within 6 minutes

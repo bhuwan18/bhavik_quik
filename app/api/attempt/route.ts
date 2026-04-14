@@ -75,7 +75,13 @@ export async function POST(req: NextRequest) {
     }),
     prisma.quiz.findUnique({
       where: { id: quizId },
-      include: { questions: true },
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        difficulty: true,
+        questions: { select: { id: true, correctIndex: true } },
+      },
     }),
     getSchoolHoursEnabled(),
     getRetakeCoinsEnabled(),
@@ -318,8 +324,8 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Non-coin milestone checks (quizzes, answers, categories, streak) ─────────
-  {
-    // FIX 4: join quiz category in the same query — eliminates separate quiz.findMany
+  // Fire-and-forget: these don't affect the response, so don't block the client
+  Promise.resolve().then(async () => {
     const [totalQuizzes, totalCorrectCount, distinctAttemptRows, earnedNonCoin] = await Promise.all([
       prisma.quizAttempt.count({ where: { userId: session.user.id } }),
       prisma.correctAnswer.count({ where: { userId: session.user.id } }),
@@ -368,7 +374,6 @@ export async function POST(req: NextRequest) {
     if (newNonCoinMilestones.length > 0) {
       await prisma.userMilestone.createMany({ data: newNonCoinMilestones, skipDuplicates: true });
 
-      // Group by type and send one notification per type (highest threshold)
       const byType = new Map<string, number[]>();
       for (const m of newNonCoinMilestones) {
         if (!byType.has(m.milestoneType)) byType.set(m.milestoneType, []);
@@ -392,7 +397,7 @@ export async function POST(req: NextRequest) {
         }).catch(() => {});
       }
     }
-  }
+  }).catch(() => {});
 
   // ── Mystical Quizlet grants ────────────────────────────────────────────────
   const mysticalGranted: { name: string; icon: string; colorFrom: string; colorTo: string; description: string }[] = [];

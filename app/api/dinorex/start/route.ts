@@ -18,11 +18,16 @@ export async function POST(req: NextRequest) {
   const players = room.players as DinoRexPlayer[];
   if (players.length < 2) return NextResponse.json({ error: "Need at least 2 players" }, { status: 400 });
 
-  // Load questions from a random official quiz
-  const quizzes = await prisma.quiz.findMany({ where: { isOfficial: true }, select: { id: true } });
-  if (!quizzes.length) return NextResponse.json({ error: "No quizzes available" }, { status: 500 });
+  // Load questions from a random official quiz (count + skip avoids fetching all IDs)
+  const quizCount = await prisma.quiz.count({ where: { isOfficial: true } });
+  if (!quizCount) return NextResponse.json({ error: "No quizzes available" }, { status: 500 });
 
-  const randomQuiz = quizzes[Math.floor(Math.random() * quizzes.length)];
+  const [randomQuiz] = await prisma.quiz.findMany({
+    where: { isOfficial: true },
+    select: { id: true },
+    skip: Math.floor(Math.random() * quizCount),
+    take: 1,
+  });
   const dbQuestions = await prisma.question.findMany({
     where: { quizId: randomQuiz.id },
     orderBy: { order: "asc" },

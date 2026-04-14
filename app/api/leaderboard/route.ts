@@ -5,7 +5,6 @@ import { prisma } from "@/lib/db";
 
 const EXCLUDED_EMAILS = ["test@bittsquiz.internal"];
 
-// Cache the public leaderboard for 30 seconds
 const getCachedLeaderboard = unstable_cache(
   async (adminEmail: string) =>
     prisma.user.findMany({
@@ -26,13 +25,9 @@ const getCachedLeaderboard = unstable_cache(
   { revalidate: 30 }
 );
 
-export async function GET() {
-  const session = await auth();
-  const isAdmin = session?.user?.isAdmin ?? false;
-  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@quizlet.internal";
-
-  if (isAdmin) {
-    const users = await prisma.user.findMany({
+const getCachedAdminLeaderboard = unstable_cache(
+  async (adminEmail: string) =>
+    prisma.user.findMany({
       where: { isAdmin: false, NOT: { email: { in: [...EXCLUDED_EMAILS, adminEmail] } } },
       select: {
         id: true,
@@ -47,7 +42,18 @@ export async function GET() {
       },
       orderBy: { coins: "desc" },
       take: 50,
-    });
+    }),
+  ["leaderboard-admin"],
+  { revalidate: 30 }
+);
+
+export async function GET() {
+  const session = await auth();
+  const isAdmin = session?.user?.isAdmin ?? false;
+  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@quizlet.internal";
+
+  if (isAdmin) {
+    const users = await getCachedAdminLeaderboard(adminEmail);
     return NextResponse.json(users);
   }
 

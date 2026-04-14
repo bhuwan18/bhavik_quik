@@ -144,6 +144,7 @@ model QuizAttempt {
   @@index([userId])
   @@index([quizId])
   @@index([completedAt])
+  @@index([userId, completedAt])
 }
 
 model Quizlet {
@@ -212,6 +213,7 @@ model CorrectAnswer {
   createdAt  DateTime @default(now())
 
   @@unique([userId, questionId])
+  @@index([questionId])
 }
 
 model ExplanationRead {
