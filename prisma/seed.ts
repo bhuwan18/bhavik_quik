@@ -3660,6 +3660,198 @@ const QUIZZES = [
     ],
   },
 
+  // ── ARTISTS EXTRA 2 ────────────────────────────────────────────
+  {
+    title: "Renaissance Masters",
+    description: "The golden age of European art.",
+    category: "artists",
+    difficulty: 3,
+    questions: [
+      {
+        text: "Which Renaissance artist painted the ceiling of the Sistine Chapel?",
+        options: ["Leonardo da Vinci", "Raphael", "Michelangelo", "Donatello"],
+        correctIndex: 2,
+        explanation: "Michelangelo painted the Sistine Chapel ceiling between 1508 and 1512, commissioned by Pope Julius II. The centrepiece is 'The Creation of Adam'. Michelangelo reportedly preferred sculpture over painting and found the commission frustrating.",
+      },
+      {
+        text: "Which painting by Leonardo da Vinci depicts the last meal of Jesus with his apostles?",
+        options: ["The Annunciation", "The Last Supper", "The Virgin of the Rocks", "Lady with an Ermine"],
+        correctIndex: 1,
+        explanation: "The Last Supper (c. 1495–1498) is a mural painted by Leonardo da Vinci on the wall of the refectory of Santa Maria delle Grazie in Milan. It captures the moment Jesus announces that one of his apostles will betray him.",
+      },
+      {
+        text: "What nationality was the Renaissance painter Titian?",
+        options: ["Florentine", "Roman", "Venetian", "Milanese"],
+        correctIndex: 2,
+        explanation: "Titian (Tiziano Vecelli, c. 1488–1576) was the leading painter of the Venetian school. He was renowned for his rich use of colour and became the official painter of the Venetian Republic.",
+      },
+      {
+        text: "Which Renaissance artist created the sculpture 'David'?",
+        options: ["Raphael", "Donatello", "Michelangelo", "Bernini"],
+        correctIndex: 2,
+        explanation: "Michelangelo carved his marble statue of David between 1501 and 1504. Standing 5.17 metres tall, it depicts the biblical hero before his battle with Goliath and is considered one of the greatest sculptures ever made. It resides in the Galleria dell'Accademia, Florence.",
+      },
+      {
+        text: "What is the subject of Raphael's famous fresco 'The School of Athens'?",
+        options: ["The birth of Christianity", "Ancient Greek philosophers gathered together", "The founding of Rome", "A Roman emperor's court"],
+        correctIndex: 1,
+        explanation: "The School of Athens (1509–1511), painted in the Vatican's Apostolic Palace, depicts great ancient Greek thinkers including Plato and Aristotle at the centre, surrounded by philosophers such as Socrates, Pythagoras, Euclid, and Heraclitus.",
+      },
+    ],
+  },
+  {
+    title: "Sculpture Through the Ages",
+    description: "From ancient marble to modern installations.",
+    category: "artists",
+    difficulty: 3,
+    questions: [
+      {
+        text: "Which ancient Greek statue is known for its missing arms?",
+        options: ["Winged Victory of Samothrace", "Venus de Milo", "Discobolus", "Laocoön"],
+        correctIndex: 1,
+        explanation: "The Venus de Milo (c. 130–100 BC), housed in the Louvre, is a marble statue of Aphrodite. Its arms were already missing when it was discovered in 1820 on the island of Milos, and their original position remains a mystery.",
+      },
+      {
+        text: "Who sculpted 'The Thinker'?",
+        options: ["Constantin Brâncuși", "Auguste Rodin", "Aristide Maillol", "Camille Claudel"],
+        correctIndex: 1,
+        explanation: "The Thinker (Le Penseur) was created by French sculptor Auguste Rodin in 1880. Originally conceived as part of a larger work called The Gates of Hell, the solitary figure became one of the most recognised sculptures in the world.",
+      },
+      {
+        text: "What material is the ancient Greek Elgin Marbles primarily made of?",
+        options: ["Bronze", "Limestone", "Marble", "Terracotta"],
+        correctIndex: 2,
+        explanation: "The Elgin Marbles are classical Greek marble sculptures that originally decorated the Parthenon in Athens (c. 447–432 BC). They were removed by Lord Elgin in the early 19th century and are currently held in the British Museum, a source of ongoing controversy with Greece.",
+      },
+      {
+        text: "Which artist is famous for large-scale balloon animal sculptures?",
+        options: ["Damien Hirst", "Jeff Koons", "Takashi Murakami", "Anish Kapoor"],
+        correctIndex: 1,
+        explanation: "Jeff Koons is famous for his stainless steel Balloon Animals series, including Balloon Dog (Orange), which sold at Christie's in 2013 for $58.4 million — a record for a living artist at the time. The works mimic the shiny surface of twisted balloons.",
+      },
+      {
+        text: "Where is Michelangelo's Pietà housed?",
+        options: ["The Louvre, Paris", "St. Peter's Basilica, Vatican City", "Galleria dell'Accademia, Florence", "Uffizi Gallery, Florence"],
+        correctIndex: 1,
+        explanation: "Michelangelo carved the Pietà (1498–1499) when he was just 24 years old. It depicts the Virgin Mary holding the body of Jesus after the crucifixion and is displayed in St. Peter's Basilica in Vatican City. It is the only work Michelangelo ever signed.",
+      },
+    ],
+  },
+  {
+    title: "Dutch & Flemish Masters",
+    description: "The Golden Age of Northern European painting.",
+    category: "artists",
+    difficulty: 4,
+    questions: [
+      {
+        text: "Who painted 'Girl with a Pearl Earring'?",
+        options: ["Rembrandt van Rijn", "Jan Vermeer", "Frans Hals", "Pieter de Hooch"],
+        correctIndex: 1,
+        explanation: "Girl with a Pearl Earring (c. 1665) was painted by Dutch master Johannes (Jan) Vermeer and is sometimes called the 'Mona Lisa of the North'. The identity of the girl is unknown. The painting is held at the Mauritshuis museum in The Hague.",
+      },
+      {
+        text: "Which Dutch artist is famous for meticulous domestic interior scenes lit by window light?",
+        options: ["Rembrandt", "Vermeer", "Rubens", "Van Dyck"],
+        correctIndex: 1,
+        explanation: "Johannes Vermeer (1632–1675) is celebrated for intimate domestic scenes with masterful depiction of natural light, such as The Milkmaid and Woman Reading a Letter. Only 34–36 works are firmly attributed to him.",
+      },
+      {
+        text: "Rembrandt's most famous group portrait depicts members of which profession?",
+        options: ["Merchants", "Physicians", "Civic Guards (militia)", "Clergy"],
+        correctIndex: 2,
+        explanation: "Rembrandt's The Night Watch (1642) is a large group portrait of a company of Amsterdam civic guards (militia), led by Captain Frans Banninck Cocq. At 3.63 × 4.37 metres, it is one of the largest and most celebrated Dutch Golden Age paintings.",
+      },
+      {
+        text: "Peter Paul Rubens was from which country?",
+        options: ["Netherlands", "Germany", "Flanders (present-day Belgium)", "France"],
+        correctIndex: 2,
+        explanation: "Peter Paul Rubens (1577–1640) was a Flemish Baroque painter from Antwerp in the Spanish Netherlands (present-day Belgium). He was prolific and internationally influential, known for dynamic compositions and sensuous figures.",
+      },
+      {
+        text: "What technique did Rembrandt use to create dramatic contrast of light and dark in his portraits?",
+        options: ["Impasto", "Sfumato", "Chiaroscuro", "Pointillism"],
+        correctIndex: 2,
+        explanation: "Rembrandt is a master of chiaroscuro — the technique of using strong contrasts between light and dark to model three-dimensional forms. His paintings often feature figures dramatically lit against deep, shadowy backgrounds.",
+      },
+    ],
+  },
+  {
+    title: "Street Art & Contemporary",
+    description: "Art beyond the gallery walls.",
+    category: "artists",
+    difficulty: 2,
+    questions: [
+      {
+        text: "Banksy's identity is officially known to the public.",
+        options: ["True", "False", "Partially — only his first name is known", "He revealed it in 2020"],
+        correctIndex: 1,
+        explanation: "Banksy's true identity has never been officially confirmed. The anonymous British street artist and political activist has kept their identity secret since they began creating politically charged stencil works in Bristol in the 1990s.",
+      },
+      {
+        text: "Which American artist pioneered the graffiti-to-gallery movement in the 1980s?",
+        options: ["Keith Haring", "Jean-Michel Basquiat", "KAWS", "Os Gemeos"],
+        correctIndex: 1,
+        explanation: "Jean-Michel Basquiat (1960–1988) rose from the New York graffiti scene under the tag SAMO and quickly transitioned into fine art galleries. His neo-expressionist paintings combined text, symbols, and figures reflecting race, poverty, and identity.",
+      },
+      {
+        text: "What is Keith Haring's most iconic visual motif?",
+        options: ["Balloon animals", "Radiant baby and dancing figures", "Soup cans", "Melting clocks"],
+        correctIndex: 1,
+        explanation: "Keith Haring's signature style features bold, simple figures — most notably the 'radiant baby' (a crawling baby emitting rays of light) and interlocking dancing figures. He started his career drawing in chalk on blank advertising spaces in New York City subway stations.",
+      },
+      {
+        text: "In which city did street art as a movement largely originate?",
+        options: ["London", "Paris", "New York City", "São Paulo"],
+        correctIndex: 2,
+        explanation: "New York City — particularly the subway system and South Bronx — was the birthplace of modern graffiti and street art culture in the late 1960s and 1970s. Writers like TAKI 183 and Phase 2 popularised the style that would eventually influence artists worldwide.",
+      },
+      {
+        text: "Banksy's artwork 'Girl with Balloon' famously did what at a Sotheby's auction in 2018?",
+        options: ["Sold for a world record price", "Was withdrawn before bidding", "Partially shredded itself moments after being sold", "Was revealed to be a forgery"],
+        correctIndex: 2,
+        explanation: "Seconds after 'Girl with Balloon' sold at Sotheby's London for £1.04 million in October 2018, a shredder hidden inside the frame activated and partially destroyed the canvas. The shredded work was renamed 'Love is in the Bin' and later resold in 2021 for £18.6 million.",
+      },
+    ],
+  },
+  {
+    title: "Art Techniques & Media",
+    description: "How artists create — the tools and methods behind the work.",
+    category: "artists",
+    difficulty: 3,
+    questions: [
+      {
+        text: "What is 'fresco' painting?",
+        options: ["Painting on dry plaster with oil paint", "Painting on wet plaster with water-based pigments", "Painting on canvas with acrylic", "Painting on wood with egg tempera"],
+        correctIndex: 1,
+        explanation: "Fresco (from the Italian for 'fresh') is a technique where water-based pigments are applied to freshly laid wet lime plaster. As the plaster dries, it bonds the pigment permanently into the wall. Michelangelo's Sistine Chapel ceiling is the world's most famous fresco.",
+      },
+      {
+        text: "What binder is used in egg tempera paint?",
+        options: ["Linseed oil", "Gum arabic", "Egg yolk", "Wax"],
+        correctIndex: 2,
+        explanation: "Egg tempera uses egg yolk as its binder to hold pigment. It was the dominant painting medium in Europe before oil paint became widespread in the 15th century. It dries very quickly, produces luminous colours, and was used by artists like Botticelli and Fra Angelico.",
+      },
+      {
+        text: "What is 'etching' in printmaking?",
+        options: ["Carving a design into wood", "Using acid to incise lines into a metal plate", "Pressing an inked stone onto paper", "Cutting a design into linoleum"],
+        correctIndex: 1,
+        explanation: "Etching involves covering a metal plate (usually zinc or copper) with a wax ground, drawing through it with a needle, then immersing the plate in acid which bites into the exposed metal. Ink is applied to the incised lines, and paper is pressed onto the plate to transfer the image.",
+      },
+      {
+        text: "Which pigment gave Vermeer's paintings their distinctive luminous blue colour?",
+        options: ["Cobalt blue", "Prussian blue", "Ultramarine (from lapis lazuli)", "Cerulean blue"],
+        correctIndex: 2,
+        explanation: "Vermeer frequently used natural ultramarine, ground from the semi-precious stone lapis lazuli imported from Afghanistan. It was extraordinarily expensive — more costly than gold by weight — which is one reason Vermeer painted so few works and died in debt.",
+      },
+      {
+        text: "What does 'en plein air' mean in painting?",
+        options: ["In the style of the old masters", "Outdoors, in the open air", "With a palette knife only", "Using thin transparent glazes"],
+        correctIndex: 1,
+        explanation: "'En plein air' is French for 'in the open air'. The Impressionists popularised painting outdoors directly from nature to capture natural light and atmospheric effects. Claude Monet and Camille Corot were among the most celebrated plein air painters.",
+      },
+    ],
+  },
+
   // ── MUSICIANS EXTRA ─────────────────────────────────────────────
   {
     title: "Indian Music",
@@ -5017,6 +5209,198 @@ const QUIZZES = [
     ],
   },
 
+  // ── PHYSICS EXTRA 2 ───────────────────────────────────────────
+  {
+    title: "Waves & Optics",
+    description: "Light, sound, and the nature of waves.",
+    category: "physics",
+    difficulty: 2,
+    questions: [
+      {
+        text: "What is the relationship between wave speed, frequency, and wavelength?",
+        options: ["v = f / λ", "v = f × λ", "v = λ / f", "v = f² × λ"],
+        correctIndex: 1,
+        explanation: "Wave speed (v) equals frequency (f) multiplied by wavelength (λ): v = fλ. For example, light travels at ~3×10⁸ m/s. A higher frequency means a shorter wavelength at the same speed. This applies to all waves — light, sound, water waves.",
+      },
+      {
+        text: "What is the Doppler effect?",
+        options: ["The bending of light around a corner", "The change in observed frequency due to relative motion between source and observer", "The splitting of white light into colours by a prism", "The interference pattern formed by two coherent light sources"],
+        correctIndex: 1,
+        explanation: "The Doppler effect is the change in perceived frequency when a source and observer are moving relative to each other. A siren sounds higher-pitched as an ambulance approaches and lower as it recedes. The same effect occurs with light — galaxies moving away show redshifted light.",
+      },
+      {
+        text: "What type of wave is sound?",
+        options: ["Transverse wave", "Electromagnetic wave", "Longitudinal wave", "Surface wave"],
+        correctIndex: 2,
+        explanation: "Sound is a longitudinal wave — the particles of the medium vibrate parallel to the direction of wave travel, creating compressions and rarefactions. Light is a transverse wave where oscillations are perpendicular to propagation. Sound cannot travel through a vacuum.",
+      },
+      {
+        text: "What is total internal reflection?",
+        options: ["When all light hitting a surface is absorbed", "When light travelling from a denser to less dense medium hits the boundary at or above the critical angle and reflects entirely back", "When a lens focuses all parallel rays to a single point", "When two light waves cancel each other out completely"],
+        correctIndex: 1,
+        explanation: "Total internal reflection occurs when light in a denser medium (e.g. glass) strikes the boundary at an angle greater than the critical angle — all light reflects back with none transmitted. This principle underpins fibre optic cables, which transmit data as light pulses.",
+      },
+      {
+        text: "What colour of visible light has the highest frequency?",
+        options: ["Red", "Green", "Yellow", "Violet"],
+        correctIndex: 3,
+        explanation: "Violet light has the highest frequency (shortest wavelength, ~380–450 nm) in the visible spectrum. Red has the lowest frequency (longest wavelength, ~620–750 nm). The order from lowest to highest frequency is: red, orange, yellow, green, blue, indigo, violet — remembered as ROYGBIV.",
+      },
+    ],
+  },
+  {
+    title: "Forces & Motion",
+    description: "Newton's laws and beyond — mechanics in depth.",
+    category: "physics",
+    difficulty: 3,
+    questions: [
+      {
+        text: "A car of mass 1000 kg accelerates at 2 m/s². What is the net force acting on it?",
+        options: ["500 N", "1000 N", "2000 N", "4000 N"],
+        correctIndex: 2,
+        explanation: "Using Newton's Second Law: F = ma = 1000 kg × 2 m/s² = 2000 N. This is the net (resultant) force — any resistive forces like friction would need to be added to find the total driving force. The unit of force, the Newton, is defined as 1 kg·m/s².",
+      },
+      {
+        text: "What is the principle of conservation of momentum?",
+        options: ["Momentum increases when a force is applied", "The total momentum of a closed system remains constant if no external force acts", "Momentum is always equal to kinetic energy", "Objects at rest have zero momentum at all times"],
+        correctIndex: 1,
+        explanation: "In a closed system (no external forces), total momentum before = total momentum after any interaction. This explains why a gun recoils when fired, why rockets work in space, and the outcome of billiard ball collisions. Momentum is a vector: p = mv.",
+      },
+      {
+        text: "What is the difference between mass and weight?",
+        options: ["They are the same thing measured in different units", "Mass is the amount of matter (kg); weight is the gravitational force on that mass (N)", "Weight is constant everywhere; mass changes with gravity", "Mass is measured in Newtons; weight in kilograms"],
+        correctIndex: 1,
+        explanation: "Mass (kg) is the amount of matter in an object — it is constant everywhere. Weight (N) is the gravitational force acting on that mass: W = mg. On the Moon (g ≈ 1.6 m/s²), you weigh about one-sixth as much as on Earth, but your mass is unchanged.",
+      },
+      {
+        text: "A ball is thrown horizontally off a cliff. Ignoring air resistance, what happens to its horizontal velocity?",
+        options: ["It decreases due to gravity", "It increases due to gravity", "It remains constant", "It reverses direction after reaching maximum height"],
+        correctIndex: 2,
+        explanation: "In projectile motion (no air resistance), horizontal and vertical components are independent. Gravity only acts vertically, so horizontal velocity remains constant throughout the flight. The ball accelerates downward at g = 9.8 m/s² while moving forward at the same horizontal speed.",
+      },
+      {
+        text: "What is terminal velocity?",
+        options: ["The maximum speed achievable in a vacuum", "The constant speed reached when drag force equals gravitational force", "The speed at which an object breaks the sound barrier", "The minimum speed needed to escape a planet's gravity"],
+        correctIndex: 1,
+        explanation: "Terminal velocity is reached when the upward drag force equals the downward gravitational force (weight), giving zero net force and hence zero acceleration. A skydiver in free fall reaches ~55 m/s (120 mph) in a belly-to-earth position. Opening a parachute increases drag, lowering terminal velocity.",
+      },
+    ],
+  },
+  {
+    title: "Electricity & Circuits",
+    description: "Voltage, current, resistance, and how circuits work.",
+    category: "physics",
+    difficulty: 3,
+    questions: [
+      {
+        text: "Two resistors of 4Ω and 6Ω are connected in series. What is the total resistance?",
+        options: ["2.4 Ω", "5 Ω", "10 Ω", "24 Ω"],
+        correctIndex: 2,
+        explanation: "Resistors in series simply add: R_total = R₁ + R₂ = 4 + 6 = 10 Ω. In a series circuit the same current flows through each component. In contrast, parallel resistors share the current — their combined resistance is always less than the smallest individual resistor.",
+      },
+      {
+        text: "What is electrical power in terms of voltage (V) and current (I)?",
+        options: ["P = V / I", "P = V + I", "P = V × I", "P = V² / I²"],
+        correctIndex: 2,
+        explanation: "Electrical power P = VI (watts = volts × amperes). Combined with Ohm's Law (V = IR), this gives P = I²R and P = V²/R. A 60W light bulb on a 240V supply draws 0.25A of current. Power is the rate of energy transfer.",
+      },
+      {
+        text: "What is the function of a capacitor in an electric circuit?",
+        options: ["It increases current flow indefinitely", "It stores electrical energy in an electric field between two plates", "It converts AC to DC current", "It measures voltage across a circuit branch"],
+        correctIndex: 1,
+        explanation: "A capacitor stores energy by accumulating electric charge on two conductive plates separated by an insulator (dielectric). Capacitance is measured in Farads (F). Capacitors are used in filters, timing circuits, camera flashes, and power supply smoothing.",
+      },
+      {
+        text: "What is the difference between AC and DC electricity?",
+        options: ["AC has higher voltage than DC", "DC flows in one direction; AC periodically reverses direction", "AC is used only in batteries; DC comes from power stations", "DC travels faster than AC"],
+        correctIndex: 1,
+        explanation: "Direct Current (DC) flows in one direction only — batteries produce DC. Alternating Current (AC) periodically reverses direction; mains electricity is AC (50 Hz in India/UK, 60 Hz in the US). AC is used for power distribution because voltage can be easily transformed.",
+      },
+      {
+        text: "Why are household appliances connected in parallel rather than in series?",
+        options: ["Series circuits require more wire", "In parallel, each appliance receives the full mains voltage and can be switched independently", "Parallel circuits use less current overall", "Series connections overheat more quickly"],
+        correctIndex: 1,
+        explanation: "In a parallel circuit, each branch receives the full supply voltage (e.g. 230V). This means appliances work at their rated voltage and one device failing does not break the whole circuit. In series, the voltage is split and all devices must be on or off together.",
+      },
+    ],
+  },
+  {
+    title: "Particle Physics",
+    description: "Quarks, bosons, and the Standard Model.",
+    category: "physics",
+    difficulty: 5,
+    questions: [
+      {
+        text: "What are the three generations of quarks in the Standard Model?",
+        options: ["Up/Down, Charm/Strange, Top/Bottom", "Red/Green/Blue, Yellow/Purple/White, Alpha/Beta/Gamma", "Electron/Muon/Tau, Proton/Neutron/Pion, Higgs/W/Z", "Light/Medium/Heavy, Spin-0/Spin-1/Spin-2, Strong/Weak/EM"],
+        correctIndex: 0,
+        explanation: "The Standard Model has six quarks in three generations: Up & Down (1st generation — make up protons and neutrons), Charm & Strange (2nd), and Top & Bottom (3rd). Top is the heaviest, with a mass comparable to a gold atom. Quarks are never found in isolation.",
+      },
+      {
+        text: "What particle was discovered at CERN in 2012, confirming the Higgs mechanism?",
+        options: ["Top quark", "Graviton", "Higgs boson", "W boson"],
+        correctIndex: 2,
+        explanation: "The Higgs boson was discovered at CERN's Large Hadron Collider in July 2012 by the ATLAS and CMS experiments. It was the last missing piece of the Standard Model, confirming the Higgs field mechanism that gives other particles their mass. Peter Higgs and François Englert won the 2013 Nobel Prize.",
+      },
+      {
+        text: "What force is mediated by gluons?",
+        options: ["Electromagnetic force", "Weak nuclear force", "Gravitational force", "Strong nuclear force"],
+        correctIndex: 3,
+        explanation: "Gluons are the force-carrier bosons of the strong nuclear force, which binds quarks together inside protons and neutrons via a property called 'colour charge'. Photons carry the electromagnetic force; W and Z bosons carry the weak force; the graviton (unconfirmed) would carry gravity.",
+      },
+      {
+        text: "What is antimatter, and what happens when it meets matter?",
+        options: ["Antimatter is dark matter; they coexist without interaction", "Antimatter has the same mass but opposite charge/quantum numbers; matter and antimatter annihilate to produce pure energy (photons)", "Antimatter travels backwards in time and cannot interact with matter", "Antimatter is made of anti-quarks only; it merges with matter to form neutrons"],
+        correctIndex: 1,
+        explanation: "Every particle has an antiparticle with the same mass but opposite quantum numbers (e.g. the antielectron/positron has +1 charge). When matter meets antimatter they annihilate, converting their entire combined mass into energy (usually gamma-ray photons) via E=mc². The asymmetry that left excess matter after the Big Bang is one of the biggest open questions in physics.",
+      },
+      {
+        text: "What is the name of the theoretical particle that would mediate the gravitational force?",
+        options: ["Gravitino", "Graviton", "Higgson", "Gluino"],
+        correctIndex: 1,
+        explanation: "The graviton is the hypothetical force-carrier boson for gravity, analogous to the photon for electromagnetism. It has not been detected experimentally. Gravity is the only fundamental force not yet incorporated into the Standard Model; merging it with quantum mechanics into a Theory of Everything remains one of physics' greatest challenges.",
+      },
+    ],
+  },
+  {
+    title: "Astrophysics & the Universe",
+    description: "Stars, galaxies, black holes, and the Big Bang.",
+    category: "physics",
+    difficulty: 4,
+    questions: [
+      {
+        text: "What is a light-year?",
+        options: ["The time it takes light to travel from the Sun to Earth", "The distance light travels in one year (~9.46 × 10¹⁵ metres)", "One million kilometres", "The age of the universe divided by its size"],
+        correctIndex: 1,
+        explanation: "A light-year is a unit of distance — the distance light travels in one Julian year at ~3×10⁸ m/s, approximately 9.461 × 10¹⁵ metres (about 5.88 trillion miles). The nearest star system, Alpha Centauri, is ~4.37 light-years away. The observable universe is about 93 billion light-years in diameter.",
+      },
+      {
+        text: "What is the current scientific estimate for the age of the universe?",
+        options: ["4.5 billion years", "10 billion years", "13.8 billion years", "20 billion years"],
+        correctIndex: 2,
+        explanation: "The universe is estimated to be approximately 13.8 billion years old, based on measurements of the cosmic microwave background radiation by the Planck satellite (2013). By contrast, Earth is about 4.54 billion years old and the Sun about 4.6 billion years old.",
+      },
+      {
+        text: "What is a neutron star?",
+        options: ["A star that has run out of hydrogen fuel", "An extremely dense stellar remnant composed almost entirely of neutrons, formed after a supernova", "A star with no nuclear fusion occurring in its core", "A failed star too small to sustain hydrogen fusion"],
+        correctIndex: 1,
+        explanation: "Neutron stars form when a massive star (8–20 solar masses) explodes as a supernova and its core collapses. The remaining object is roughly 20 km across but contains more mass than the Sun, with densities so extreme that protons and electrons merge into neutrons. A teaspoon of neutron star material would weigh ~10 million tonnes.",
+      },
+      {
+        text: "What is dark matter?",
+        options: ["The matter inside black holes which no longer emits light", "Hypothetical matter that interacts gravitationally but does not emit, absorb, or reflect light", "The dust and gas between galaxies that absorbs starlight", "Anti-matter that has cooled below the threshold of photon emission"],
+        correctIndex: 1,
+        explanation: "Dark matter is an undetected form of matter inferred from gravitational effects — galaxies rotate too fast and bend light too strongly to be explained by visible matter alone. It is estimated to make up ~27% of the universe's total mass-energy. Its nature remains unknown; leading candidates include WIMPs and axions.",
+      },
+      {
+        text: "What is the cosmic microwave background (CMB)?",
+        options: ["Radiation emitted by the Sun in the microwave spectrum", "The thermal afterglow of the Big Bang, permeating all of space at ~2.7 K", "Microwave radiation produced by quasars", "Background noise generated by microwave-emitting stars throughout the Milky Way"],
+        correctIndex: 1,
+        explanation: "The CMB is thermal radiation left over from about 380,000 years after the Big Bang, when the universe cooled enough for protons and electrons to form neutral hydrogen (recombination), allowing photons to travel freely. It was discovered accidentally in 1965 by Penzias and Wilson at Bell Labs, who won the 1978 Nobel Prize. Its temperature is ~2.725 K.",
+      },
+    ],
+  },
+
   // ── WORLD LANGUAGES ───────────────────────────────────────────
   {
     title: "Spanish Basics",
@@ -5081,6 +5465,198 @@ const QUIZZES = [
       { text: "What is the official language of Brazil?", options: ["Spanish", "Portuguese", "French", "English"], correctIndex: 1 },
       { text: "Which language is written right to left AND is spoken by over 300 million people?", options: ["Urdu", "Hebrew", "Arabic", "Farsi"], correctIndex: 2 },
       { text: "Swahili is a major language in which continent?", options: ["Asia", "South America", "Europe", "Africa"], correctIndex: 3 },
+    ],
+  },
+
+  // ── WORLD LANGUAGES EXTRA ─────────────────────────────────────
+  {
+    title: "Japanese Basics",
+    description: "Greetings, numbers, and everyday words in Japanese.",
+    category: "world-languages",
+    difficulty: 2,
+    questions: [
+      {
+        text: "How do you say 'Thank you' in Japanese?",
+        options: ["Sumimasen", "Arigatou", "Konnichiwa", "Sayonara"],
+        correctIndex: 1,
+        explanation: "'Arigatou' (ありがとう) means 'thank you' in Japanese. A more formal version is 'Arigatou gozaimasu'. 'Sumimasen' means 'excuse me/sorry', 'Konnichiwa' means 'hello/good afternoon', and 'Sayonara' means 'goodbye'.",
+      },
+      {
+        text: "Which writing system uses characters that represent syllables and is used for foreign loanwords in Japanese?",
+        options: ["Hiragana", "Katakana", "Kanji", "Romaji"],
+        correctIndex: 1,
+        explanation: "Katakana (カタカナ) is a syllabic script used primarily for foreign loanwords (e.g., テレビ = terebi = television), onomatopoeia, and emphasis. Hiragana is used for native Japanese words and grammar; Kanji are Chinese-derived logographic characters.",
+      },
+      {
+        text: "What does 'Sakura' (さくら) mean in Japanese?",
+        options: ["Mountain", "Cherry blossom", "Sunrise", "River"],
+        correctIndex: 1,
+        explanation: "Sakura (桜/さくら) means cherry blossom. The annual cherry blossom season (hanami) is a deeply significant cultural event in Japan, celebrated with outdoor gatherings under blooming trees. The sakura is also Japan's unofficial national flower.",
+      },
+      {
+        text: "How do you say 'one, two, three' in Japanese?",
+        options: ["Ichi, ni, san", "Hana, dul, set", "Yi, er, san", "Un, deux, trois"],
+        correctIndex: 0,
+        explanation: "The Japanese numbers one to three are ichi (一), ni (二), san (三). These are the Sino-Japanese readings used in most counting contexts. 'Hana, dul, set' is Korean; 'Yi, er, san' is Mandarin Chinese; 'Un, deux, trois' is French.",
+      },
+      {
+        text: "What does 'Kawaii' (かわいい) mean?",
+        options: ["Strong", "Scary", "Cute", "Fast"],
+        correctIndex: 2,
+        explanation: "'Kawaii' means cute or adorable in Japanese and has become a global cultural phenomenon. It describes anything charming, small, or endearing — from characters like Hello Kitty to fashion styles. The word is central to modern Japanese pop culture.",
+      },
+    ],
+  },
+  {
+    title: "German Language",
+    description: "Core vocabulary and phrases in German.",
+    category: "world-languages",
+    difficulty: 3,
+    questions: [
+      {
+        text: "How do you say 'Good evening' in German?",
+        options: ["Guten Morgen", "Guten Tag", "Guten Abend", "Gute Nacht"],
+        correctIndex: 2,
+        explanation: "'Guten Abend' means 'good evening' in German. 'Guten Morgen' = good morning, 'Guten Tag' = good day/afternoon, and 'Gute Nacht' = good night. German distinguishes politely between times of day in greetings.",
+      },
+      {
+        text: "What does the German word 'Fernweh' mean?",
+        options: ["Homesickness", "A longing for distant places", "Fear of heights", "Wandering through the forest"],
+        correctIndex: 1,
+        explanation: "'Fernweh' (literally 'farsickness') is the longing or ache for distant, unexplored places — the opposite of 'Heimweh' (homesickness). German is famous for compound words that express emotions with no direct English equivalent.",
+      },
+      {
+        text: "Which case is used in German for the direct object of a sentence?",
+        options: ["Nominative", "Accusative", "Dative", "Genitive"],
+        correctIndex: 1,
+        explanation: "German has four grammatical cases. The Accusative case marks the direct object (the thing receiving the action). For example, in 'Ich sehe den Mann' (I see the man), 'den Mann' is in the Accusative. The Nominative marks the subject.",
+      },
+      {
+        text: "What does 'Entschuldigung' mean in German?",
+        options: ["Thank you", "You're welcome", "Excuse me / Sorry", "Please"],
+        correctIndex: 2,
+        explanation: "'Entschuldigung' means 'excuse me' or 'I'm sorry' — it is used both to apologise and to get someone's attention (like 'pardon me'). It comes from 'Schuld' (guilt/debt) with the prefix 'ent-' indicating removal — literally 'un-guilting'.",
+      },
+      {
+        text: "German nouns have how many grammatical genders?",
+        options: ["1", "2", "3", "4"],
+        correctIndex: 2,
+        explanation: "German nouns have three grammatical genders: masculine (der), feminine (die), and neuter (das). Unlike Romance languages, the gender of German nouns does not always reflect natural gender and must largely be memorised.",
+      },
+    ],
+  },
+  {
+    title: "Mandarin Chinese Basics",
+    description: "Introduction to the world's most spoken language.",
+    category: "world-languages",
+    difficulty: 3,
+    questions: [
+      {
+        text: "How many tones does Standard Mandarin Chinese have?",
+        options: ["2", "3", "4", "6"],
+        correctIndex: 2,
+        explanation: "Standard Mandarin (Pǔtōnghuà) has four tones plus a neutral tone: 1st (flat high), 2nd (rising), 3rd (dipping), 4th (falling). The same syllable spoken in different tones has completely different meanings — e.g., 'mā' (mother) vs 'mǎ' (horse).",
+      },
+      {
+        text: "What does 'Nǐ hǎo' (你好) mean in Mandarin?",
+        options: ["Goodbye", "Thank you", "Hello", "I'm sorry"],
+        correctIndex: 2,
+        explanation: "'Nǐ hǎo' (你好) is the standard Mandarin greeting meaning 'hello' — literally 'you good'. A more formal version is 'Nín hǎo' (您好). The reply is simply 'Nǐ hǎo' back, or 'Nǐ hǎo ma?' (How are you?).",
+      },
+      {
+        text: "Which writing system is used for Mandarin Chinese?",
+        options: ["Hangul", "Hiragana", "Chinese characters (Hanzi)", "Arabic script"],
+        correctIndex: 2,
+        explanation: "Mandarin is written using Hanzi (汉字) — Chinese characters. Mainland China uses simplified characters (简体字) while Taiwan and Hong Kong use traditional characters (繁體字). Pinyin, a romanisation system, is used to teach pronunciation.",
+      },
+      {
+        text: "What does 'Xièxiè' (谢谢) mean?",
+        options: ["Please", "Thank you", "You're welcome", "Excuse me"],
+        correctIndex: 1,
+        explanation: "'Xièxiè' (谢谢, pronounced shyeh-shyeh) means 'thank you' in Mandarin. The response is often 'Bù kèqì' (不客气) meaning 'you're welcome' or 'don't mention it'.",
+      },
+      {
+        text: "Mandarin Chinese is the official language of which country, used as 'Putonghua'?",
+        options: ["Taiwan", "Singapore", "China (People's Republic)", "Hong Kong"],
+        correctIndex: 2,
+        explanation: "Pǔtōnghuà (普通话), literally 'common speech', is the official standard Mandarin of the People's Republic of China. Taiwan calls its standard form Guóyǔ (國語); Singapore uses Mandarin as one of four official languages. Hong Kong's primary official languages are Cantonese and English.",
+      },
+    ],
+  },
+  {
+    title: "Language Families of the World",
+    description: "How the world's languages are related.",
+    category: "world-languages",
+    difficulty: 4,
+    questions: [
+      {
+        text: "Which language family do English, Spanish, Hindi, and Russian all belong to?",
+        options: ["Afro-Asiatic", "Sino-Tibetan", "Indo-European", "Austronesian"],
+        correctIndex: 2,
+        explanation: "English, Spanish, Hindi, Russian, and about 445 other languages all belong to the Indo-European family — the largest language family by number of speakers. It includes Germanic, Romance, Indo-Iranian, Slavic, and several other branches.",
+      },
+      {
+        text: "Which language is NOT a Romance language?",
+        options: ["Romanian", "Portuguese", "Greek", "Catalan"],
+        correctIndex: 2,
+        explanation: "Greek is not a Romance language — it belongs to its own Hellenic branch of Indo-European. Romanian, Portuguese, and Catalan are all Romance languages that descended from Latin. Other Romance languages include French, Spanish, and Italian.",
+      },
+      {
+        text: "Arabic, Hebrew, and Amharic belong to which language family?",
+        options: ["Indo-European", "Dravidian", "Afro-Asiatic", "Turkic"],
+        correctIndex: 2,
+        explanation: "Arabic, Hebrew, and Amharic (the official language of Ethiopia) are all Semitic languages, which form a branch of the Afro-Asiatic family. This family includes over 300 languages spoken across North Africa and the Middle East.",
+      },
+      {
+        text: "Which is the largest language family by number of native speakers?",
+        options: ["Sino-Tibetan", "Indo-European", "Afro-Asiatic", "Austronesian"],
+        correctIndex: 1,
+        explanation: "The Indo-European family has approximately 3.2 billion native speakers — roughly 46% of the world's population. It includes English, Spanish, Hindi, Bengali, Portuguese, Russian, and many others. Sino-Tibetan (including Mandarin) is second with about 1.4 billion.",
+      },
+      {
+        text: "Tamil, Telugu, Kannada, and Malayalam belong to which language family?",
+        options: ["Indo-European", "Dravidian", "Austroasiatic", "Sino-Tibetan"],
+        correctIndex: 1,
+        explanation: "Tamil, Telugu, Kannada, and Malayalam are the four classical Dravidian languages spoken primarily in South India and Sri Lanka. The Dravidian family is entirely distinct from Indo-European and predates the arrival of Sanskrit in India.",
+      },
+    ],
+  },
+  {
+    title: "Loanwords & Language Fun",
+    description: "Words borrowed across languages and linguistic trivia.",
+    category: "world-languages",
+    difficulty: 2,
+    questions: [
+      {
+        text: "The English word 'jungle' comes from which language?",
+        options: ["Arabic", "Hindi/Sanskrit", "Swahili", "Portuguese"],
+        correctIndex: 1,
+        explanation: "'Jungle' comes from the Hindi/Urdu word 'jangal' (जंगल), which was borrowed from Sanskrit 'jāṅgala' meaning wild or arid land. It entered English through British colonisation of India in the 18th century. Many English words have Indian origins, including shampoo, bungalow, and pyjamas.",
+      },
+      {
+        text: "Which language gave English the word 'algebra'?",
+        options: ["Latin", "Greek", "Arabic", "Persian"],
+        correctIndex: 2,
+        explanation: "'Algebra' comes from the Arabic 'al-jabr' (الجبر), meaning 'the reunion of broken parts'. It appeared in the title of a 9th-century treatise by mathematician Al-Khwarizmi — whose name also gave us the word 'algorithm'.",
+      },
+      {
+        text: "The word 'ketchup' originated from which language?",
+        options: ["French", "Dutch", "Malay/Chinese", "Spanish"],
+        correctIndex: 2,
+        explanation: "'Ketchup' derives from the Hokkien Chinese word 'kê-tsiap' (鮭汁), a sauce made from fermented fish. It entered English via the Malay word 'kicap' through British traders in Southeast Asia in the 17th century, long before tomatoes were added to the recipe.",
+      },
+      {
+        text: "What does 'café' literally mean in French?",
+        options: ["Restaurant", "Coffee", "Place to sit", "Food stall"],
+        correctIndex: 1,
+        explanation: "'Café' in French literally means 'coffee'. The word comes from Turkish 'kahve', which came from Arabic 'qahwa' (قهوة). The establishment we call a café was named after the drink served there. It entered English directly from French in the 19th century.",
+      },
+      {
+        text: "Which language has the most words in its dictionary, according to most estimates?",
+        options: ["Mandarin Chinese", "Arabic", "English", "German"],
+        correctIndex: 2,
+        explanation: "English is estimated to have the largest vocabulary of any language, with over 170,000 words in current use according to the Oxford English Dictionary, and another 47,000 obsolete words. English's vast vocabulary results from centuries of borrowing from Latin, French, Norse, Arabic, and hundreds of other languages.",
+      },
     ],
   },
 

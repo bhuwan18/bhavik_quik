@@ -384,21 +384,24 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
                   disabled={!canMarkRead || markingRead}
                   className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                     canMarkRead
-                      ? "bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-600/40 cursor-pointer"
+                      ? "read-unlock bg-green-500/15 hover:bg-green-500/25 text-green-300 border border-green-500/50 cursor-pointer"
                       : "bg-white/5 text-gray-600 border border-white/10 cursor-not-allowed"
                   }`}
                 >
-                  {markingRead
-                    ? "Marking..."
-                    : canMarkRead
-                    ? "✅ Mark as Read (+2 coins)"
-                    : `Mark as Read (${readTimer}s)`}
+                  {markingRead ? (
+                    "Marking..."
+                  ) : canMarkRead ? (
+                    <><span>✅ Mark as Read</span><span className="text-yellow-400 font-semibold">+2 🪙</span></>
+                  ) : (
+                    <><span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500/60 animate-pulse" />
+                    <span className="text-gray-500">Mark as Read in {readTimer}s</span></>
+                  )}
                 </button>
               ) : (
                 <div className="inline-flex items-center gap-2">
                   <span className="text-xs text-gray-500">✅ Read</span>
                   {explanationCoins !== null && explanationCoins > 0 && (
-                    <span className="text-xs text-yellow-400 font-semibold">+{explanationCoins} coins</span>
+                    <span className="text-xs text-yellow-400 font-semibold">+{explanationCoins} 🪙</span>
                   )}
                   {explanationCoins === 0 && (
                     <span className="text-xs text-gray-600">(limit reached)</span>
