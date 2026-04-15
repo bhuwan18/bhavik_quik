@@ -375,6 +375,29 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
         </div>
       );
     }
+    case "trade_completed": {
+      const { quizletName, rarity, icon, colorFrom, colorTo, price, sellerName } = data as {
+        quizletName: string; rarity: string; icon: string;
+        colorFrom: string; colorTo: string; price: number; sellerName: string;
+      };
+      const animClass = RARITY_ANIM[rarity] ?? "";
+      return (
+        <div className="space-y-2" style={feedFont}>
+          <p className="text-sm text-gray-200 font-semibold">
+            Traded with <span className="text-rose-400">{sellerName}</span>:
+          </p>
+          <span
+            className={cn("inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-white border border-white/15", animClass)}
+            style={{ background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` }}
+          >
+            <span className="text-lg">{icon}</span>
+            <span>{quizletName}</span>
+            <span className="opacity-70 capitalize text-xs font-semibold">{rarity}</span>
+          </span>
+          <p className="text-xs text-yellow-400 font-bold">Bought for {price} 🪙</p>
+        </div>
+      );
+    }
     default:
       return <p className="text-sm text-gray-400">Activity</p>;
   }

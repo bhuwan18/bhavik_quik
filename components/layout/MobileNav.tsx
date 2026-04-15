@@ -26,6 +26,7 @@ import {
   LogOut,
   Menu,
   X,
+  ArrowLeftRight,
   type LucideIcon,
 } from "lucide-react";
 
@@ -37,9 +38,10 @@ const PRIMARY_NAV: { href: string; icon: LucideIcon; label: string; color: strin
 ];
 
 const MORE_NAV: { href: string; icon: LucideIcon; label: string; color: string }[] = [
-  { href: "/leaderboard",  icon: Trophy,        label: "Leaderboard", color: "text-amber-400"  },
-  { href: "/milestones",   icon: Medal,         label: "Milestones",  color: "text-yellow-400" },
-  { href: "/game",         icon: Gamepad2,      label: "Game Modes",  color: "text-orange-400" },
+  { href: "/leaderboard",  icon: Trophy,          label: "Leaderboard", color: "text-amber-400"  },
+  { href: "/trading",      icon: ArrowLeftRight,  label: "Trading",     color: "text-rose-400"   },
+  { href: "/milestones",   icon: Medal,           label: "Milestones",  color: "text-yellow-400" },
+  { href: "/game",         icon: Gamepad2,        label: "Game Modes",  color: "text-orange-400" },
   { href: "/feedback",     icon: MessageSquare, label: "Feedback",    color: "text-pink-400"   },
   { href: "/shop",         icon: Store,         label: "Upgrade",     color: "text-emerald-400"},
   { href: "/feed",          icon: Rss,           label: "Feed",         color: "text-teal-400"  },

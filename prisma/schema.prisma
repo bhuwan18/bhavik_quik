@@ -51,6 +51,8 @@ model User {
   feedReactions        FeedReaction[]
   nudgesSent           Nudge[] @relation("NudgeSender")
   nudgesReceived       Nudge[] @relation("NudgeRecipient")
+  tradeListings        TradeListing[] @relation("TradeListings")
+  tradeBids            TradeBid[]     @relation("TradeBids")
   weeklyCoins          Int     @default(0)
   weeklyCoinsWeek      String  @default("")
   dailyCoinsSpent      Int     @default(0)
@@ -157,17 +159,19 @@ model Quizlet {
   colorTo     String
   description String
   isHidden    Boolean       @default(false)
-  sellValue   Int           @default(10)
-  owners      UserQuizlet[]
+  sellValue      Int              @default(10)
+  owners         UserQuizlet[]
+  tradeListings  TradeListing[]
 }
 
 model UserQuizlet {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  quizletId  String
-  quizlet    Quizlet  @relation(fields: [quizletId], references: [id])
-  obtainedAt DateTime @default(now())
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  quizletId    String
+  quizlet      Quizlet       @relation(fields: [quizletId], references: [id])
+  obtainedAt   DateTime      @default(now())
+  tradeListing TradeListing?
 
   @@unique([userId, quizletId])
   @@index([userId])
@@ -380,4 +384,38 @@ model DinoRexRoom {
   @@index([code])
   @@index([status])
   @@index([createdAt])
+}
+
+model TradeListing {
+  id            String      @id @default(cuid())
+  sellerId      String
+  seller        User        @relation("TradeListings", fields: [sellerId], references: [id], onDelete: Cascade)
+  userQuizletId String      @unique
+  userQuizlet   UserQuizlet @relation(fields: [userQuizletId], references: [id], onDelete: Cascade)
+  quizletId     String
+  quizlet       Quizlet     @relation(fields: [quizletId], references: [id])
+  startingPrice Int
+  buyNowPrice   Int?
+  status        String      @default("active") // active | sold | expired | cancelled
+  expiresAt     DateTime
+  createdAt     DateTime    @default(now())
+  bids          TradeBid[]
+
+  @@index([sellerId])
+  @@index([status, expiresAt])
+  @@index([quizletId])
+}
+
+model TradeBid {
+  id        String       @id @default(cuid())
+  listingId String
+  listing   TradeListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  bidderId  String
+  bidder    User         @relation("TradeBids", fields: [bidderId], references: [id], onDelete: Cascade)
+  amount    Int
+  isHeld    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+
+  @@index([listingId, amount])
+  @@index([bidderId])
 }

@@ -29,6 +29,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Medal,
+  ArrowLeftRight,
   type LucideIcon,
 } from "lucide-react";
 
@@ -38,6 +39,7 @@ const NAV_ITEMS: { href: string; icon: LucideIcon; label: string; color: string 
   { href: "/leaderboard", icon: Trophy,           label: "Leaderboard", color: "text-amber-400"  },
   { href: "/marketplace", icon: ShoppingBag,      label: "Marketplace", color: "text-green-400"  },
   { href: "/quizlets",    icon: Layers,           label: "Quizlets",    color: "text-violet-400" },
+  { href: "/trading",     icon: ArrowLeftRight,   label: "Trading",     color: "text-rose-400"   },
   { href: "/milestones",  icon: Medal,            label: "Milestones",  color: "text-yellow-400" },
   { href: "/feed",        icon: Rss,              label: "Feed",        color: "text-teal-400"   },
   { href: "/game",        icon: Gamepad2,         label: "Game Modes",  color: "text-orange-400" },

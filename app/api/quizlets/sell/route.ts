@@ -29,6 +29,14 @@ export async function POST(req: NextRequest) {
 
   if (!ownership) return NextResponse.json({ error: "You don't own this quizlet" }, { status: 404 });
 
+  // Block sell if quizlet is currently listed for trading
+  const activeListing = await prisma.tradeListing.findFirst({
+    where: { userQuizletId: ownership.id, status: "active" },
+  });
+  if (activeListing) {
+    return NextResponse.json({ error: "This quizlet is currently listed for trading" }, { status: 400 });
+  }
+
   const sellValue = ownership.quizlet.sellValue;
 
   await prisma.userQuizlet.delete({

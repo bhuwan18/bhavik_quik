@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import Link from "next/link";
 import { RARITY_COLORS } from "@/lib/utils";
 import { QUIZLETS_DATA } from "@/lib/quizlets-data";
 import { PACKS_DATA } from "@/lib/packs-data";
@@ -138,13 +139,24 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
           <p className="text-white font-bold text-sm leading-tight mb-1">{quizlet.name}</p>
           <span className={`text-xs ${rarityInfo.text} font-medium mb-3`}>{rarityInfo.label}</span>
           <p className="text-white/60 text-xs mb-4 line-clamp-2">{quizlet.description}</p>
-          <button
-            onClick={() => handleSell(quizlet)}
-            disabled={selling === quizlet.id}
-            className="w-full py-1.5 text-xs bg-black/30 hover:bg-black/50 text-white/80 rounded-lg transition-colors"
-          >
-            Sell 🪙 {quizlet.sellValue}
-          </button>
+          <div className="w-full flex gap-1.5">
+            <button
+              onClick={() => handleSell(quizlet)}
+              disabled={selling === quizlet.id}
+              className="flex-1 py-1.5 text-xs bg-black/30 hover:bg-black/50 text-white/80 rounded-lg transition-colors"
+            >
+              Sell 🪙 {quizlet.sellValue}
+            </button>
+            {quizlet.pack !== "mystical" && (
+              <Link
+                href="/trading"
+                className="py-1.5 px-2 text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg transition-colors"
+                title="List for Trade"
+              >
+                Trade
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     );

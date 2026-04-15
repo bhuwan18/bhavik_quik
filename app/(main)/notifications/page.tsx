@@ -21,6 +21,10 @@ const TYPE_META: Record<string, { icon: string; label: string; color: string }> 
   feed_comment:           { icon: "💬", label: "Feed Comment",     color: "bg-purple-500/15 border-purple-500/30" },
   feed_reaction:          { icon: "🎉", label: "Feed Reaction",    color: "bg-pink-500/15 border-pink-500/30" },
   user_nudge:             { icon: "👊", label: "Nudge",            color: "bg-yellow-500/15 border-yellow-500/30" },
+  outbid:                 { icon: "🔔", label: "Outbid",           color: "bg-rose-500/15 border-rose-500/30" },
+  trade_won:              { icon: "🎉", label: "Trade Won",        color: "bg-green-500/15 border-green-500/30" },
+  trade_sold:             { icon: "💰", label: "Trade Sold",       color: "bg-yellow-500/15 border-yellow-500/30" },
+  trade_expired:          { icon: "⏰", label: "Expired",          color: "bg-gray-500/15 border-gray-500/30" },
 };
 
 export default function NotificationsPage() {
