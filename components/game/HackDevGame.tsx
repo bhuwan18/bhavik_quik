@@ -20,6 +20,7 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Refs to avoid stale closures in timer effect
   const answersRef = useRef(answers);
@@ -29,19 +30,30 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
   useEffect(() => { scoreRef.current = score; }, [score]);
   useEffect(() => { questionsRef.current = questions; }, [questions]);
 
-  const loadQuestions = async () => {
+  const loadQuestions = async (): Promise<boolean> => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`/api/quizzes?category=${HACKDEV_CATEGORY}&official=true`);
-      const quizzes = await res.json();
-      if (quizzes.length === 0) return;
-      // Pick a random official tech quiz
+      const data = await res.json();
+      const quizzes = data?.quizzes ?? data;
+      if (!Array.isArray(quizzes) || quizzes.length === 0) {
+        setLoadError("No technology quizzes found in the database.");
+        return false;
+      }
       const quiz = quizzes[Math.floor(Math.random() * quizzes.length)];
       const qRes = await fetch(`/api/quizzes/${quiz.id}`);
       const full = await qRes.json();
-      setQuestions(full.questions);
-    } catch {
-      // empty
+      const qs = full?.questions ?? [];
+      if (!qs.length) {
+        setLoadError("The selected quiz has no questions. Please try again.");
+        return false;
+      }
+      setQuestions(qs);
+      return true;
+    } catch (e) {
+      setLoadError(`Failed to load questions: ${e instanceof Error ? e.message : "unknown error"}`);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -53,8 +65,8 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
     if (questionsRef.current.length > 0) {
       try {
         const quizRes = await fetch(`/api/quizzes?category=${HACKDEV_CATEGORY}&official=true`);
-        const quizzes = await quizRes.json();
-        if (quizzes.length > 0) {
+        const { quizzes } = await quizRes.json();
+        if (quizzes?.length > 0) {
           await fetch("/api/attempt", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -112,9 +124,13 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
             <p>🪙 5 coins per correct answer</p>
             <p>⚡ Answers reveal instantly — keep going!</p>
           </div>
+          {loadError && (
+            <p className="text-red-400 text-sm mb-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">{loadError}</p>
+          )}
           <button
             onClick={async () => {
-              await loadQuestions();
+              const ok = await loadQuestions();
+              if (!ok) return;
               setPhase("playing");
               setTimeLeft(HACKDEV_DURATION_S);
             }}

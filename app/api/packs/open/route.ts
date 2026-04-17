@@ -4,6 +4,9 @@ import { prisma } from "@/lib/db";
 import { rollPackOpening } from "@/lib/roll";
 import { SELL_VALUES } from "@/lib/utils";
 
+// Rarities that allow multiple copies per user
+const STACKABLE_RARITIES = new Set(["secret", "unique", "impossible"]);
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -82,11 +85,14 @@ export async function POST(req: NextRequest) {
   let refundCoins = 0;
   const newQuizlets: typeof rolled = [];
   const duplicates: typeof rolled = [];
-  // Track newly gained quizlets within this roll to avoid double-granting
+  // Track newly gained quizlets within this roll to avoid double-granting non-stackable quizlets
   const grantedIds = new Set<string>();
 
   for (const quizlet of rolled) {
-    if (ownedIds.has(quizlet.id) || grantedIds.has(quizlet.id)) {
+    if (STACKABLE_RARITIES.has(quizlet.rarity)) {
+      // Stackable rarities (secret/unique/impossible) always stack — never refund
+      newQuizlets.push(quizlet);
+    } else if (ownedIds.has(quizlet.id) || grantedIds.has(quizlet.id)) {
       refundCoins += SELL_VALUES[quizlet.rarity] ?? 10;
       duplicates.push(quizlet);
     } else {
@@ -96,10 +102,21 @@ export async function POST(req: NextRequest) {
   }
 
   if (newQuizlets.length > 0) {
-    await prisma.userQuizlet.createMany({
-      data: newQuizlets.map((q) => ({ userId: session.user.id, quizletId: q.id })),
-      skipDuplicates: true,
-    });
+    const nonStackable = newQuizlets.filter((q) => !STACKABLE_RARITIES.has(q.rarity));
+    if (nonStackable.length > 0) {
+      await prisma.userQuizlet.createMany({
+        data: nonStackable.map((q) => ({ userId: session.user.id, quizletId: q.id })),
+        skipDuplicates: true,
+      });
+    }
+    // Stackable rarities: upsert to increment quantity (or create on first obtain)
+    for (const q of newQuizlets.filter((q) => STACKABLE_RARITIES.has(q.rarity))) {
+      await prisma.userQuizlet.upsert({
+        where: { userId_quizletId: { userId: session.user.id, quizletId: q.id } },
+        create: { userId: session.user.id, quizletId: q.id, quantity: 1 },
+        update: { quantity: { increment: 1 } },
+      });
+    }
     // Feed: quizlet_earned activity for each newly obtained quizlet (fire-and-forget)
     for (const q of newQuizlets) {
       prisma.feedActivity.create({

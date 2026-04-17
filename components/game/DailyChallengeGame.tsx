@@ -15,14 +15,20 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [todayDate, setTodayDate] = useState("");
 
-  const loadQuestions = async () => {
+  const loadQuestions = async (): Promise<boolean> => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch("/api/quizzes?official=true");
-      const quizzes = await res.json();
-      if (quizzes.length === 0) return;
+      const data = await res.json();
+      const quizzes = data?.quizzes ?? data;
+      if (!Array.isArray(quizzes) || quizzes.length === 0) {
+        setLoadError("No quizzes found in the database.");
+        return false;
+      }
 
       // Sort by id for determinism, pick by day of year
       const sorted = [...quizzes].sort((a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id));
@@ -34,12 +40,18 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
 
       const qRes = await fetch(`/api/quizzes/${quiz.id}`);
       const full = await qRes.json();
-      // Take first 5 questions
+      const qs = (full?.questions ?? []).slice(0, DAILY_CHALLENGE_QUESTION_COUNT);
+      if (!qs.length) {
+        setLoadError("Today's quiz has no questions. Please try again.");
+        return false;
+      }
       setQuizId(quiz.id);
-      setQuestions(full.questions.slice(0, DAILY_CHALLENGE_QUESTION_COUNT));
+      setQuestions(qs);
       setTodayDate(now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }));
-    } catch {
-      // empty
+      return true;
+    } catch (e) {
+      setLoadError(`Failed to load today's challenge: ${e instanceof Error ? e.message : "unknown error"}`);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -136,9 +148,13 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
             <p>🪙 Earn coins for every correct answer</p>
             <p>🔄 New challenge every day</p>
           </div>
+          {loadError && (
+            <p className="text-red-400 text-sm mb-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">{loadError}</p>
+          )}
           <button
             onClick={async () => {
-              await loadQuestions();
+              const ok = await loadQuestions();
+              if (!ok) return;
               setPhase("playing");
               setCurrent(0);
               setScore(0);

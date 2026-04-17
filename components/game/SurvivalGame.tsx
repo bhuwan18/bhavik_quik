@@ -15,6 +15,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [survived, setSurvived] = useState(false);
 
   // Refs to avoid stale closures in timer effect
@@ -29,19 +30,31 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
   useEffect(() => { currentRef.current = current; }, [current]);
   useEffect(() => { quizIdRef.current = quizId; }, [quizId]);
 
-  const loadQuestions = async () => {
+  const loadQuestions = async (): Promise<boolean> => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch("/api/quizzes?official=true");
-      const quizzes = await res.json();
-      if (quizzes.length === 0) return;
+      const data = await res.json();
+      const quizzes = data?.quizzes ?? data;
+      if (!Array.isArray(quizzes) || quizzes.length === 0) {
+        setLoadError("No quizzes found in the database.");
+        return false;
+      }
       const quiz = quizzes[Math.floor(Math.random() * quizzes.length)];
       const qRes = await fetch(`/api/quizzes/${quiz.id}`);
       const full = await qRes.json();
+      const qs = full?.questions ?? [];
+      if (!qs.length) {
+        setLoadError("The selected quiz has no questions. Please try again.");
+        return false;
+      }
       setQuizId(quiz.id);
-      setQuestions(full.questions);
-    } catch {
-      // empty
+      setQuestions(qs);
+      return true;
+    } catch (e) {
+      setLoadError(`Failed to load questions: ${e instanceof Error ? e.message : "unknown error"}`);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -131,9 +144,13 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
             <p>🔥 Build your streak — earn coins for every correct answer</p>
             <p>🌍 Random category each game</p>
           </div>
+          {loadError && (
+            <p className="text-red-400 text-sm mb-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">{loadError}</p>
+          )}
           <button
             onClick={async () => {
-              await loadQuestions();
+              const ok = await loadQuestions();
+              if (!ok) return;
               setPhase("playing");
               setCurrent(0);
               setStreak(0);

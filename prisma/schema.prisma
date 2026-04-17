@@ -170,6 +170,7 @@ model UserQuizlet {
   user         User          @relation(fields: [userId], references: [id])
   quizletId    String
   quizlet      Quizlet       @relation(fields: [quizletId], references: [id])
+  quantity     Int           @default(1)
   obtainedAt   DateTime      @default(now())
   tradeListing TradeListing?
 

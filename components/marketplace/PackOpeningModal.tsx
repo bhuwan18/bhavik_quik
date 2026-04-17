@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { RARITY_COLORS } from "@/lib/utils";
 
+function isLightColor(hex: string): boolean {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.65;
+}
+
 type QuizletResult = {
   id: string;
   name: string;
@@ -40,6 +48,7 @@ function SingleModal({ pack, results, coinsRefunded, onClose }: Props) {
   const isLegendary = quizlet.rarity === "legendary";
   const isRainbow = ["unique", "impossible"].includes(quizlet.rarity);
   const isDramatic = ["epic", "legendary", "secret", "unique", "impossible"].includes(quizlet.rarity);
+  const light = isLightColor(quizlet.colorFrom);
 
   const handleReveal = () => {
     if (revealState !== "idle") return;
@@ -104,11 +113,11 @@ function SingleModal({ pack, results, coinsRefunded, onClose }: Props) {
                   </div>
                 )}
                 <span className="text-6xl drop-shadow-lg">{quizlet.icon}</span>
-                <p className="text-white font-bold text-xl text-center leading-tight drop-shadow">{quizlet.name}</p>
-                <span className={`text-sm font-bold uppercase tracking-widest ${rarityInfo.text}`}>
+                <p className={`font-bold text-xl text-center leading-tight ${light ? "text-gray-900" : "text-white"}`}>{quizlet.name}</p>
+                <span className={`text-sm font-bold uppercase tracking-widest rounded-full px-3 py-0.5 ${light ? "bg-black/15 text-gray-800" : `bg-black/35 ${rarityInfo.text}`}`}>
                   {rarityInfo.label}
                 </span>
-                <p className="text-white/70 text-xs text-center leading-relaxed">{quizlet.description}</p>
+                <p className={`text-xs text-center leading-relaxed ${light ? "text-gray-800" : "text-white/80"}`}>{quizlet.description}</p>
               </div>
             </div>
           </div>
@@ -255,11 +264,18 @@ function BulkModal({ pack, results, coinsRefunded, onClose }: Props) {
                           DUPE
                         </div>
                       )}
-                      <span className="text-3xl drop-shadow">{quizlet.icon}</span>
-                      <p className="text-white font-bold text-xs text-center leading-tight drop-shadow line-clamp-2">{quizlet.name}</p>
-                      <span className={`text-[9px] font-bold uppercase tracking-wide ${rarityInfo.text}`}>
-                        {rarityInfo.label}
-                      </span>
+                      {(() => {
+                        const lg = isLightColor(quizlet.colorFrom);
+                        return (
+                          <>
+                            <span className="text-3xl drop-shadow">{quizlet.icon}</span>
+                            <p className={`font-bold text-[10px] text-center leading-tight line-clamp-2 ${lg ? "text-gray-900" : "text-white"}`}>{quizlet.name}</p>
+                            <span className={`text-[8px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 ${lg ? "bg-black/15 text-gray-800" : `bg-black/35 ${rarityInfo.text}`}`}>
+                              {rarityInfo.label}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

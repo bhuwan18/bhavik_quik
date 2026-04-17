@@ -7,13 +7,22 @@ import { QUIZLETS_DATA } from "@/lib/quizlets-data";
 import { PACKS_DATA } from "@/lib/packs-data";
 import type { Quizlet } from "@prisma/client";
 
-type OwnedQuizlet = Quizlet & { obtainedAt: string };
+type OwnedQuizlet = Quizlet & { obtainedAt: string; quantity: number };
 
 type Props = {
   ownedQuizlets: OwnedQuizlet[];
   userCoins: number;
   allQuizlets: Quizlet[];
 };
+
+/** Returns true if the hex color is perceptually light (luminance > 0.65) */
+function isLightColor(hex: string): boolean {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.65;
+}
 
 const HIDDEN_RARITIES = new Set(["secret", "unique", "impossible"]);
 const MYSTICAL_PACK = "mystical";
@@ -99,7 +108,10 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
   }, [allQuizlets, rarityFilter, ownedIds]);
 
   const handleSell = async (quizlet: OwnedQuizlet) => {
-    if (!confirm(`Sell ${quizlet.name} for ${quizlet.sellValue} coins?`)) return;
+    const confirmMsg = quizlet.quantity > 1
+      ? `Sell one copy of ${quizlet.name} for ${quizlet.sellValue} coins? (${quizlet.quantity - 1} will remain)`
+      : `Sell ${quizlet.name} for ${quizlet.sellValue} coins?`;
+    if (!confirm(confirmMsg)) return;
     setSelling(quizlet.id);
     try {
       const res = await fetch("/api/quizlets/sell", {
@@ -109,7 +121,11 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
       });
       const data = await res.json();
       if (res.ok) {
-        setQuizlets((prev) => prev.filter((q) => q.id !== quizlet.id));
+        if (data.quantityRemaining > 0) {
+          setQuizlets((prev) => prev.map((q) => q.id === quizlet.id ? { ...q, quantity: data.quantityRemaining } : q));
+        } else {
+          setQuizlets((prev) => prev.filter((q) => q.id !== quizlet.id));
+        }
         setCoins((c) => c + data.coinsEarned);
         showToast(`Sold ${quizlet.name} for 🪙 ${data.coinsEarned} coins`);
       }
@@ -129,28 +145,36 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
     const isLegendary = quizlet.rarity === "legendary";
     const isRainbow = ["unique", "impossible"].includes(quizlet.rarity);
     const isMystical = quizlet.rarity === "mystical";
+    const light = isLightColor(quizlet.colorFrom);
     return (
       <div
         className={`relative border-2 rounded-2xl overflow-hidden ${rarityInfo.border} ${rarityInfo.glow} ${isLegendary ? "legendary-card" : ""} ${isRainbow ? "rainbow-card" : ""} ${isMystical ? "mystical-card" : ""}`}
         style={{ background: `linear-gradient(135deg, ${quizlet.colorFrom}, ${quizlet.colorTo})` }}
       >
+        {quizlet.quantity > 1 && (
+          <span className="absolute top-1 right-1 bg-black/70 text-white text-xs font-bold px-1.5 py-0.5 rounded-full z-10">
+            ×{quizlet.quantity}
+          </span>
+        )}
         <div className="p-4 flex flex-col items-center text-center">
           <span className="text-3xl mb-2">{quizlet.icon}</span>
-          <p className="text-white font-bold text-sm leading-tight mb-1">{quizlet.name}</p>
-          <span className={`text-xs ${rarityInfo.text} font-medium mb-3`}>{rarityInfo.label}</span>
-          <p className="text-white/60 text-xs mb-4 line-clamp-2">{quizlet.description}</p>
+          <p className={`font-bold text-sm leading-tight mb-1 ${light ? "text-gray-900" : "text-white"}`}>{quizlet.name}</p>
+          <span className={`text-xs font-semibold mb-3 rounded-full px-2 py-0.5 ${light ? "bg-black/15 text-gray-800" : `bg-black/30 ${rarityInfo.text}`}`}>{rarityInfo.label}</span>
+          <p className={`text-xs mb-4 line-clamp-2 ${light ? "text-gray-800" : "text-white/80"}`}>{quizlet.description}</p>
           <div className="w-full flex gap-1.5">
-            <button
-              onClick={() => handleSell(quizlet)}
-              disabled={selling === quizlet.id}
-              className="flex-1 py-1.5 text-xs bg-black/30 hover:bg-black/50 text-white/80 rounded-lg transition-colors"
-            >
-              Sell 🪙 {quizlet.sellValue}
-            </button>
+            {quizlet.pack !== "mystical" && (
+              <button
+                onClick={() => handleSell(quizlet)}
+                disabled={selling === quizlet.id}
+                className={`flex-1 py-1.5 text-xs rounded-lg transition-colors ${light ? "bg-black/15 hover:bg-black/25 text-gray-900" : "bg-black/30 hover:bg-black/50 text-white/80"}`}
+              >
+                Sell 🪙 {quizlet.sellValue}
+              </button>
+            )}
             {quizlet.pack !== "mystical" && (
               <Link
                 href="/trading"
-                className="py-1.5 px-2 text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg transition-colors"
+                className="py-1.5 px-2 text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-600 rounded-lg transition-colors"
                 title="List for Trade"
               >
                 Trade
@@ -168,6 +192,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
     const isLegendary = quizlet.rarity === "legendary";
     const isRainbow = ["unique", "impossible"].includes(quizlet.rarity);
     const isMystical = quizlet.rarity === "mystical";
+    const light = owned && isLightColor(quizlet.colorFrom);
     return (
       <div
         className={`relative border-2 rounded-2xl overflow-hidden transition-all ${rarityInfo.border} ${owned ? rarityInfo.glow : "opacity-50 grayscale"} ${owned && isLegendary ? "legendary-card" : ""} ${owned && isRainbow ? "rainbow-card" : ""} ${owned && isMystical ? "mystical-card" : ""}`}
@@ -184,10 +209,10 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
         )}
         <div className="p-4 flex flex-col items-center text-center">
           <span className="text-3xl mb-2">{owned ? quizlet.icon : "❓"}</span>
-          <p className="text-white font-bold text-sm leading-tight mb-1">
+          <p className={`font-bold text-sm leading-tight mb-1 ${light ? "text-gray-900" : "text-white"}`}>
             {owned ? quizlet.name : "???"}
           </p>
-          <span className={`text-xs font-medium ${rarityInfo.text}`}>{rarityInfo.label}</span>
+          <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${light ? "bg-black/15 text-gray-800" : `bg-black/30 ${rarityInfo.text}`}`}>{rarityInfo.label}</span>
         </div>
       </div>
     );

@@ -24,7 +24,7 @@ export default async function QuizletsPage() {
 
   return (
     <QuizletsClient
-      ownedQuizlets={owned.map((r) => ({ ...r.quizlet, obtainedAt: r.obtainedAt.toISOString() }))}
+      ownedQuizlets={owned.map((r) => ({ ...r.quizlet, obtainedAt: r.obtainedAt.toISOString(), quantity: r.quantity }))}
       userCoins={user?.coins ?? 0}
       allQuizlets={allQuizlets}
     />

@@ -12,22 +12,37 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(SPEEDBLITZ_DURATION_S);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [coinsEarned, setCoinsEarned] = useState(0);
 
-  const loadQuestions = async () => {
+  const loadQuestions = async (): Promise<boolean> => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch("/api/quizzes?official=true");
-      const quizzes = await res.json();
+      const data = await res.json();
+      const quizzes = data?.quizzes ?? data;
+      if (!Array.isArray(quizzes) || quizzes.length === 0) {
+        setLoadError("No quizzes found in the database.");
+        return false;
+      }
       const allQ: Question[] = [];
       for (const quiz of quizzes.slice(0, Math.ceil(SPEEDBLITZ_QUESTION_COUNT / 5))) {
         const qRes = await fetch(`/api/quizzes/${quiz.id}`);
         const full = await qRes.json();
-        allQ.push(...full.questions);
+        allQ.push(...(full?.questions ?? []));
+      }
+      if (!allQ.length) {
+        setLoadError("No questions found. Please try again.");
+        return false;
       }
       // Shuffle and take 20
       const shuffled = allQ.sort(() => Math.random() - 0.5).slice(0, SPEEDBLITZ_QUESTION_COUNT);
       setQuestions(shuffled);
+      return true;
+    } catch (e) {
+      setLoadError(`Failed to load questions: ${e instanceof Error ? e.message : "unknown error"}`);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -68,8 +83,16 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
         <div className="text-6xl mb-4">⚡</div>
         <h1 className="text-3xl font-bold text-white mb-3">Speed Blitz</h1>
         <p className="text-gray-400 mb-6">20 questions. 30 seconds. No time to think!</p>
+        {loadError && (
+          <p className="text-red-400 text-sm mb-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">{loadError}</p>
+        )}
         <button
-          onClick={async () => { await loadQuestions(); setPhase("playing"); setTimeLeft(SPEEDBLITZ_DURATION_S); }}
+          onClick={async () => {
+            const ok = await loadQuestions();
+            if (!ok) return;
+            setPhase("playing");
+            setTimeLeft(SPEEDBLITZ_DURATION_S);
+          }}
           disabled={loading}
           className="w-full py-4 bg-yellow-600 hover:bg-yellow-700 text-white font-bold text-lg rounded-xl disabled:opacity-50"
         >
