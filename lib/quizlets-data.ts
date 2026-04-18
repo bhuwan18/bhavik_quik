@@ -110,6 +110,7 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Eternia", rarity: "unique", pack: "magic-pack", icon: "♾️", colorFrom: "#d97706", colorTo: "#dc2626", description: "One of three unique beings. Eternia has existed since before the universe.", isHidden: true, sellValue: 5000 },
 
   // ── MYSTICAL QUIZLETS (achievement-based, not pack-openable) ──────
+  { name: "Language Nerd", rarity: "mystical", pack: "mystical", icon: "🗣️", colorFrom: "#f59e0b", colorTo: "#7c3aed", description: "Fluent in quizzes. Ten world languages challenges conquered — a true polyglot of knowledge.", isHidden: false, sellValue: 500 },
   { name: "Atypical Choices", rarity: "mystical", pack: "mystical", icon: "🌀", colorFrom: "#2dd4bf", colorTo: "#6d28d9", description: "Awarded to the explorer who dares to play the road less travelled — the quiz nobody else bothered to try.", isHidden: false, sellValue: 500 },
   { name: "Hogwarts Legend", rarity: "mystical", pack: "mystical", icon: "⚡", colorFrom: "#7c3aed", colorTo: "#b45309", description: "A true master of the wizarding world, forged through ten legendary quests inside Hogwarts' hallowed halls.", isHidden: false, sellValue: 500 },
   { name: "Arc Reactor", rarity: "mystical", pack: "mystical", icon: "🔵", colorFrom: "#38bdf8", colorTo: "#1e40af", description: "Power source of a hero. Earned by those who answered Earth's Mightiest questions ten times over.", isHidden: false, sellValue: 500 },
