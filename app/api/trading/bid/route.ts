@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
+export const maxDuration = 10; // Vercel Hobby cap
+
 // ─── POST: Place a bid (escrow pattern) ──────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -25,87 +27,112 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  // Fetch listing with current highest bid
+  // Fetch listing for quizlet name (used in notifications after the transaction)
   const listing = await prisma.tradeListing.findUnique({
     where: { id: listingId },
     include: {
-      bids: { where: { isHeld: true }, orderBy: { amount: "desc" }, take: 1 },
       quizlet: { select: { name: true, icon: true } },
+      seller: { select: { id: true } },
     },
   });
 
   if (!listing) return NextResponse.json({ error: "Listing not found" }, { status: 404 });
-  if (listing.status !== "active") return NextResponse.json({ error: "Listing is not active" }, { status: 400 });
-  if (listing.expiresAt <= new Date()) return NextResponse.json({ error: "Listing has expired" }, { status: 400 });
   if (listing.sellerId === session.user.id) return NextResponse.json({ error: "Cannot bid on your own listing" }, { status: 400 });
 
-  const currentHighest = listing.bids[0]?.amount ?? 0;
-  const minBid = currentHighest > 0 ? currentHighest + 1 : listing.startingPrice;
-
-  if (amount < minBid) {
-    return NextResponse.json({ error: `Minimum bid is ${minBid} coins` }, { status: 400 });
-  }
-
-  // Force buy-now route if bid >= buyNowPrice
+  // Force buy-now route if bid >= buyNowPrice (pre-check using outer snapshot — enforced again inside tx)
   if (listing.buyNowPrice && amount >= listing.buyNowPrice) {
     return NextResponse.json({ error: "Bid equals or exceeds buy-now price. Use buy-now instead." }, { status: 400 });
   }
 
-  // Step 1: Create placeholder bid (not yet held)
-  const bid = await prisma.tradeBid.create({
-    data: { listingId, bidderId: session.user.id, amount, isHeld: false },
-  });
+  // Mutable state updated inside the transaction callback.
+  // Object wrapper avoids TypeScript CFA narrowing let-variables to their initial type
+  // when assigned inside async callbacks.
+  const txState = {
+    newBidId: "",
+    refundedBid: null as { bidderId: string; amount: number } | null,
+  };
 
-  // Step 2: Atomic coin deduction
-  const deducted = await prisma.user.updateMany({
-    where: { id: session.user.id, coins: { gte: amount } },
-    data: { coins: { decrement: amount } },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Re-fetch listing + current highest held bid inside transaction for consistency
+      const freshListing = await tx.tradeListing.findUnique({
+        where: { id: listingId },
+        include: { bids: { where: { isHeld: true }, orderBy: { amount: "desc" }, take: 1 } },
+      });
 
-  if (deducted.count === 0) {
-    // Deduction failed — clean up placeholder
-    await prisma.tradeBid.delete({ where: { id: bid.id } });
-    return NextResponse.json({ error: "Not enough coins" }, { status: 400 });
+      if (!freshListing || freshListing.status !== "active")
+        throw Object.assign(new Error("Listing is no longer active"), { code: "NOT_ACTIVE" });
+      if (freshListing.expiresAt <= new Date())
+        throw Object.assign(new Error("Listing has expired"), { code: "EXPIRED" });
+
+      const freshHighest = freshListing.bids[0] ?? null;
+      const freshMin = freshHighest ? freshHighest.amount + 1 : freshListing.startingPrice;
+
+      if (amount < freshMin)
+        throw Object.assign(new Error(`Minimum bid is now ${freshMin} coins`), { code: "TOO_LOW" });
+      if (freshListing.buyNowPrice && amount >= freshListing.buyNowPrice)
+        throw Object.assign(new Error("Bid equals or exceeds buy-now price. Use buy-now instead."), { code: "USE_BUY_NOW" });
+
+      // Deduct coins
+      const deducted = await tx.user.updateMany({
+        where: { id: session.user.id, coins: { gte: amount } },
+        data: { coins: { decrement: amount } },
+      });
+      if (deducted.count === 0)
+        throw Object.assign(new Error("Not enough coins"), { code: "INSUFFICIENT_COINS" });
+
+      // Create bid already held (no placeholder needed)
+      const bid = await tx.tradeBid.create({
+        data: { listingId, bidderId: session.user.id, amount, isHeld: true },
+      });
+      txState.newBidId = bid.id;
+
+      // Refund previous highest bidder using fresh data (prevents double-refund on concurrent bids)
+      if (freshHighest && freshHighest.bidderId !== session.user.id) {
+        await tx.user.update({
+          where: { id: freshHighest.bidderId },
+          data: { coins: { increment: freshHighest.amount } },
+        });
+        await tx.tradeBid.update({
+          where: { id: freshHighest.id },
+          data: { isHeld: false },
+        });
+        txState.refundedBid = { bidderId: freshHighest.bidderId, amount: freshHighest.amount };
+      } else if (freshHighest && freshHighest.bidderId === session.user.id) {
+        // Same user raising their own bid — refund their previous held amount
+        await tx.user.update({
+          where: { id: session.user.id },
+          data: { coins: { increment: freshHighest.amount } },
+        });
+        await tx.tradeBid.update({
+          where: { id: freshHighest.id },
+          data: { isHeld: false },
+        });
+      }
+    });
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code;
+    const message = err instanceof Error ? err.message : "Bid failed";
+    const status =
+      code === "INSUFFICIENT_COINS" || code === "TOO_LOW" || code === "USE_BUY_NOW"
+        ? 400
+        : code === "NOT_ACTIVE" || code === "EXPIRED"
+        ? 409
+        : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 
-  // Step 3: Mark bid as held
-  await prisma.tradeBid.update({ where: { id: bid.id }, data: { isHeld: true } });
-
-  // Step 4: Refund previous highest bidder
-  const prevBid = listing.bids[0];
-  if (prevBid && prevBid.bidderId !== session.user.id) {
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: prevBid.bidderId },
-        data: { coins: { increment: prevBid.amount } },
-      }),
-      prisma.tradeBid.update({
-        where: { id: prevBid.id },
-        data: { isHeld: false },
-      }),
-    ]);
-
-    // Notify outbid user (fire-and-forget)
+  // Notify outbid user (fire-and-forget) — uses outer listing snapshot for quizlet name
+  if (txState.refundedBid) {
+    const rb = txState.refundedBid;
     prisma.notification.create({
       data: {
-        userId: prevBid.bidderId,
+        userId: rb.bidderId,
         type: "outbid",
-        message: `You were outbid on ${listing.quizlet.name} (${listing.quizlet.icon}). Your ${prevBid.amount} coins have been refunded. New highest bid: ${amount} coins.`,
+        message: `You were outbid on ${listing.quizlet.name} (${listing.quizlet.icon}). Your ${rb.amount} coins have been refunded. New highest bid: ${amount} coins.`,
       },
     }).catch(() => {});
-  } else if (prevBid && prevBid.bidderId === session.user.id) {
-    // Same user raising their bid — refund their previous bid
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: session.user.id },
-        data: { coins: { increment: prevBid.amount } },
-      }),
-      prisma.tradeBid.update({
-        where: { id: prevBid.id },
-        data: { isHeld: false },
-      }),
-    ]);
   }
 
-  return NextResponse.json({ success: true, bidId: bid.id, amount });
+  return NextResponse.json({ success: true, bidId: txState.newBidId, amount });
 }

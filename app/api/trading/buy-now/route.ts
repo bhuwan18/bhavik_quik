@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { calculateSellerProceeds } from "@/lib/trading";
 
+export const maxDuration = 10; // Vercel Hobby cap
+
 // ─── POST: Instant buy-now purchase ──────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -43,46 +45,57 @@ export async function POST(req: NextRequest) {
   const price = listing.buyNowPrice;
   const sellerProceeds = calculateSellerProceeds(price);
 
-  // Atomic coin deduction
-  const deducted = await prisma.user.updateMany({
-    where: { id: session.user.id, coins: { gte: price } },
-    data: { coins: { decrement: price } },
-  });
-  if (deducted.count === 0) {
-    return NextResponse.json({ error: "Not enough coins" }, { status: 400 });
-  }
+  // Single atomic transaction: coin deduction + trade + bid refunds all succeed or all roll back
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 1. Conditional coin deduction
+      const deducted = await tx.user.updateMany({
+        where: { id: session.user.id, coins: { gte: price } },
+        data: { coins: { decrement: price } },
+      });
+      if (deducted.count === 0)
+        throw Object.assign(new Error("Not enough coins"), { code: "INSUFFICIENT_COINS" });
 
-  // Execute trade in transaction
-  await prisma.$transaction([
-    // Mark listing as sold
-    prisma.tradeListing.update({
-      where: { id: listing.id },
-      data: { status: "sold" },
-    }),
-    // Transfer quizlet ownership
-    prisma.userQuizlet.update({
-      where: { id: listing.userQuizletId },
-      data: { userId: session.user.id, obtainedAt: new Date() },
-    }),
-    // Credit seller
-    prisma.user.update({
-      where: { id: listing.sellerId },
-      data: { coins: { increment: sellerProceeds } },
-    }),
-  ]);
+      // 2. Mark listing sold — status guard ensures only the first concurrent buyer wins
+      const updated = await tx.tradeListing.updateMany({
+        where: { id: listing.id, status: "active" },
+        data: { status: "sold" },
+      });
+      if (updated.count === 0)
+        throw Object.assign(
+          new Error("This listing was just sold to someone else. Your coins have not been deducted."),
+          { code: "ALREADY_SOLD" }
+        );
 
-  // Refund all held bids
-  for (const bid of listing.bids) {
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: bid.bidderId },
-        data: { coins: { increment: bid.amount } },
-      }),
-      prisma.tradeBid.update({
-        where: { id: bid.id },
-        data: { isHeld: false },
-      }),
-    ]);
+      // 3. Transfer quizlet ownership
+      await tx.userQuizlet.update({
+        where: { id: listing.userQuizletId },
+        data: { userId: session.user.id, obtainedAt: new Date() },
+      });
+
+      // 4. Credit seller
+      await tx.user.update({
+        where: { id: listing.sellerId },
+        data: { coins: { increment: sellerProceeds } },
+      });
+
+      // 5. Refund all held bids inside the same transaction
+      for (const bid of listing.bids) {
+        await tx.user.update({
+          where: { id: bid.bidderId },
+          data: { coins: { increment: bid.amount } },
+        });
+        await tx.tradeBid.update({
+          where: { id: bid.id },
+          data: { isHeld: false },
+        });
+      }
+    });
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code;
+    const message = err instanceof Error ? err.message : "Purchase failed";
+    const status = code === "INSUFFICIENT_COINS" ? 400 : code === "ALREADY_SOLD" ? 409 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 
   // Notifications (fire-and-forget)

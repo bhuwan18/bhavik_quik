@@ -1,7 +1,5 @@
 # CLAUDE.md — AI Assistant Guide for BittsQuiz 2026
 
-This file provides guidance for AI assistants working in this repository.
-
 ---
 
 ## Project Overview
@@ -32,78 +30,47 @@ This file provides guidance for AI assistants working in this repository.
 
 ---
 
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- PostgreSQL database (Neon recommended: https://neon.tech)
-- Google OAuth app (https://console.cloud.google.com)
-
-### Setup
+## Schema & Seed Commands
 
 ```bash
-# Install dependencies
-npm install
-
-# Copy env file and fill in values
-cp .env.example .env
-
-# Push database schema
-npm run db:push
-
-# Seed with ~193 official quizzes + all quizlets + packs
-npm run db:seed
-
-# Start development server
-npm run dev
+npm run db:push      # push schema changes to DB
+npx prisma generate  # regenerate client types
+npm run db:seed      # re-seed data (idempotent)
 ```
 
-### Environment Variables (`.env`)
+## Environment Variables
 
 ```env
-DATABASE_URL="postgresql://..."        # Neon PostgreSQL connection string
-NEXTAUTH_SECRET="..."                  # Random string: openssl rand -base64 32
+DATABASE_URL="postgresql://..."
+NEXTAUTH_SECRET="..."
 NEXTAUTH_URL="http://localhost:3000"
-GOOGLE_CLIENT_ID="..."                 # From Google Cloud Console
+GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
-
-# Admin credentials (used for admin panel login)
 ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="..."
 ADMIN_EMAIL="admin@quizlet.internal"
-
-# UPI payment (merchant info shown to users — not secret)
-NEXT_PUBLIC_UPI_ID="merchant@upi"
+NEXT_PUBLIC_UPI_ID="merchant@upi"          # shown to users, not secret
 NEXT_PUBLIC_UPI_NAME="BittsQuiz"
 UPI_ID="merchant@upi"
 UPI_NAME="BittsQuiz"
-
-# Background music URL (publicly accessible MP3 stream)
-NEXT_PUBLIC_MUSIC_URL="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-
-# Email / SMTP (for new user registration alerts)
-# Gmail: use App Password from Google Account → Security → App Passwords
+NEXT_PUBLIC_MUSIC_URL="..."                # public MP3 stream URL
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
 SMTP_SECURE="false"
-SMTP_USER="your-gmail@gmail.com"
-SMTP_PASS="your-app-password"
-ADMIN_NOTIFY_EMAIL="your-gmail@gmail.com"   # defaults to SMTP_USER if unset
-
-# Pusher Channels (DinoRex real-time multiplayer)
-# Create free app at pusher.com → Channels; recommended cluster for India: ap2
+SMTP_USER="..."
+SMTP_PASS="..."                            # Gmail App Password
+ADMIN_NOTIFY_EMAIL="..."                   # defaults to SMTP_USER if unset
 PUSHER_APP_ID="..."
 PUSHER_KEY="..."
 PUSHER_SECRET="..."
-PUSHER_CLUSTER="ap2"
+PUSHER_CLUSTER="ap2"                       # India: ap2 recommended
 NEXT_PUBLIC_PUSHER_KEY="..."
 NEXT_PUBLIC_PUSHER_CLUSTER="ap2"
-
-# Web Push / VAPID (browser push notifications)
-# Generate keys: npx web-push generate-vapid-keys
-VAPID_EMAIL="mailto:your@email.com"
-NEXT_PUBLIC_VAPID_PUBLIC_KEY="..."
+VAPID_EMAIL="mailto:..."
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="..."         # generate: npx web-push generate-vapid-keys
 VAPID_PRIVATE_KEY="..."
+TEST_USERNAME="..."                        # test login button on /login
+TEST_PASSWORD="..."
 ```
 
 ---
@@ -112,148 +79,25 @@ VAPID_PRIVATE_KEY="..."
 
 ```
 app/
-├── layout.tsx                    Root layout — ThemeProvider + SessionProvider + Vercel Analytics
-├── page.tsx                      Redirects: logged in → /dashboard, else → /login
-├── login/page.tsx                Google sign-in screen
-├── certificate/page.tsx          Completion certificate (only if all quizlets owned)
-├── globals.css                   CSS variables (dark-only) + animation keyframes + Tailwind overrides
-├── (main)/                       Auth-guarded area (sidebar layout + AudioProvider)
-│   ├── layout.tsx                Auth guard + Sidebar (desktop) + MobileNav + OnlinePing + AudioPlayer + PushSubscriptionManager + SplashScreen + NotificationsProvider + FeedProvider
-│   ├── loading.tsx               App-level loading screen with rotating game facts
-│   ├── dashboard/page.tsx        Play-first hero + IntroOverlay + category quick-play + stats
-│   ├── discover/page.tsx         Browse quizzes — shows ✓ Completed badge on perfect-score quizzes
-│   ├── quiz/[id]/page.tsx        Quiz player — checks isLocked + school hours before rendering
-│   ├── marketplace/page.tsx      Buy packs with coins
-│   ├── quizlets/page.tsx         View/sell owned Quizlets (My Collection) + full dex view (All Quizlets) with toggle
-│   ├── quiz-maker/page.tsx       Create and publish custom quizzes
-│   ├── leaderboard/page.tsx      Top 50 players — sortable columns, follower count, Pro/Max badges, green online dot; podium on default sort only
-│   ├── profile/[userId]/page.tsx Public profile — avatar, online dot, tier badge, stats, follow button, follower/following counts, recent quizlets
-│   ├── feedback/page.tsx         User feedback form → saves to DB (no email)
-│   ├── info/page.tsx             Redirects to /quizlets (deprecated)
-│   ├── game/page.tsx             Game mode selection hub
-│   ├── notifications/page.tsx    View in-app notifications (feedback replies, leaderboard events, milestones, follow events)
-│   ├── feed/page.tsx             Social feed — own activity + followed users' activity; likes + emoji reactions + comments
-│   ├── trading/page.tsx          Trading Post — list/bid/buy quizlets via 24h auctions; lazy auction resolution on load
-│   ├── buy-coins/page.tsx        Redirects to /shop
-│   ├── shop/page.tsx             Buy Pro (₹250/mo) or Max (₹500/mo) via UPI + coin purchase + daily reset + streak freeze (coin-based); weekly discounts shown when active
-│   ├── milestones/page.tsx       Multi-type milestone badges (coins/quizzes/answers/categories/streak) — earned grid + progress to next
-│   └── admin/
-│       ├── layout.tsx            Admin auth guard
-│       ├── quizzes/page.tsx      List all quizzes with Edit links
-│       ├── quizzes/[id]/edit/    Edit quiz title/description/category/difficulty/questions (incl. imageUrl)
-│       ├── users/page.tsx        User manager — lock/unlock, reset daily limit, grant/revoke Pro/Max, send push
-│       ├── payments/page.tsx     Approve/reject pending UPI payment requests (coins/pro/max/reset)
-│       ├── feedback/page.tsx     View all user feedback — filter by type, mark read/unread
-│       └── settings/page.tsx     Global toggles — school hours, retake coins; weekly discount offers (Pro/Max/daily reset/coins)
-└── api/
-    ├── auth/[...nextauth]/       NextAuth handler
-    ├── feedback/                 POST — saves feedback to DB (Feedback model)
-    ├── quizzes/                  GET quizzes list, POST create quiz
-    ├── quizzes/[id]/             GET single quiz; PATCH (admin) update quiz + questions
-    ├── attempt/                  POST quiz attempt — awards coins with multiplier, daily cap, dedup; auto-grants milestones; updates streak; grants mystical quizlets on category/rarity conditions
-    ├── milestones/               GET user's earned milestones
-    ├── packs/                    GET active packs (incl. festival packs)
-    ├── packs/open/               POST open pack, roll characters
-    ├── quizlets/                 GET owned quizlets
-    ├── quizlets/sell/            POST sell a quizlet for coins
-    ├── user/stats/               GET dashboard stats
-    ├── user/ping/                POST update lastSeenAt — called every 5 min by OnlinePing (3-min DB-write debounce)
-    ├── user/follow/[userId]/     POST follow a user; DELETE unfollow — auth + self-follow + admin guards
-    ├── user/[userId]/follow-list/ GET followers or following list for a user (admin + own profile only; ?type=followers|following)
-    ├── user/buy-streak-freeze/   GET streak info; POST purchase streak freeze with coins (1K or 2.5K coins, max 2)
-    ├── user/submit-payment/      POST submit UTR number for UPI payment (coins/pro/max/reset)
-    ├── push/subscribe/           POST/DELETE web push subscription (VAPID endpoint + keys)
-    ├── notifications/            GET user in-app notifications
-    ├── feed/                     GET paginated social feed (own + followed users' FeedActivity, 20/page)
-    ├── feed/[id]/like/           POST toggle like on a feed activity
-    ├── feed/[id]/comments/       GET comments; POST new comment (max 280 chars)
-    ├── feed/[id]/react/          POST toggle emoji reaction (🔥🎉👏😱) — unique per user+activity+emoji
-    ├── feed/nudge/[userId]/      POST send a nudge to a user (stored in Nudge model)
-    ├── explanation-read/         POST mark a question explanation as read (ExplanationRead model)
-    ├── trading/listings/         GET active trade listings; POST create new listing (24h auction)
-    ├── trading/listings/[id]/    GET listing detail with bids
-    ├── trading/bid/              POST place a bid on a listing (coins held)
-    ├── trading/buy-now/          POST execute buy-now purchase on a listing
-    ├── myinstants-proxy/         GET proxy for Myinstants audio (avoids CORS)
-    ├── leaderboard/              GET top 50 leaderboard data
-    ├── dinorex/                  DinoRex multiplayer: create, join, start, answer, reveal, [code] (GET/DELETE)
-    ├── admin/payments/
-    │   ├── route.ts              GET list payment requests
-    │   └── [id]/route.ts         PATCH approve/reject → credit coins, grant Pro, grant Max, or reset daily limit
-    ├── admin/feedback/
-    │   └── route.ts              GET all feedback; PATCH mark isRead or reply (creates Notification + push)
-    ├── admin/users/
-    │   ├── route.ts              GET paginated + searchable user list
-    │   └── [id]/route.ts         PATCH user actions: lock, unlock, reset_daily, grant/revoke Pro/Max
-    ├── admin/users/[id]/notify/  POST send push notification to a specific user (admin only)
-    ├── admin/grant-milestones/   POST backfill milestones for all existing users (admin only)
-    ├── admin/settings/           PATCH global settings (schoolHoursEnabled, retakeCoinsEnabled, weeklyOffer_*)
-    ├── admin/weekly-offer/       GET current weekly offers; POST set/clear weekly discount for a tier
-    ├── admin/2fa/setup/          POST generate TOTP secret + QR code for admin 2FA
-    └── admin/2fa/verify/         POST verify TOTP code to complete 2FA setup
+├── layout.tsx  page.tsx  globals.css  login/  certificate/
+└── (main)/
+    ├── layout.tsx  loading.tsx
+    ├── dashboard/  discover/  quiz/[id]/  marketplace/  quizlets/
+    ├── quiz-maker/  leaderboard/  profile/[userId]/  feedback/
+    ├── game/  notifications/  feed/  trading/  shop/  milestones/
+    └── admin/  (quizzes/  quizzes/[id]/edit/  users/  payments/  feedback/  settings/)
 
 components/
-├── icons/
-│   ├── SoccerBallIcon.tsx        SVG soccer ball (Football category)
-│   ├── CricketWicketIcon.tsx     SVG cricket wicket (Cricket category)
-│   └── AvengersIcon.tsx          SVG Avengers logo (Avengers category)
-├── layout/Sidebar.tsx            Collapsible desktop sidebar — admin nav; collapse stored in localStorage `bq_sidebar_collapsed`
-├── layout/MobileNav.tsx          Bottom tab bar (mobile only, md:hidden) — 5 tabs + "More" drawer
-├── layout/OnlinePing.tsx         Client component — silently POSTs /api/user/ping every 5 min (ONLINE_PING_INTERVAL_MS)
-├── layout/PushSubscriptionManager.tsx  Registers sw.js, shows push opt-in banner, saves subscription
-├── layout/NotificationsProvider.tsx    React context — fetches unread notification count on every route change; exposes useUnreadCount()
-├── layout/FeedProvider.tsx             React context — tracks new feed activity since last visit (localStorage key `bq_feed_last_seen`); exposes useHasNewFeed()
-├── ThemeProvider.tsx             next-themes wrapper (class-based, default: dark)
-├── SplashScreen.tsx              Daily splash shown once per IST day (localStorage key bq_splash_date) — festival pack, weekly offers, Pro/Max pitch; auto-dismiss
-├── IntroOverlay.tsx              First-visit onboarding overlay (5 steps, localStorage key bq_intro_seen_v1)
-├── AudioPlayer.tsx               Floating music player (bottom-right) — volume + on/off
-├── quiz/QuizPlayer.tsx           Interactive quiz — answers shuffled randomly each session
-├── quiz/QuizMakerForm.tsx        Quiz creation form
-├── marketplace/
-│   ├── MarketplaceClient.tsx     Pack browsing + purchase
-│   └── PackOpeningModal.tsx      Animated pack reveal (tap cards)
-├── discover/DiscoverGrid.tsx     Quiz grid component used by the Discover page
-├── quizlets/QuizletsClient.tsx   Toggle: "My Collection" (owned, sell, Hidden section) + "All Quizlets" dex view (all non-hidden, owned highlighted)
-├── milestones/MilestonesClient.tsx  Milestone grid — earned badges with tier colors + progress bar to next unlock; tapping a locked badge opens a ProgressModal showing current stat, % bar, and remaining count
-├── profile/
-│   ├── FollowButton.tsx          Optimistic follow/unfollow toggle — POST/DELETE /api/user/follow/[id]; rollback on failure
-│   └── FollowListModal.tsx       Modal to browse followers/following — fetches /api/user/[id]/follow-list; admin + own profile only
-├── trading/
-│   ├── TradingClient.tsx         Trading post — browse listings, create listing, bid, buy-now tabs
-│   ├── ListingCard.tsx           Individual auction card (quizlet, price, bid count, countdown)
-│   ├── ListingDetailModal.tsx    Listing detail with bid history + buy-now button
-│   ├── CreateListingModal.tsx    Form to list a quizlet for auction
-│   └── CountdownTimer.tsx        Live countdown to auction expiry
-└── game/
-    ├── GameModesClient.tsx       Mode selection (HackDev, DinoRex, SpeedBlitz, Survival, Daily, Classic)
-    ├── HackDevGame.tsx           60-second tech quiz sprint
-    ├── DinoRexLobby.tsx          Elimination game — real multiplayer (Pusher + DB rooms) + AI practice mode
-    ├── SpeedBlitzGame.tsx        20 questions in 30 seconds
-    ├── SurvivalGame.tsx          One wrong answer = game over, 10s timer per question
-    └── DailyChallengeGame.tsx    5 deterministic questions per day (date-seeded), 30s per question
+├── layout/  (Sidebar, MobileNav, OnlinePing, PushSubscriptionManager, NotificationsProvider, FeedProvider)
+├── quiz/  marketplace/  discover/  quizlets/  milestones/  profile/  trading/  game/  icons/
+└── ThemeProvider  SplashScreen  IntroOverlay  AudioPlayer
 
 lib/
-├── milestones-data.ts            Multi-type milestones: coins (1K–100K), quizzes, answers, categories, streak — 6 tiers: bronze→silver→gold→platinum→diamond→cosmic
-├── auth.ts                       NextAuth config — Google + admin credentials + test user + isMax in session
-├── db.ts                         Prisma client singleton
-├── email.ts                      Nodemailer helper — sendEmail() + ADMIN_EMAIL constant
-├── push.ts                       Web Push helper — sendPushToUser(userId, title, body, url)
-├── pusher.ts                     Pusher server instance + DinoRex shared types (DinoRexPlayer, etc.)
-├── audio-context.tsx             React context for background music state + controls
-├── quizlets-data.ts              All 107 quizlet definitions (9 standard packs + 3 global uniques + 6 festival + 23 mystical)
-├── packs-data.ts                 All 15 pack definitions (9 standard + 6 festival)
-├── trading.ts                    Trading Post config (TRADING_CONFIG: 24h auction, 5% seller fee, mystical blocked) + calculateSellerProceeds()
-├── trading-resolve.ts            Lazy auction resolution — maybeResolveExpired() called from trading endpoints (30s cooldown)
-├── festivals.ts                  Festival calendar (6 festivals)
-├── roll.ts                       Pack opening RNG logic
-├── time.ts                       Time utilities — isSchoolHours(), getISTDateString(), IST offset helpers
-├── game-config.ts                Game timing constants, coin economy values, membership pricing, streak config (STREAK_MILESTONES, freeze costs)
-├── app-settings.ts               AppSetting model helpers — getSchoolHoursEnabled(), getRetakeCoinsEnabled(), getWeeklyOffers()
-└── utils.ts                      cn(), CATEGORIES (20 total), RARITY_COLORS, SELL_VALUES, CategorySlug
+    auth  db  email  push  pusher  audio-context  profile
+    quizlets-data  packs-data  trading  trading-resolve
+    festivals  roll  time  game-config  app-settings  utils  milestones-data
 
-prisma/
-├── schema.prisma                 Full DB schema — 27 models incl. PushSubscription, DinoRexRoom, AppSetting, Notification, UserMilestone, UserFollow, FeedActivity, FeedLike, FeedComment, FeedReaction, Nudge, TradeListing, TradeBid, ExplanationRead
-└── seed.ts                       ~193 official quizzes across 20 categories + all quizlets + packs
+prisma/  schema.prisma (27 models)  seed.ts
 ```
 
 ---
@@ -261,375 +105,197 @@ prisma/
 ## Core Domain Concepts
 
 ### Quizlets (Characters)
-- Called "Quizlets" in-game (not "characters")
-- **107 total**: 9 standard packs (Tech/Sports/Magic/Hero/Music/Science × 9, Math × 8, English × 8, Rainbow × 5) + 3 global uniques + 6 festival pack quizlets + 23 mystical achievement quizlets
-- Each has: name, rarity, pack, icon (emoji), color gradient, description
-- Rarities: `common` | `uncommon` | `rare` | `epic` | `legendary` | `secret` | `unique` | `mystical` | `impossible`
-- Secret/Unique/Impossible have `isHidden: true` — shown in a separate "Hidden" section in the Quizlets tab (My Collection view only), not in the All Quizlets dex view or pack descriptions
-- Mystical quizlets have `isHidden: false` and `pack: "mystical"` — visible in the dex view; granted automatically via `/api/attempt`, never sold in packs
+- 107 total: 9 standard packs + 3 global uniques + 6 festival + 23 mystical
+- Rarities: `common | uncommon | rare | epic | legendary | secret | unique | mystical | impossible`
+- `isHidden: true` → Secret/Unique/Impossible — "Hidden" section in My Collection only; excluded from All Quizlets dex and pack descriptions
+- Mystical: `isHidden: false`, `pack: "mystical"` — visible in dex; never sold in packs
 
 ### Rarity Visual System
 Defined in `lib/utils.ts → RARITY_COLORS`:
-- Common: gray border, no glow
-- Uncommon: green border, soft glow
-- Rare: blue border, medium glow
-- Epic: purple border, strong glow
-- Legendary: gold border, animated pulse (`legendary-card` CSS class)
-- Secret: dark/red border
-- Unique: pink border, rainbow animation (`rainbow-card`)
-- Mystical: teal border, shimmer animation (`mystical-card` CSS class) — achievement-only
-- Impossible: full rainbow animation
+- Common: gray border, no glow | Uncommon: green, soft glow | Rare: blue, medium glow | Epic: purple, strong glow
+- Legendary: gold, animated pulse (`legendary-card` CSS class)
+- Secret: dark/red | Unique: pink, rainbow animation (`rainbow-card`) | Mystical: teal, shimmer (`mystical-card`) | Impossible: full rainbow animation
 
-### Mystical Quizlets (Achievement-Based)
-- 23 mystical quizlets exist — **not obtainable from packs**; granted automatically by `/api/attempt` when conditions are met
-- `CATEGORY_MYSTICAL_MAP` in `app/api/attempt/route.ts` maps 19 categories → a quizlet name (brand-logos is the only unmapped category)
-- **Category condition**: complete 10+ distinct quizzes (`distinct: ["quizId"]`) in that category → grants the mapped mystical quizlet
-- **Atypical Choices**: granted when the current quiz is being attempted for the very first time by any user (`quizAttempt.count === 1` after the attempt is recorded)
-- On grant: creates a `UserQuizlet` record + an in-app `Notification` (type `milestone`)
-- Already-owned quizlets are silently skipped (no duplicate check needed — `userQuizlet.findUnique` guards it)
-- Sell value: 500 coins each (same as `SELL_VALUES.mystical`)
-- `lib/quizlets-data.ts` is the source of truth for all 23 definitions (`pack: "mystical"`, `isHidden: false`)
+### Mystical Quizlets
+- Granted by `/api/attempt` only — never from packs
+- Category condition: 10+ distinct quizzes in that category → grants `CATEGORY_MYSTICAL_MAP[category]` (brand-logos is unmapped)
+- Atypical Choices condition: `quizAttempt.count === 1` after recording (first-ever attempt by any user)
+- On grant: creates `UserQuizlet` + `Notification` (type `milestone`); already-owned silently skipped
+- To add a new one: add to `lib/quizlets-data.ts` (rarity `mystical`, pack `mystical`) AND `CATEGORY_MYSTICAL_MAP` in `app/api/attempt/route.ts`
 
 ### Coin Economy
-- Coins per correct answer vary by difficulty: 1→3, 2→5, 3→8, 4→12, 5→20 (defined in `lib/game-config.ts`)
+- Per correct answer by difficulty: 1→3, 2→5, 3→8, 4→12, 5→20
 - Multipliers: Regular 1×, Pro 1.5×, Max 2× (applied before daily cap)
-- Daily earn limits: Regular 500, Pro 1000, Max 1500 coins/day (resets UTC midnight)
-- No duplicate coins: each question can only earn coins once per user (`CorrectAnswer` table)
-- Selling a quizlet returns `sellValue` coins (defined in `SELL_VALUES` in utils.ts)
-- Pack costs: 20–125 coins standard, 40–65 festival
-- Coins can also be purchased via UPI (1 coin = ₹1)
-- Daily coin limit can be reset for ₹100 via UPI (PaymentRequest type `reset`); admin approves
+- Daily earn limits: Regular 500, Pro 1000, Max 1500 (resets UTC midnight)
+- No duplicate coins: `CorrectAnswer` `@@unique([userId, questionId])`; use `createMany({ skipDuplicates: true })`
 
 ### Membership Tiers
-- **Regular**: default, 1× multiplier, 500 coins/day limit
-- **Pro**: ₹250/month via UPI, 1.5× multiplier, 1000 coins/day limit — `isPro + proExpiresAt`
-- **Max**: ₹500/month via UPI, 2× multiplier, 1500 coins/day limit — `isMax + maxExpiresAt`
-- Tiers stack from highest active: Max > Pro > Regular
-- Expiry is checked at request time (not cached); renewal extends from current expiry date
-- Shop page at `/shop` — replaces old `/upgrade`
+- Regular: default, 1×, 500/day | Pro: ₹250/mo, 1.5×, 1000/day (`isPro + proExpiresAt`) | Max: ₹500/mo, 2×, 1500/day (`isMax + maxExpiresAt`)
+- Check active: `isMax && (!maxExpiresAt || maxExpiresAt > new Date())` — same pattern for Pro; Max > Pro > Regular
+- Renewal extends from current expiry date, not today
 
 ### Pack Opening (`lib/roll.ts`)
-When a pack is opened, guaranteed slots: 2 common, 2 uncommon, 1 rare.
-One bonus roll can hit epic/legendary/secret/unique.
-Rainbow pack: tiny chance (0.001%) for the impossible character.
-If user already owns a quizlet: refund coins equal to its sell value.
+- Guaranteed slots: 2 common, 2 uncommon, 1 rare; 1 bonus roll can hit epic/legendary/secret/unique
+- Rainbow pack: 0.001% chance for impossible; already-owned quizlet → refund sell value in coins
 
-### Festival System (`lib/festivals.ts`)
-6 festivals hardcoded by `MM-DD` date. On festival days, `GET /api/packs` includes
-the festival pack slug. No DB change needed — pure date comparison at request time.
+### Festival System
+- 6 festivals by `MM-DD` in `lib/festivals.ts`; `/api/packs` includes festival pack slug on matching dates — pure date comparison, no DB change
 
-### Pre-made Quiz Content
-All 20 categories are seeded via `prisma/seed.ts` — approximately 193 official quizzes total.
-Seeded categories: football, cricket, harry-potter, technology, avengers, artists, musicians, math, science, physics, world-languages, flags, brand-logos, animals, anime, grade-6, geography, world-travel, gaming, memes.
-Category quiz counts vary: technology (22), science/math/football/cricket/avengers (12 each), harry-potter (15), physics/musicians/gaming/artists/world-travel (7 each), grade-6 (10+), flags (11), brand-logos (10), animals (10+), others (5 each).
-Premium categories (`premiumTier` field on `CATEGORIES`): grade-6 (tier 1), geography (tier 1), world-travel (tier 2), gaming (tier 2), memes (tier 3).
+### Quiz Content
+- ~193 official quizzes across 20 categories seeded via `prisma/seed.ts`
+- Premium categories: grade-6/geography (tier 1), world-travel/gaming (tier 2), memes (tier 3)
+- Brand-logos is the only category with no `CATEGORY_MYSTICAL_MAP` entry
 
 ### Weekly Offers & Splash Screen
-- **Weekly offers** are stored as `AppSetting` keys (`weeklyOffer_pro`, `weeklyOffer_max`, `weeklyOffer_daily_reset`, `weeklyOffer_coins`) — each value is a JSON object `{ discountPercent, weekStart }`
-- `lib/app-settings.ts → getWeeklyOffers()` reads all four offer keys and returns only those whose `weekStart` matches the current Sun–Sat week (UTC)
-- Admin sets/clears weekly offers at `/admin/settings` via `POST /api/admin/weekly-offer`
-- `components/SplashScreen.tsx` — full-screen overlay shown once per IST day (localStorage key `bq_splash_date`); displays today's festival pack (if any), active weekly offers, and a Pro/Max pitch; auto-dismisses after a few seconds
-- Shop page (`/shop`) also reads `getWeeklyOffers()` and shows a discount badge on relevant purchase options when active
+- Stored as `AppSetting` keys: `weeklyOffer_pro`, `weeklyOffer_max`, `weeklyOffer_daily_reset`, `weeklyOffer_coins` — value: `{ discountPercent, weekStart }`
+- `lib/app-settings.ts → getWeeklyOffers()` returns only offers matching the current Sun–Sat week (UTC)
+- `SplashScreen.tsx` shown once per IST day (`bq_splash_date`); admin sets/clears via `POST /api/admin/weekly-offer`
 
 ### Trading Post
-- Located at `/trading` — listed in both desktop Sidebar and MobileNav
-- Users can list owned quizlets for auction (24h duration, starting price ≥ sell value)
-- `TradeListing` model: `sellerId`, `userQuizletId` (unique — prevents double-listing), `quizletId`, `startingPrice`, `buyNowPrice?`, `status` (active/sold/expired/cancelled), `expiresAt`
-- `TradeBid` model: `listingId`, `bidderId`, `amount`, `isHeld` (coins held during auction)
-- **Seller fee**: 5% deducted from final sale price; seller receives `calculateSellerProceeds(amount)` from `lib/trading.ts`
-- **Mystical quizlets cannot be listed** (`TRADING_CONFIG.BLOCKED_PACKS = ["mystical"]`)
-- **Lazy resolution**: `lib/trading-resolve.ts → maybeResolveExpired()` runs at most every 30s; called from trading GET endpoints — no background job needed
-- API routes: `GET/POST /api/trading/listings/`, `GET /api/trading/listings/[id]/`, `POST /api/trading/bid/`, `POST /api/trading/buy-now/`
+- `TradeListing`: sellerId, userQuizletId (unique — no double-listing), quizletId, startingPrice, buyNowPrice?, status (active/sold/expired/cancelled), expiresAt (24h)
+- `TradeBid`: listingId, bidderId, amount, isHeld
+- 5% seller fee; always use `calculateSellerProceeds()` from `lib/trading.ts`
+- Mystical quizlets blocked: `TRADING_CONFIG.BLOCKED_PACKS = ["mystical"]`
+- Call `maybeResolveExpired()` from `lib/trading-resolve.ts` at start of every trading read endpoint (30s cooldown)
 
-### Feed Reactions & Nudges
-- **Reactions** (`FeedReaction` model): emoji reactions (🔥🎉👏😱) on feed activities — `@@unique([userId, activityId, emoji])`; toggled via `POST /api/feed/[id]/react/`
-- **Nudges** (`Nudge` model): user-to-user pokes; `POST /api/feed/nudge/[userId]/` sends a nudge (no rate-limit documented — check implementation before adding)
-
-### Explanation Reads
-- `ExplanationRead` model tracks which question explanations a user has opened — `@@unique([userId, questionId])`
-- Written via `POST /api/explanation-read/`; used to persist expanded state across sessions
-
-### Admin 2FA
-- TOTP-based two-factor authentication for the admin panel
-- Setup: `POST /api/admin/2fa/setup/` → returns TOTP secret + QR code
-- Verify: `POST /api/admin/2fa/verify/` → validates TOTP code
-
-### Quiz Answer Shuffling
-QuizPlayer shuffles answer options on every session using a seeded Fisher-Yates shuffle (`shuffleOrder` in `components/quiz/QuizPlayer.tsx`). The correct answer mapping is preserved — do not change this logic.
+### Feed & Reactions
+- `FeedReaction`: `@@unique([userId, activityId, emoji])`; toggled via `POST /api/feed/[id]/react/`; emojis: 🔥🎉👏😱
+- `Nudge`: user-to-user pokes via `POST /api/feed/nudge/[userId]/`
+- `ExplanationRead`: `@@unique([userId, questionId])`; written via `POST /api/explanation-read/`
 
 ### Game Modes
-- **HackDev**: Single player, tech questions, 60-second timer
-- **DinoRex**: Elimination mode — real multiplayer via Pusher Channels (DB-backed rooms, 6 API routes) + AI practice mode vs bots
-- **Speed Blitz**: 20 questions in 30 seconds, all categories
-- **Survival**: Any category, 10s per question — first wrong answer ends the game, score = streak
-- **Daily Challenge**: 5 questions, same for all users on a given day (date-seeded selection), 30s per question
-- **Classic**: Links to `/discover` for standard quiz browsing
+- HackDev: tech, 60s | DinoRex: elimination, Pusher multiplayer + AI bots | SpeedBlitz: 20q in 30s | Survival: 10s/q, first wrong = over | Daily Challenge: 5 deterministic (date-seeded), 30s each | Classic: links to /discover
 - All modes submit to `/api/attempt` for coin awards (multiplier + daily limit apply)
 
-### UPI Payment Flow
-1. User selects amount on `/shop` (coins, Pro/Max membership, or daily limit reset)
-2. QR code + UPI deep link shown (`upi://pay?pa=...`)
-3. User pays in GPay/PhonePe/etc., enters UTR number
-4. `POST /api/user/submit-payment` → creates `PaymentRequest` with type `coins`, `pro`, `max`, or `reset` (status: pending)
-5. Admin sees it at `/admin/payments` → clicks Approve or Reject
-6. On approve: coins credited OR `isPro=true` with `proExpiresAt` set OR `isMax=true` with `maxExpiresAt` set OR `dailyCoinsReset` reset
-7. Renewal stacks: if already active, extends from current expiry date rather than today
-- `/buy-coins` now redirects to `/shop`
+### UPI Payment Flow (`/shop`)
+1. User selects purchase → QR + UPI deep link shown
+2. User pays, enters UTR → `POST /api/user/submit-payment` → `PaymentRequest` (pending)
+3. Admin approves at `/admin/payments` → credits coins / grants Pro+expiry / grants Max+expiry / resets daily limit
+- Renewal extends from current expiry; `/buy-coins` and `/upgrade` both redirect to `/shop`
 
-### Feedback System
-- `/feedback` page with type selector (General, Bug Report, Feature Request, Content Issue, Other)
-- Submissions POST to `/api/feedback` → saved to `Feedback` DB table (no email)
-- Admin views all feedback at `/admin/feedback` — filter by type, mark read/unread, shows user info
-- `Feedback` model: `id`, `userId`, `type`, `message`, `isRead` (default false), `createdAt`
-
-### New User Onboarding
-- `components/IntroOverlay.tsx` — shown once on first login (localStorage key `bq_intro_seen_v1`)
-- 5-step walkthrough: Welcome → Earn Coins → Collect Quizlets → Compete → Let's Play
-- Has Skip button; final step links directly to `/discover`
-- Rendered in `app/(main)/dashboard/page.tsx`
-
-### Online Status (Leaderboard + Profile)
-- `User.lastSeenAt DateTime?` field updated every 5 minutes by `OnlinePing` client component
-- Leaderboard and profile page show green dot on avatar if `lastSeenAt > now - 5 minutes`
-- Leaderboard shows ⭐ badge for Pro users, 👑 badge for Max users (Max takes priority)
-- Leaderboard columns: rank, player, coins, correct answers, accuracy %, followers, quizlets owned, quiz attempts — all except accuracy are sortable via URL params (`?sort=coins&dir=desc&page=1`)
-- Podium (top-3 cards) only renders when `sort === "coins" && dir === "desc"` on page 1 — hidden during non-default sort to avoid confusion
-- Admin sees extra column: email + join date
-- `POST /api/user/ping` handles the update
-
-### Follow System
-- `UserFollow` model: `id`, `followerId`, `followingId`, `createdAt` — `@@unique([followerId, followingId])`; cascade deletes
-- `POST /api/user/follow/[userId]` — follow a user; guards: auth, self-follow (400), target non-existent or isAdmin (404); duplicate silently ignored
-- `DELETE /api/user/follow/[userId]` — unfollow
-- `components/profile/FollowButton.tsx` — client component with optimistic toggle and rollback on non-2xx
-- Profile pages hidden for admin users (`lib/profile.ts` returns `null` if `isAdmin === true` → Next.js `notFound()`)
-- Follower notifications fan out in `/api/attempt`: `follow_milestone` when followed user crosses a coin milestone; `follow_streak_milestone` when they hit a streak milestone
-- **No notification on "user comes online"** — the 5-min ping would be unacceptably noisy; online status is display-only on the profile page
-
-### School Hours Restriction
-- Applies to users whose email ends in `@oberoi-is.net`
-- Blocked Mon–Fri 08:00–15:00 IST (UTC+5:30 offset applied server-side)
-- Enforced at two layers: `/quiz/[id]` page render AND `/api/attempt` POST
-- Shows friendly "school hours" UI message when blocked
-- **Global toggle**: Admin can enable/disable restriction at `/admin/settings` (stored in `AppSetting` key `schoolHoursEnabled`)
-- **Per-user override**: Admin can set `schoolAccessOverride = true` on any user in `/admin/users` to bypass regardless of global setting
-- Time logic extracted to `lib/time.ts` → `isSchoolHours()`
-
-### Account Locking
-- `User.isLocked Boolean` — when true, user cannot play quiz or earn coins
-- Quiz page shows a locked account UI before rendering the quiz
-- `/api/attempt` returns 403 if `isLocked`
-- Admin can lock/unlock at `/admin/users` via PATCH `/api/admin/users/[id]` with action `lock` / `unlock`
-
-### Question Images
-- `Question.imageUrl String?` — optional image shown above question text in QuizPlayer
-- Supported in admin quiz editor (`/admin/quizzes/[id]/edit`) — enter any public image URL
-- QuizPlayer renders `<img>` if `imageUrl` is set; null/empty = no image shown
-
-### Test User Login
-- Login page (`/app/login/page.tsx`) has a "Test login" button for QA/demo purposes
-- Credentials checked against `TEST_USERNAME` + `TEST_PASSWORD` env vars
-- Creates or retrieves a test user with a dynamic email (timestamp-based)
-- Test user is non-admin; school hours and account locks still apply
+### Feedback
+- `POST /api/feedback` → `Feedback` DB table; no email sent
+- Admin reply creates `Notification` + push (not email)
 
 ### Notifications
-- `Notification` model: `id`, `userId`, `type`, `message`, `isRead`, `createdAt`
-- Notification types: `overtaken` | `top3_join` | `feedback_reply` | `admin_message` | `milestone` | `streak_milestone` | `follow_milestone` | `follow_streak_milestone`
-- `/notifications` page shows all of a user's notifications; `TYPE_META` in the page maps each type to icon + label + color
-- `GET /api/notifications` returns unread count + list
-- Created by: admin feedback reply, admin direct message (admin/users), leaderboard overtake/top3 events, milestone unlock, streak milestone, follow fan-out (follow_milestone, follow_streak_milestone)
-- MobileNav "More" drawer shows red dot on Notifications if unread count > 0
+- Types: `overtaken | top3_join | feedback_reply | admin_message | milestone | streak_milestone | follow_milestone | follow_streak_milestone`
+- **Separate from Feed** — `Notification` = private system messages; `FeedActivity` = public social events; never create `Notification` from feed logic
 
 ### Social Feed
-- `/feed` page — Duolingo-style social feed; replaces Notifications as the primary nav entry (Notifications still accessible)
-- Shows **own** activity + activity of **followed users**, newest first, paginated (20/page)
-- **Activity types** stored in `FeedActivity` model (`type` + `data` JSON):
-  - `quiz_completed` — `{ quizTitle, category, score, total, coinsEarned }` — created in `/api/attempt` on every quiz submission
-  - `milestone_earned` — `{ milestoneName, milestoneType, threshold, tier }` — created in `/api/attempt` when coin or non-coin milestone crossed
-  - `quizlet_earned` — `{ quizletName, rarity, icon, colorFrom, colorTo, source }` (`source: "pack" | "mystical"`) — created in `/api/packs/open` (new pack quizlets) and `/api/attempt` (mystical grants)
-  - `streak_milestone` — `{ days }` — created in `/api/attempt` when streak milestone crossed
-  - `leaderboard_top3` — `{ rank }` — created in `/api/attempt` when user first enters top 3
-  - `user_returned` — `{ daysMissed }` — created in `/api/user/ping` when `lastSeenAt` was >48 hours ago (fires once per return)
-- **Likes**: `FeedLike` model — `@@unique([userId, activityId])`; `POST /api/feed/[id]/like` toggles like and returns `{ liked, likeCount }`
-- **Comments**: `FeedComment` model; `GET /api/feed/[id]/comments` returns all; `POST` adds one (max 280 chars)
-- All feed activity creation is **fire-and-forget** (`.catch(() => {})`) — never blocks the main API response
-- Feed is **not a notification channel** — feed events do not create `Notification` records; they are separate systems
+- Activity types in `FeedActivity.type`: `quiz_completed | milestone_earned | quizlet_earned | streak_milestone | leaderboard_top3 | user_returned`
+- `quizlet_earned.source`: `"pack" | "mystical"`; `user_returned` fires in `POST /api/user/ping` only when `lastSeenAt > 48h ago`
+- All feed writes are **fire-and-forget** (`.catch(() => {})`); never `await` in the hot path
+- New activity types need a matching renderer in `feed/page.tsx → ActivityBody`
+- Likes: `FeedLike` `@@unique([userId, activityId])`; Comments: `FeedComment` (max 280 chars)
 
-### Global Settings (AppSetting)
-- `AppSetting` DB model: `key` (unique), `value` (string), `updatedAt`
-- Admin UI at `/admin/settings` — currently exposes: `schoolHoursEnabled` (true/false)
-- `lib/app-settings.ts` exposes `getSchoolHoursEnabled()` for server-side reads
-- PATCH `/api/admin/settings` updates any key/value pair
+### Follow System
+- `UserFollow`: `@@unique([followerId, followingId])`, cascade deletes
+- Guards: self-follow (400), target non-existent or isAdmin (404); duplicate silently ignored
+- `lib/profile.ts → getProfileData()` returns `null` for admins → `notFound()`
+- Follow fan-out notifications (`follow_milestone`, `follow_streak_milestone`) created in `/api/attempt`
+
+### Online Status
+- `User.lastSeenAt` updated every 5 min by `OnlinePing`; green dot if `lastSeenAt > now - 5 min`
+- Leaderboard: ⭐ Pro, 👑 Max (Max takes priority); podium renders only on default sort (coins desc, page 1)
+- Leaderboard sort via URL params (`sort`/`dir`/`page`); accuracy is computed, NOT sortable
+
+### School Hours Restriction
+- Applies to `@oberoi-is.net` emails; blocks Mon–Fri 08:00–15:00 IST
+- Enforced at: `/quiz/[id]` page render AND `/api/attempt` POST
+- Global toggle: `AppSetting` key `schoolHoursEnabled`; per-user override: `User.schoolAccessOverride = true`
+- Always use `lib/time.ts → isSchoolHours()` + `lib/app-settings.ts → getSchoolHoursEnabled()`; never inline IST math
+
+### Account Locking
+- `User.isLocked` — quiz page shows locked UI; `/api/attempt` returns 403
+- Admin: PATCH `/api/admin/users/[id]` with `action: "lock" | "unlock"`
 
 ### No-Duplicate Coins
-- `CorrectAnswer` model tracks every (userId, questionId) pair a user answered correctly
-- `@@unique([userId, questionId])` prevents double-recording
-- `/api/attempt` only awards coins for questions NOT already in this table
-- New correct answers are inserted via `prisma.correctAnswer.createMany({ skipDuplicates: true })`
+- `CorrectAnswer` model: `@@unique([userId, questionId])` — never skip this check; it prevents infinite coin farming
+- Insert via `prisma.correctAnswer.createMany({ skipDuplicates: true })`
+
+### Global Settings
+- `AppSetting` model: `key` (unique), `value` (string); read via `lib/app-settings.ts`; write via PATCH `/api/admin/settings` or `POST /api/admin/weekly-offer`
+- Never hardcode setting keys outside `lib/app-settings.ts`
 
 ### Milestone System
-- **5 milestone types**: `coins` | `quizzes` | `answers` | `categories` | `streak`
-- **6 tiers**: bronze · silver · gold · platinum · diamond · **cosmic** (new highest tier)
-- Coin milestones: 1K–60K (every 1K) + 65K, 70K, 75K, 85K, 100K (`MILESTONE_THRESHOLDS`)
-- Quiz milestones: 10, 25, 50, 100, 250, 500, 1000 quizzes played
-- Answer milestones: 50, 100, 250, 500, 1000, 2500, 5000 unique correct answers
-- Category milestones: 3, 5, 8, 11, 16 categories explored
-- Streak badge milestones: 5, 10, 20, 30, 50, 75, 100, 150, 200, 365 days
-- Defined in `lib/milestones-data.ts` — `ALL_MILESTONES`, `MILESTONES` (coins), `QUIZ_MILESTONES`, `ANSWER_MILESTONES`, `CATEGORY_MILESTONES`, `STREAK_BADGE_MILESTONES`, `TIER_COLORS`
-- Gold/diamond/cosmic milestones have CSS animation classes (`legendary-card`, `rainbow-card`)
-- Auto-granted in `/api/attempt` when a quiz completion crosses a threshold
-- Stored in `UserMilestone` model: `@@unique([userId, milestoneType, threshold])` (milestoneType added)
-- On unlock: creates an in-app `Notification` (type `milestone`) + fires a web push
-- Existing users can be backfilled via `POST /api/admin/grant-milestones` (admin only)
-- `/milestones` page shows earned badges by type + progress bar toward next unlock
-- Dashboard shows the user's latest earned milestone badge and links to `/milestones`
+- 5 types: `coins | quizzes | answers | categories | streak`; 6 tiers: bronze · silver · gold · platinum · diamond · cosmic
+- Coin: 1K–60K (every 1K) + 65K, 70K, 75K, 85K, 100K | Quiz: 10,25,50,100,250,500,1000 | Answer: 50,100,250,500,1000,2500,5000 | Category: 3,5,8,11,16 | Streak badge: 5,10,20,30,50,75,100,150,200,365
+- `UserMilestone` unique key: `[userId, milestoneType, threshold]`; always pass `milestoneType`; use `skipDuplicates: true`
+- On unlock: `Notification` (type `milestone`) + web push (fire-and-forget)
 
 ### Daily Streaks
-- Tracked on `User` model: `currentStreak`, `longestStreak`, `lastStreakDate` (UTC DateTime), `streakFreezes` (0–2)
-- Streak increments each IST calendar day a user completes at least one quiz
-- Date comparison uses `getISTDateString()` from `lib/time.ts` (IST = UTC+5:30)
-- Gap of exactly 1 day → streak increments; gap >1 day → freeze auto-consumed if available, else streak resets to 1
-- Streak milestone thresholds: `STREAK_MILESTONES` in `lib/game-config.ts` — [5,10,15,20,25,30,40,50,60,75,90,100,150,200,365] days
-- On crossing a streak milestone: creates `Notification` (type `streak_milestone`) + fire-and-forget push
-- Streak update only writes to DB when the IST date has changed (skips same-day plays)
-- Dashboard shows 🔥 streak card with progress bar to next milestone and freeze count
-- Streak freezes are coin-purchased (not UPI): 1st freeze = 1,000 coins, 2nd freeze = 2,500 coins, max 2 owned
-- Purchase endpoint: `GET/POST /api/user/buy-streak-freeze`; shop has a "🧊 Streak Freeze" tab
-
-### New User Email Notification
-- NextAuth `events.createUser` fires when a brand-new Google account signs up
-- Sends admin notification email via `lib/email.ts → sendEmail()`
-
-### Quiz Completion Tracking
-- Discover page fetches user's `QuizAttempt` records where `score === total` (perfect score)
-- Those quiz cards show a green **✓ Completed** badge and green border
+- IST date comparison via `getISTDateString()` from `lib/time.ts` — never inline IST math
+- Gap 1 day → increment; gap >1 day → consume freeze if available, else reset to 1
+- Freeze purchase: `streakFreezes: { increment: 1 }` (atomic); 1st = 1K coins, 2nd = 2.5K coins; max 2
+- `STREAK_MILESTONES` in `lib/game-config.ts`: 5,10,15,20,25,30,40,50,60,75,90,100,150,200,365
 
 ### Mobile Navigation
-- Desktop: full `Sidebar` — collapsible (state in localStorage `bq_sidebar_collapsed`); Feed is listed between Milestones and Game Modes
-- Mobile: `MobileNav` — bottom tab bar (Home, Discover, Packs, Quizlets, More) + "More" drawer with (Leaderboard, Milestones, Game Modes, Feedback, Upgrade/Shop, **Feed**, Notifications)
-- `/marketplace` is labelled "Packs"; `/shop` (Pro/Max) is labelled "Upgrade" — keep these distinct to avoid confusion
-- Main content has `pb-20 md:pb-0` to clear the mobile nav bar
+- Desktop: `Sidebar` (collapsible, `bq_sidebar_collapsed`); Mobile: `MobileNav` (bottom tab bar + "More" drawer)
+- `pb-20 md:pb-0` on main content to clear mobile nav bar
+- `/marketplace` = "Packs"; `/shop` = "Upgrade" — keep distinct, never link to `/upgrade` or `/buy-coins`
 
 ### Theme (Dark Only)
-- App is **dark-only** — `ThemeProvider` uses `forcedTheme="dark"`, no light mode toggle exists
-- CSS custom properties in `globals.css` define `--background`, `--surface`, `--main-bg`, `--sidebar-*`, `--text-base` (all dark values on `:root, .dark`)
-- Structural elements use `style={{ background: "var(--main-bg)" }}` etc.
-- **Do not use hardcoded dark colors** (`bg-[#0d0a22]`, `bg-gray-900`, `bg-[#070511]`) — use `bg-white/5` or CSS variables instead
-- No `.light` overrides exist in `globals.css` — do not add any
+- `forcedTheme="dark"` — no light mode; use `bg-white/5`, `bg-white/10`, or CSS variables
+- Never hardcode dark hex colors (`bg-[#0d0a22]`, etc.); never add `.light` overrides to `globals.css`
 
-### Background Music
-- `AudioProvider` in `lib/audio-context.tsx` wraps `(main)/layout.tsx`
-- State (enabled, volume) persisted in `localStorage` keys `bq_music_enabled` / `bq_music_volume`
-- Auto-pauses on `/quiz/[id]` routes, resumes on leaving
-- Default track: `NEXT_PUBLIC_MUSIC_URL` env var (SoundHelix-Song-1.mp3 by default)
-- UI: floating button bottom-right via `components/AudioPlayer.tsx`
+### DinoRex Multiplayer
+- Uses Pusher Channels (not Socket.io); room state in `DinoRexRoom` DB model; types in `lib/pusher.ts`
+- AI practice mode is standalone client-only (no Pusher, no DB rooms)
 
-### DinoRex Real-Time Multiplayer
-- Real-time events delivered via **Pusher Channels** (not Socket.io)
-- Room state persisted in `DinoRexRoom` DB model; each API call updates DB then triggers Pusher
-- Client subscribes to `dinorex-{code}` channel; types defined in `lib/pusher.ts`
-- AI practice mode bypasses all of this — standalone client-only component
-- Room lifecycle: `create → join → start → answer (×N) → reveal → game-ended`
+### Web Push
+- `public/sw.js` handles push + notificationclick; requires `VAPID_EMAIL`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
+- `sendPushToUser()` from `lib/push.ts` is fire-and-forget; auto-deletes expired subscriptions (HTTP 410/404)
 
-### Web Push Notifications (VAPID)
-- Service worker at `public/sw.js` — handles `push` and `notificationclick` browser events
-- `PushSubscriptionManager` (rendered in main layout) registers the SW and shows opt-in banner
-- Banner is suppressed if dismissed (`bq_push_dismissed` localStorage key) or permission denied
-- Subscriptions stored in `PushSubscription` DB table; `sendPushToUser()` in `lib/push.ts`
-- Currently triggered by: admin feedback reply (`/api/admin/feedback`), leaderboard overtake (`/api/attempt`), milestone unlock (`/api/attempt`), streak milestone (`/api/attempt`)
-- Requires `VAPID_EMAIL`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` env vars
-- Generate VAPID keys: `npx web-push generate-vapid-keys`
-- Expired/revoked subscriptions (HTTP 410/404) are auto-deleted from DB on send
-
-### Remotion Video Composition
-- `remotion/` directory contains a standalone video composition (not part of the web app)
-- Files: `BittsQuizReel.tsx`, `BittsQuizVideo.tsx`, `Root.tsx`, `index.ts`, `tokens.ts`
-- Used to generate promotional/social media video reels for BittsQuiz
-- Does not affect the Next.js app or DB — edit independently
-
-### Design System
-- `design-system.md` documents the visual design tokens, colors, spacing, and component patterns
-- Reference this when adding new UI components to stay consistent
-
-### Year Auto-Increment
-The app name is always `BittsQuiz {new Date().getFullYear()}`.
-Never hardcode a year — always use `new Date().getFullYear()`.
+### Misc
+- New user signup: NextAuth `events.createUser` → `lib/email.ts → sendEmail()` (admin alert only — do not add email elsewhere)
+- Quiz completion: Discover page checks `QuizAttempt where score === total` → green ✓ badge
+- Question images: `Question.imageUrl String?` — shown above question in QuizPlayer; admin-editable
+- Test login: `TEST_USERNAME` + `TEST_PASSWORD` env vars on `/login`; non-admin user
+- Admin 2FA: TOTP — setup `POST /api/admin/2fa/setup/`, verify `POST /api/admin/2fa/verify/`
+- Background music: `lib/audio-context.tsx`; `bq_music_enabled`/`bq_music_volume` localStorage; auto-pauses on `/quiz/[id]`
+- Design system: see `design-system.md` for visual tokens, colors, spacing, component patterns
+- Year: always `new Date().getFullYear()` — never hardcode
+- Quiz answer shuffling: seeded Fisher-Yates (`shuffleOrder`) in `QuizPlayer.tsx` — do not change this logic
 
 ---
 
-## Key Files to Know
+## Key Files
 
 | File | Purpose |
 |------|---------|
-| `lib/profile.ts` | Server-only profile data fetcher — `getProfileData(userId, viewerUserId)` — returns `null` for admins; parallel queries via `Promise.all` |
-| `lib/milestones-data.ts` | Multi-type milestone definitions + `ALL_MILESTONES` + `TIER_COLORS` (6 tiers incl. cosmic) — edit names/tiers here |
-| `lib/quizlets-data.ts` | All 107 quizlet definitions (9 standard packs + 3 global uniques + 6 festival + 23 mystical) |
-| `lib/packs-data.ts` | All 15 pack definitions (9 standard + 6 festival) |
+| `lib/profile.ts` | `getProfileData(userId, viewerUserId)` — returns `null` for admins; parallel queries |
+| `lib/milestones-data.ts` | All milestone definitions + `ALL_MILESTONES`, `TIER_COLORS` — edit names/tiers here |
+| `lib/quizlets-data.ts` | All 107 quizlet definitions |
+| `lib/packs-data.ts` | All 15 pack definitions |
 | `lib/roll.ts` | Pack opening RNG — edit drop rates here |
 | `lib/festivals.ts` | Add/modify festival dates here |
-| `lib/utils.ts` | RARITY_COLORS, SELL_VALUES, CATEGORIES (20 total, 4 with premiumTier), CategorySlug type |
-| `lib/time.ts` | isSchoolHours() + getISTDateString() + IST offset helpers |
-| `lib/game-config.ts` | Game timing constants, coin earn amounts, membership pricing, daily limits, streak constants |
-| `lib/app-settings.ts` | getSchoolHoursEnabled(), getRetakeCoinsEnabled(), getWeeklyOffers() — reads AppSetting from DB |
-| `lib/trading.ts` | Trading Post config (TRADING_CONFIG) + calculateSellerProceeds() |
-| `lib/trading-resolve.ts` | maybeResolveExpired() — lazy auction resolution with 30s cooldown |
-| `lib/email.ts` | sendEmail() helper — used by auth createUser event (new user alerts); NOT used by feedback |
-| `lib/push.ts` | sendPushToUser() — sends VAPID web push to all of a user's subscriptions; auto-cleans expired |
-| `lib/pusher.ts` | pusherServer instance + DinoRex shared types (DinoRexPlayer, DinoRexQuestion, PusherEvent) |
-| `lib/audio-context.tsx` | Background music context + state |
-| `public/sw.js` | Service worker — receives push events and shows browser notifications |
-| `app/icon.svg` | App favicon — SVG lightning bolt on purple-to-pink gradient (auto-served by Next.js) |
-| `app/globals.css` | Dark-only theme CSS variables + font config + animation keyframes |
-| `app/(main)/loading.tsx` | App-level loading screen — rotating game facts, shown during route transitions |
-| `app/(main)/shop/page.tsx` | Pro/Max membership + coin purchase + daily limit reset (replaces old /upgrade and /buy-coins) |
-| `app/(main)/notifications/page.tsx` | In-app notifications list |
-| `app/(main)/feed/page.tsx` | Social feed — paginated activity cards with likes + inline comments |
-| `app/api/feed/route.ts` | GET paginated feed (own + followed users' FeedActivity) |
-| `app/api/feed/[id]/like/route.ts` | POST toggle like — returns `{ liked, likeCount }` |
-| `app/api/feed/[id]/comments/route.ts` | GET + POST comments on a feed activity |
-| `app/(main)/admin/users/page.tsx` | User manager — lock/unlock, reset daily, grant/revoke tiers, send push |
-| `app/(main)/admin/settings/page.tsx` | Global admin settings — school hours, retake coins, weekly discount offers |
-| `app/(main)/trading/page.tsx` | Trading Post — auction listings, bids, buy-now |
-| `components/SplashScreen.tsx` | Daily splash screen — festival pack + weekly offers shown here automatically |
-| `components/profile/FollowListModal.tsx` | Follower/following list modal on profile pages |
-| `components/layout/NotificationsProvider.tsx` | Unread notification count context — read via `useUnreadCount()` |
-| `components/ThemeProvider.tsx` | next-themes wrapper |
-| `components/IntroOverlay.tsx` | First-visit onboarding (5 steps, shown once via localStorage) |
-| `components/layout/Sidebar.tsx` | Desktop collapsible sidebar — edit nav items here |
+| `lib/utils.ts` | `RARITY_COLORS`, `SELL_VALUES`, `CATEGORIES` (20 total, 4 premium), `CategorySlug` |
+| `lib/time.ts` | `isSchoolHours()`, `getISTDateString()`, IST offset helpers |
+| `lib/game-config.ts` | Coin earn amounts, daily limits, membership pricing, `STREAK_MILESTONES` |
+| `lib/app-settings.ts` | `getSchoolHoursEnabled()`, `getRetakeCoinsEnabled()`, `getWeeklyOffers()` |
+| `lib/trading.ts` | `TRADING_CONFIG` + `calculateSellerProceeds()` |
+| `lib/trading-resolve.ts` | `maybeResolveExpired()` — call at start of every trading read endpoint |
+| `lib/email.ts` | `sendEmail()` — new-user alerts only; NOT used by feedback |
+| `lib/push.ts` | `sendPushToUser()` — VAPID web push; fire-and-forget; auto-cleans expired |
+| `lib/pusher.ts` | `pusherServer` + DinoRex shared types (DinoRexPlayer, DinoRexQuestion, PusherEvent) |
+| `app/globals.css` | Dark-only CSS variables + animation keyframes |
+| `prisma/schema.prisma` | DB schema (27 models) — run `db:push` + `prisma generate` after changes |
+| `app/(main)/shop/page.tsx` | Pro/Max membership + coin purchase + daily limit reset |
+| `app/(main)/feed/page.tsx` | Social feed — `ActivityBody` renderer (add new activity types here) |
+| `app/(main)/admin/settings/page.tsx` | Global toggles + weekly discount offers |
+| `components/SplashScreen.tsx` | Daily splash — festival pack + weekly offers (once per IST day) |
+| `components/layout/NotificationsProvider.tsx` | `useUnreadCount()` — unread count context |
+| `components/layout/Sidebar.tsx` | Desktop sidebar — edit nav items here |
 | `components/layout/MobileNav.tsx` | Mobile bottom nav — edit items here |
-| `components/layout/OnlinePing.tsx` | Pings /api/user/ping every 5 min |
-| `components/game/SurvivalGame.tsx` | Survival mode — streak until first wrong answer |
-| `components/game/DailyChallengeGame.tsx` | Daily challenge — 5 deterministic questions per day |
-| `prisma/schema.prisma` | DB schema — run `npm run db:push` after changes |
-| `prisma/seed.ts` | Re-run `npm run db:seed` to re-seed (~193 quizzes, all 20 categories) |
+| `public/sw.js` | Service worker — push events + notificationclick |
 
 ---
 
 ## Development Workflow
 
-### Branches
-- AI branches: always use `claude/` prefix
-- Never push to `master` without explicit permission
-
-### Commits
-- Clear, present-tense commit messages
-- Keep commits focused
-
-### Push
-```bash
-git push -u origin <branch-name>
-```
-
-### After Schema Changes
-```bash
-npm run db:push      # push schema changes to DB
-npx prisma generate  # regenerate client types
-npm run db:seed      # re-seed data (idempotent)
-```
-
-### After Adding New Quizlets/Packs
-1. Add to `lib/quizlets-data.ts` or `lib/packs-data.ts`
-2. Re-run `npm run db:seed`
+- AI branches: always use `claude/` prefix; never push to `master` without explicit permission
+- After schema changes: `npm run db:push` → `npx prisma generate` → `npm run db:seed` (if quizlet/pack data changed)
+- After adding new quizlets/packs: update `lib/quizlets-data.ts` or `lib/packs-data.ts`, then re-run `npm run db:seed`
 
 ---
 

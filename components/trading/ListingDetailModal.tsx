@@ -35,6 +35,31 @@ type ListingDetail = {
   isOwner: boolean;
 };
 
+const FETCH_TIMEOUT_MS = 15_000;
+const ACTION_TIMEOUT_MS = 15_000;
+
+async function safeFetch(url: string, options?: RequestInit & { timeoutMs?: number }) {
+  const { timeoutMs = FETCH_TIMEOUT_MS, ...fetchOptions } = options ?? {};
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...fetchOptions, signal: controller.signal });
+    clearTimeout(timer);
+    return res;
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+}
+
+async function parseJson(res: Response): Promise<Record<string, unknown>> {
+  try {
+    return await res.json();
+  } catch {
+    return {};
+  }
+}
+
 export function ListingDetailModal({
   listingId,
   userId,
@@ -57,16 +82,16 @@ export function ListingDetailModal({
 
   const fetchListing = useCallback(async () => {
     try {
-      const res = await fetch(`/api/trading/listings/${listingId}`);
+      const res = await safeFetch(`/api/trading/listings/${listingId}`);
       if (!res.ok) { setError("Failed to load listing"); setLoading(false); return; }
       const data = await res.json();
       setListing(data);
-      // Set default bid amount
       const highestBid = data.bids?.[0]?.amount ?? 0;
       const minNext = highestBid > 0 ? highestBid + 1 : data.startingPrice;
       setBidAmount(String(minNext));
-    } catch {
-      setError("Network error");
+    } catch (err) {
+      const isTimeout = (err as { name?: string }).name === "AbortError";
+      setError(isTimeout ? "Request timed out — please try again." : "Failed to load listing — please try again.");
     } finally {
       setLoading(false);
     }
@@ -80,18 +105,24 @@ export function ListingDetailModal({
     setActionLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/trading/bid", {
+      const res = await safeFetch("/api/trading/bid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ listingId, amount }),
+        timeoutMs: ACTION_TIMEOUT_MS,
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Bid failed"); return; }
+      const data = await parseJson(res);
+      if (!res.ok) { setError((data.error as string) ?? "Bid failed — please try again."); return; }
       setSuccess(`Bid of ${amount} coins placed!`);
       onAction();
       await fetchListing();
-    } catch {
-      setError("Network error");
+    } catch (err) {
+      const isTimeout = (err as { name?: string }).name === "AbortError";
+      setError(
+        isTimeout
+          ? "Request timed out. Please refresh and check your balance before retrying."
+          : "Connection lost. Please refresh and check your balance before retrying."
+      );
     } finally {
       setActionLoading(false);
     }
@@ -102,18 +133,24 @@ export function ListingDetailModal({
     setActionLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/trading/buy-now", {
+      const res = await safeFetch("/api/trading/buy-now", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ listingId }),
+        timeoutMs: ACTION_TIMEOUT_MS,
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Purchase failed"); return; }
+      const data = await parseJson(res);
+      if (!res.ok) { setError((data.error as string) ?? "Purchase failed — please try again."); return; }
       setSuccess(`You bought ${data.quizletName} for ${data.price} coins!`);
       onAction();
       await fetchListing();
-    } catch {
-      setError("Network error");
+    } catch (err) {
+      const isTimeout = (err as { name?: string }).name === "AbortError";
+      setError(
+        isTimeout
+          ? "Request timed out. Please refresh and check your balance before retrying."
+          : "Connection lost. Please refresh and check your balance before retrying."
+      );
     } finally {
       setActionLoading(false);
     }
@@ -124,14 +161,18 @@ export function ListingDetailModal({
     setActionLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/trading/listings/${listingId}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Cancel failed"); return; }
+      const res = await safeFetch(`/api/trading/listings/${listingId}`, {
+        method: "DELETE",
+        timeoutMs: ACTION_TIMEOUT_MS,
+      });
+      const data = await parseJson(res);
+      if (!res.ok) { setError((data.error as string) ?? "Cancel failed — please try again."); return; }
       setSuccess("Listing cancelled.");
       onAction();
       onClose();
-    } catch {
-      setError("Network error");
+    } catch (err) {
+      const isTimeout = (err as { name?: string }).name === "AbortError";
+      setError(isTimeout ? "Request timed out — please try again." : "Connection lost — please try again.");
     } finally {
       setActionLoading(false);
     }
