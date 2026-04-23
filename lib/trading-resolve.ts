@@ -54,70 +54,61 @@ async function resolveOneListing(listing: ListingWithIncludes): Promise<void> {
   if (winningBid) {
     // ── Auction won: transfer quizlet, credit seller, refund other bids ──
     const sellerProceeds = calculateSellerProceeds(winningBid.amount);
+    const otherBids = listing.bids.filter((b) => b.id !== winningBid.id);
 
-    // Check if winner already owns this quizlet type (unique constraint guard)
     const winnerAlreadyOwns = await prisma.userQuizlet.findUnique({
       where: { userId_quizletId: { userId: winningBid.bidderId, quizletId: listing.quizletId } },
     });
 
     if (winnerAlreadyOwns && winnerAlreadyOwns.id !== listing.userQuizletId) {
-      // Winner already has this quizlet — increment their quantity and delete the listed record
+      if (!listing.quizlet.isHidden) {
+        // Non-hidden quizlet: duplicate not allowed — refund all bids and expire (safety net)
+        for (const bid of listing.bids) {
+          await prisma.$transaction([
+            prisma.user.update({ where: { id: bid.bidderId }, data: { coins: { increment: bid.amount } } }),
+            prisma.tradeBid.update({ where: { id: bid.id }, data: { isHeld: false } }),
+          ]);
+        }
+        await prisma.tradeListing.update({ where: { id: listing.id }, data: { status: "expired" } });
+        return;
+      }
+
+      // Hidden quizlet (secret/unique/impossible): quantity increment allowed.
+      // Process all bids BEFORE deleting UserQuizlet to avoid cascade-delete bug (P2025).
+      for (const bid of otherBids) {
+        await prisma.$transaction([
+          prisma.user.update({ where: { id: bid.bidderId }, data: { coins: { increment: bid.amount } } }),
+          prisma.tradeBid.update({ where: { id: bid.id }, data: { isHeld: false } }),
+        ]);
+      }
+      await prisma.tradeBid.update({ where: { id: winningBid.id }, data: { isHeld: false } });
+
+      // Now safe to delete — cascade only hits already-released bids
       await prisma.$transaction([
-        prisma.tradeListing.update({
-          where: { id: listing.id },
-          data: { status: "sold" },
-        }),
-        prisma.userQuizlet.update({
-          where: { id: winnerAlreadyOwns.id },
-          data: { quantity: { increment: 1 } },
-        }),
-        prisma.userQuizlet.delete({
-          where: { id: listing.userQuizletId },
-        }),
-        prisma.user.update({
-          where: { id: listing.sellerId },
-          data: { coins: { increment: sellerProceeds } },
-        }),
-        prisma.tradeBid.update({
-          where: { id: winningBid.id },
-          data: { isHeld: false },
-        }),
+        prisma.tradeListing.update({ where: { id: listing.id }, data: { status: "sold" } }),
+        prisma.userQuizlet.update({ where: { id: winnerAlreadyOwns.id }, data: { quantity: { increment: 1 } } }),
+        prisma.user.update({ where: { id: listing.sellerId }, data: { coins: { increment: sellerProceeds } } }),
+        prisma.userQuizlet.delete({ where: { id: listing.userQuizletId } }),
       ]);
     } else {
       // Normal transfer: update userId on the existing UserQuizlet record
       await prisma.$transaction([
-        prisma.tradeListing.update({
-          where: { id: listing.id },
-          data: { status: "sold" },
-        }),
+        prisma.tradeListing.update({ where: { id: listing.id }, data: { status: "sold" } }),
         prisma.userQuizlet.update({
           where: { id: listing.userQuizletId },
           data: { userId: winningBid.bidderId, obtainedAt: new Date() },
         }),
-        prisma.user.update({
-          where: { id: listing.sellerId },
-          data: { coins: { increment: sellerProceeds } },
-        }),
-        prisma.tradeBid.update({
-          where: { id: winningBid.id },
-          data: { isHeld: false },
-        }),
+        prisma.user.update({ where: { id: listing.sellerId }, data: { coins: { increment: sellerProceeds } } }),
+        prisma.tradeBid.update({ where: { id: winningBid.id }, data: { isHeld: false } }),
       ]);
-    }
 
-    // Refund all other held bids
-    const otherBids = listing.bids.filter((b) => b.id !== winningBid.id);
-    for (const bid of otherBids) {
-      await prisma.$transaction([
-        prisma.user.update({
-          where: { id: bid.bidderId },
-          data: { coins: { increment: bid.amount } },
-        }),
-        prisma.tradeBid.update({
-          where: { id: bid.id },
-          data: { isHeld: false },
-        }),
-      ]);
+      // Refund all other held bids
+      for (const bid of otherBids) {
+        await prisma.$transaction([
+          prisma.user.update({ where: { id: bid.bidderId }, data: { coins: { increment: bid.amount } } }),
+          prisma.tradeBid.update({ where: { id: bid.id }, data: { isHeld: false } }),
+        ]);
+      }
     }
 
     // Notifications (fire-and-forget)

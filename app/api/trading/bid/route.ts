@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const listing = await prisma.tradeListing.findUnique({
     where: { id: listingId },
     include: {
-      quizlet: { select: { name: true, icon: true } },
+      quizlet: { select: { name: true, icon: true, isHidden: true } },
       seller: { select: { id: true } },
     },
   });
@@ -72,6 +72,14 @@ export async function POST(req: NextRequest) {
         throw Object.assign(new Error(`Minimum bid is now ${freshMin} coins`), { code: "TOO_LOW" });
       if (freshListing.buyNowPrice && amount >= freshListing.buyNowPrice)
         throw Object.assign(new Error("Bid equals or exceeds buy-now price. Use buy-now instead."), { code: "USE_BUY_NOW" });
+
+      if (!listing.quizlet.isHidden) {
+        const alreadyOwns = await tx.userQuizlet.findUnique({
+          where: { userId_quizletId: { userId: session.user.id, quizletId: freshListing.quizletId } },
+        });
+        if (alreadyOwns)
+          throw Object.assign(new Error("You already own this quizlet"), { code: "ALREADY_OWNED" });
+      }
 
       // Deduct coins
       const deducted = await tx.user.updateMany({
@@ -114,7 +122,7 @@ export async function POST(req: NextRequest) {
     const code = (err as { code?: string }).code;
     const message = err instanceof Error ? err.message : "Bid failed";
     const status =
-      code === "INSUFFICIENT_COINS" || code === "TOO_LOW" || code === "USE_BUY_NOW"
+      code === "INSUFFICIENT_COINS" || code === "TOO_LOW" || code === "USE_BUY_NOW" || code === "ALREADY_OWNED"
         ? 400
         : code === "NOT_ACTIVE" || code === "EXPIRED"
         ? 409

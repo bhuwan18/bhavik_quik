@@ -79,18 +79,22 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // 4. Transfer quizlet ownership — guard against @@unique([userId, quizletId]) violation
+      // 4. Transfer quizlet ownership
       const buyerAlreadyOwns = await tx.userQuizlet.findUnique({
         where: { userId_quizletId: { userId: session.user.id, quizletId: listing.quizletId } },
       });
 
       if (buyerAlreadyOwns) {
-        // Buyer already owns this quizlet — increment their quantity and clean up the listed record
+        if (!listing.quizlet.isHidden) {
+          // Non-hidden quizlet: duplicate ownership not allowed
+          throw Object.assign(new Error("You already own this quizlet"), { code: "ALREADY_OWNED" });
+        }
+        // Hidden quizlet (secret/unique/impossible): increment quantity
         await tx.userQuizlet.update({
           where: { id: buyerAlreadyOwns.id },
           data: { quantity: { increment: 1 } },
         });
-        // Reassign the listing's FK before deleting to avoid cascade-deleting the listing record
+        // Reassign listing FK before deleting to avoid cascade-deleting the listing record
         await tx.tradeListing.update({
           where: { id: listing.id },
           data: { userQuizletId: buyerAlreadyOwns.id },
@@ -112,7 +116,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const code = (err as { code?: string }).code;
     const message = err instanceof Error ? err.message : "Purchase failed";
-    const status = code === "INSUFFICIENT_COINS" ? 400 : code === "ALREADY_SOLD" ? 409 : 500;
+    const status = code === "INSUFFICIENT_COINS" || code === "ALREADY_OWNED" ? 400 : code === "ALREADY_SOLD" ? 409 : 500;
     return NextResponse.json({ error: message }, { status });
   }
 
