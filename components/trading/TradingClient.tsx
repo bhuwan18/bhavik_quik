@@ -215,11 +215,16 @@ export default function TradingClient({
                 <div key={l.id} className="relative">
                   <ListingCard listing={l} onClick={() => setSelectedListingId(l.id)} />
                   {l.status !== "active" && (
-                    <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
-                      <span className={`text-xs font-bold uppercase px-2 py-1 rounded-full ${
-                        l.status === "sold" ? "bg-green-500/20 text-green-400" :
-                        l.status === "expired" ? "bg-gray-500/20 text-gray-400" :
-                        "bg-red-500/20 text-red-400"
+                    <div
+                      className="absolute inset-0 bg-black/75 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer"
+                      onClick={() => setSelectedListingId(l.id)}
+                    >
+                      <span className="text-3xl">{l.quizlet.icon}</span>
+                      <p className="text-white text-xs font-semibold text-center px-2 leading-tight">{l.quizlet.name}</p>
+                      <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${
+                        l.status === "sold" ? "bg-green-500/25 text-green-300 border-green-500/40" :
+                        l.status === "expired" ? "bg-gray-500/25 text-gray-300 border-gray-500/40" :
+                        "bg-red-500/25 text-red-300 border-red-500/40"
                       }`}>
                         {l.status}
                       </span>
