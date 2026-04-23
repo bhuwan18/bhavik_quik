@@ -67,19 +67,7 @@ export async function POST(req: NextRequest) {
           { code: "ALREADY_SOLD" }
         );
 
-      // 3. Transfer quizlet ownership
-      await tx.userQuizlet.update({
-        where: { id: listing.userQuizletId },
-        data: { userId: session.user.id, obtainedAt: new Date() },
-      });
-
-      // 4. Credit seller
-      await tx.user.update({
-        where: { id: listing.sellerId },
-        data: { coins: { increment: sellerProceeds } },
-      });
-
-      // 5. Refund all held bids inside the same transaction
+      // 3. Refund all held bids before ownership transfer (must happen before any cascade delete)
       for (const bid of listing.bids) {
         await tx.user.update({
           where: { id: bid.bidderId },
@@ -90,6 +78,36 @@ export async function POST(req: NextRequest) {
           data: { isHeld: false },
         });
       }
+
+      // 4. Transfer quizlet ownership — guard against @@unique([userId, quizletId]) violation
+      const buyerAlreadyOwns = await tx.userQuizlet.findUnique({
+        where: { userId_quizletId: { userId: session.user.id, quizletId: listing.quizletId } },
+      });
+
+      if (buyerAlreadyOwns) {
+        // Buyer already owns this quizlet — increment their quantity and clean up the listed record
+        await tx.userQuizlet.update({
+          where: { id: buyerAlreadyOwns.id },
+          data: { quantity: { increment: 1 } },
+        });
+        // Reassign the listing's FK before deleting to avoid cascade-deleting the listing record
+        await tx.tradeListing.update({
+          where: { id: listing.id },
+          data: { userQuizletId: buyerAlreadyOwns.id },
+        });
+        await tx.userQuizlet.delete({ where: { id: listing.userQuizletId } });
+      } else {
+        await tx.userQuizlet.update({
+          where: { id: listing.userQuizletId },
+          data: { userId: session.user.id, obtainedAt: new Date() },
+        });
+      }
+
+      // 5. Credit seller
+      await tx.user.update({
+        where: { id: listing.sellerId },
+        data: { coins: { increment: sellerProceeds } },
+      });
     });
   } catch (err: unknown) {
     const code = (err as { code?: string }).code;
