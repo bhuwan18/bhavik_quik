@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
       { protocol: "https", hostname: "flagcdn.com" },
       { protocol: "https", hostname: "cdn.simpleicons.org" },
+      { protocol: "https", hostname: "i.imgflip.com" },
     ],
   },
   experimental: {
