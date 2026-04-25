@@ -190,7 +190,7 @@ function PackCard({
         <p className="text-white/70 text-sm mb-4">{pack.description}</p>
 
         {/* Drop Rates */}
-        {dropRates.length > 0 && (
+        {dropRates.length > 0 ? (
           <div className="mb-4">
             <p className="text-white/40 text-xs font-medium mb-2 uppercase tracking-wide">Drop Rates</p>
             <div className="flex flex-wrap gap-x-3 gap-y-1.5">
@@ -210,7 +210,18 @@ function PackCard({
               <span className="text-xs text-white/40">✦ 0.01% Unique (any pack)</span>
             </div>
           </div>
-        )}
+        ) : QUIZLETS_DATA.some((q) => q.pack === pack.slug) ? (
+          <div className="mb-4">
+            <p className="text-white/40 text-xs font-medium mb-2 uppercase tracking-wide">Drop Rates</p>
+            <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-white/5 border border-white/10">
+              <span className="text-sm">🔒</span>
+              <span className="text-xs text-white/50">All quizlets in this pack are secret</span>
+            </div>
+            <div className="mt-1.5">
+              <span className="text-xs text-white/40">✦ 0.01% Unique (any pack)</span>
+            </div>
+          </div>
+        ) : null}
 
         {/* Buttons pinned to bottom */}
         <div className="mt-auto">

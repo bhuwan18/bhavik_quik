@@ -111,6 +111,17 @@ export const PACKS_DATA: PackDef[] = [
     isFestival: false,
     isActive: true,
   },
+  {
+    name: "Space Pack",
+    description: "A secret-only pack from the cosmos. Every quizlet inside is a secret. Good luck.",
+    cost: 2000,
+    slug: "space-pack",
+    icon: "🚀",
+    colorFrom: "#020617",
+    colorTo: "#0c0a1e",
+    isFestival: false,
+    isActive: true,
+  },
   // Festival packs
   {
     name: "New Year Bash",
