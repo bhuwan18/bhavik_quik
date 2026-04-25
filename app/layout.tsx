@@ -12,6 +12,9 @@ const grotesk = Rubik({ subsets: ["latin"], variable: "--font-grotesk", weight: 
 export const metadata: Metadata = {
   title: "BittsQuiz",
   description: "Answer quizzes, earn coins, and collect rare Quizlet characters. The ultimate quiz & collectible experience!",
+  verification: {
+    google: "YkJoNwZuKpoBjCyy-Xa5DStNjD3_BmH5TdXEvo3auLI",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
