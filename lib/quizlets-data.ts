@@ -145,6 +145,15 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Cosmos",        rarity: "secret", pack: "space-pack", icon: "🪐", colorFrom: "#0c1445", colorTo: "#1e1b4b", description: "Not a quizlet — a universe compressed into one. Everything that exists fits inside its rings.",               isHidden: true, sellValue: 1000 },
   { name: "The Dark Side", rarity: "secret", pack: "space-pack", icon: "🌑", colorFrom: "#030712", colorTo: "#0f0a23", description: "The half of every celestial body that faces away from light. It knows things the lit side never will.",       isHidden: true, sellValue: 1000 },
 
+  // ── VAULT PACK (unique elementals, exclusive) ──────────────────
+  { name: "Emberlord",  rarity: "unique", pack: "vault-pack", icon: "🔥", colorFrom: "#7c2d12", colorTo: "#dc2626", description: "The eldest fire. Burns before fuel exists, and outlasts the last star.",                                     isHidden: true, sellValue: 5000 },
+  { name: "Thalassa",   rarity: "unique", pack: "vault-pack", icon: "🌊", colorFrom: "#164e63", colorTo: "#0284c7", description: "The primordial ocean given form. Every drop of water in the world answers to her.",                     isHidden: true, sellValue: 5000 },
+  { name: "Terravex",   rarity: "unique", pack: "vault-pack", icon: "🌍", colorFrom: "#3f2c1a", colorTo: "#16a34a", description: "The living continent. Mountains are its bones; earthquakes are its thoughts.",                           isHidden: true, sellValue: 5000 },
+  { name: "Zephyron",   rarity: "unique", pack: "vault-pack", icon: "🌪️", colorFrom: "#1e3a5f", colorTo: "#94a3b8", description: "The first wind. Predates weather, predates sky. Carries every whispered secret ever spoken.",            isHidden: true, sellValue: 5000 },
+  { name: "Strikevex",  rarity: "unique", pack: "vault-pack", icon: "⚡", colorFrom: "#fbbf24", colorTo: "#7c3aed", description: "A lightning bolt that struck at the birth of the universe and never stopped.",                           isHidden: true, sellValue: 5000 },
+  { name: "Glaciara",   rarity: "unique", pack: "vault-pack", icon: "❄️", colorFrom: "#1e40af", colorTo: "#bae6fd", description: "Absolute zero given consciousness. Freezes time when it holds still.",                                   isHidden: true, sellValue: 5000 },
+  { name: "Nullvex",    rarity: "unique", pack: "vault-pack", icon: "🌑", colorFrom: "#030712", colorTo: "#1c1917", description: "The void between elements. Not dark, not light — the absence of both.",                                  isHidden: true, sellValue: 5000 },
+
   // ── FESTIVAL PACK QUIZLETS ─────────────────────────────────────
   { name: "Fireworksy", rarity: "rare", pack: "newyear-pack", icon: "🎇", colorFrom: "#fbbf24", colorTo: "#7c3aed", description: "Born at midnight every new year — explodes with joy and fades into stardust.", isHidden: false, sellValue: 60 },
   { name: "Lovette", rarity: "uncommon", pack: "love-pack", icon: "💝", colorFrom: "#fda4af", colorTo: "#be123c", description: "A love-struck spirit that makes everything it touches a little warmer.", isHidden: false, sellValue: 25 },

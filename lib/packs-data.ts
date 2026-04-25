@@ -122,6 +122,17 @@ export const PACKS_DATA: PackDef[] = [
     isFestival: false,
     isActive: true,
   },
+  {
+    name: "Vault Pack",
+    description: "Seven elemental beings locked away since the beginning of time. No other pack contains them.",
+    cost: 5000,
+    slug: "vault-pack",
+    icon: "🔒",
+    colorFrom: "#1c1917",
+    colorTo: "#44403c",
+    isFestival: false,
+    isActive: true,
+  },
   // Festival packs
   {
     name: "New Year Bash",

@@ -31,6 +31,14 @@ export function rollPackOpening(
   packQuizlets: Quizlet[],
   allQuizlets: Quizlet[]
 ): Quizlet[] {
+  // Vault Pack: always yields one of its exclusive unique elementals
+  if (packSlug === "vault-pack") {
+    const vaultUniques = packQuizlets.filter((q) => q.rarity === "unique");
+    if (vaultUniques.length > 0) {
+      return [vaultUniques[Math.floor(Math.random() * vaultUniques.length)]];
+    }
+  }
+
   // Ultra-rare: impossible from rainbow pack
   if (packSlug === "rainbow-pack" && Math.random() < RAINBOW_IMPOSSIBLE_CHANCE) {
     const impossibles = allQuizlets.filter((q) => q.rarity === "impossible");
@@ -39,9 +47,9 @@ export function rollPackOpening(
     }
   }
 
-  // Tiny chance for a unique from any pack
+  // Tiny chance for a unique from any pack (vault-pack uniques excluded — vault-only)
   if (Math.random() < 0.0001) {
-    const uniques = allQuizlets.filter((q) => q.rarity === "unique");
+    const uniques = allQuizlets.filter((q) => q.rarity === "unique" && q.pack !== "vault-pack");
     if (uniques.length > 0) {
       return [uniques[Math.floor(Math.random() * uniques.length)]];
     }
