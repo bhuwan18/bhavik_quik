@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 type Question = {
   id: string;
@@ -315,13 +314,11 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
         {question.imageUrl && (
           <div className="mb-5 flex justify-center">
             <div className="bg-white rounded-2xl p-4 md:p-6 shadow-lg inline-flex items-center justify-center">
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={question.imageUrl}
                 alt={question.text}
-                width={300}
-                height={200}
-                className="object-contain max-h-48 md:max-h-60"
-                sizes="(max-width: 768px) 280px, 300px"
+                className="object-contain max-h-48 md:max-h-60 w-auto"
               />
             </div>
           </div>
