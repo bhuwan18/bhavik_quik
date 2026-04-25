@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Nunito } from "next/font/google";
 import Sidebar from "@/components/layout/Sidebar";
 import MobileNav from "@/components/layout/MobileNav";
@@ -32,6 +33,10 @@ export default async function MainLayout({ children }: { children: React.ReactNo
           </main>
           <footer className="hidden md:block border-t border-white/5 py-3 px-6 text-center text-xs text-gray-600">
             Creator: <span className="text-purple-400/70 font-medium">Bhavik Lodha, G5MB</span>
+            <span className="mx-2 opacity-30">·</span>
+            <Link href="/privacy" className="hover:text-gray-400 transition-colors">Privacy</Link>
+            <span className="mx-2 opacity-30">·</span>
+            <Link href="/terms" className="hover:text-gray-400 transition-colors">Terms</Link>
           </footer>
         </div>
       </div>

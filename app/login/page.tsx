@@ -2,6 +2,7 @@
 
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function LoginPage() {
@@ -203,7 +204,10 @@ export default function LoginPage() {
         )}
 
         <p className="text-gray-700 text-xs text-center">
-          By signing in you agree to our Terms of Service.
+          By signing in you agree to our{" "}
+          <Link href="/terms" className="hover:text-gray-500 transition-colors underline underline-offset-2">Terms of Service</Link>
+          {" "}and{" "}
+          <Link href="/privacy" className="hover:text-gray-500 transition-colors underline underline-offset-2">Privacy Policy</Link>.
         </p>
       </div>
     </div>
