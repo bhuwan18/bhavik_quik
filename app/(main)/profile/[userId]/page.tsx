@@ -25,7 +25,6 @@ export default async function ProfilePage({
   const isBlacksmithActive = data.isBlacksmith && (!data.blacksmithExpiresAt || data.blacksmithExpiresAt > new Date());
 
   const stats = [
-    { label: "Coins Earned", value: `🪙 ${data.totalCoinsEarned.toLocaleString()}`, color: "text-yellow-400" },
     { label: "Current Streak", value: `🔥 ${data.currentStreak}d`, color: "text-orange-400" },
     { label: "Longest Streak", value: `📈 ${data.longestStreak}d`, color: "text-amber-400" },
     { label: "Accuracy", value: `🎯 ${data.accuracy}%`, color: data.accuracy >= 70 ? "text-green-400" : data.accuracy >= 50 ? "text-yellow-400" : "text-red-400" },
@@ -117,6 +116,17 @@ export default async function ProfilePage({
       {/* Stats grid */}
       <div>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Stats</h2>
+        {/* Coins card — full width, shows balance + lifetime */}
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-3 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-xl font-bold text-yellow-400">🪙 {data.coins.toLocaleString()}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Current Balance</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xl font-bold text-yellow-600">🏆 {data.totalCoinsEarned.toLocaleString()}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Lifetime Earned</p>
+          </div>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {stats.map((s) => (
             <div

@@ -102,6 +102,8 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Chromara", rarity: "epic", pack: "rainbow-pack", icon: "🎆", colorFrom: "#c084fc", colorTo: "#38bdf8", description: "A chromatic entity that shifts colour every millisecond.", isHidden: false, sellValue: 150 },
   { name: "Aurorex", rarity: "legendary", pack: "rainbow-pack", icon: "🌌", colorFrom: "#fbbf24", colorTo: "#a78bfa", description: "The spirit of the northern lights, wandering the cosmos.", isHidden: false, sellValue: 400 },
   { name: "The Impossible One", rarity: "impossible", pack: "rainbow-pack", icon: "🌟", colorFrom: "#f43f5e", colorTo: "#3b82f6", description: "A being so rare it should not exist. 0.001% chance. You defied all odds.", isHidden: true, sellValue: 99999 },
+  { name: "Rainbow Overlord", rarity: "impossible", pack: "rainbow-pack", icon: "🌈", colorFrom: "#ff0080", colorTo: "#7c3aed", description: "Sovereign of every spectrum. Commands all colours and dimensions simultaneously. There is no higher authority.", isHidden: true, sellValue: 99999 },
+  { name: "The Unobtainable", rarity: "impossible", pack: "rainbow-pack", icon: "🚫", colorFrom: "#000000", colorTo: "#ffffff", description: "By definition, it cannot be obtained. And yet, here it is.", isHidden: true, sellValue: 99999 },
   { name: "Prismixa", rarity: "epic", pack: "rainbow-pack", icon: "💠", colorFrom: "#f0abfc", colorTo: "#a855f7", description: "A chromatic entity that splits pure white light into an infinite spectrum of colour.", isHidden: false, sellValue: 150 },
 
   // ── GLOBAL UNIQUE QUIZLETS (3 total, hidden, cross-pack) ───────

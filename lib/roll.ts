@@ -33,8 +33,10 @@ export function rollPackOpening(
 ): Quizlet[] {
   // Ultra-rare: impossible from rainbow pack
   if (packSlug === "rainbow-pack" && Math.random() < RAINBOW_IMPOSSIBLE_CHANCE) {
-    const impossible = allQuizlets.find((q) => q.rarity === "impossible");
-    if (impossible) return [impossible];
+    const impossibles = allQuizlets.filter((q) => q.rarity === "impossible");
+    if (impossibles.length > 0) {
+      return [impossibles[Math.floor(Math.random() * impossibles.length)]];
+    }
   }
 
   // Tiny chance for a unique from any pack

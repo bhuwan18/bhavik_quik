@@ -13,6 +13,7 @@ export type ProfileData = {
   id: string;
   name: string | null;
   image: string | null;
+  coins: number;
   totalCoinsEarned: number;
   currentStreak: number;
   longestStreak: number;
@@ -48,6 +49,7 @@ export async function getProfileData(
       name: true,
       image: true,
       isAdmin: true,
+      coins: true,
       totalCoinsEarned: true,
       currentStreak: true,
       longestStreak: true,
@@ -138,6 +140,7 @@ export async function getProfileData(
     id: user.id,
     name: user.name,
     image: user.image,
+    coins: user.coins,
     totalCoinsEarned: user.totalCoinsEarned,
     currentStreak: user.currentStreak,
     longestStreak: user.longestStreak,
