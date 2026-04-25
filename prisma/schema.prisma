@@ -57,6 +57,10 @@ model User {
   weeklyCoinsWeek      String  @default("")
   dailyCoinsSpent      Int     @default(0)
   dailySpentReset      DateTime @default(now())
+  isBlacksmith         Boolean   @default(false)
+  blacksmithExpiresAt  DateTime?
+  quizletSubmissions   QuizletSubmission[]
+  createdQuizlets      Quizlet[]
 
   @@index([totalCoinsEarned])
   @@index([lastSeenAt])
@@ -150,18 +154,22 @@ model QuizAttempt {
 }
 
 model Quizlet {
-  id          String        @id @default(cuid())
-  name        String        @unique
-  rarity      String
-  pack        String
-  icon        String
-  colorFrom   String
-  colorTo     String
-  description String
-  isHidden    Boolean       @default(false)
-  sellValue      Int              @default(10)
-  owners         UserQuizlet[]
-  tradeListings  TradeListing[]
+  id              String        @id @default(cuid())
+  name            String        @unique
+  rarity          String
+  pack            String
+  icon            String
+  colorFrom       String
+  colorTo         String
+  description     String
+  isHidden        Boolean       @default(false)
+  sellValue       Int           @default(10)
+  createdByUserId String?
+  createdBy       User?         @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  owners          UserQuizlet[]
+  tradeListings   TradeListing[]
+
+  @@index([createdByUserId])
 }
 
 model UserQuizlet {
@@ -419,4 +427,24 @@ model TradeBid {
 
   @@index([listingId, amount])
   @@index([bidderId])
+}
+
+model QuizletSubmission {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  icon        String
+  colorFrom   String
+  colorTo     String
+  rarity      String
+  description String
+  pack        String
+  status      String   @default("pending") // pending | approved | rejected
+  adminNote   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }

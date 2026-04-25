@@ -22,6 +22,7 @@ export default async function ProfilePage({
 
   const isMaxActive = data.isMax && (!data.maxExpiresAt || data.maxExpiresAt > new Date());
   const isProActive = !isMaxActive && data.isPro && (!data.proExpiresAt || data.proExpiresAt > new Date());
+  const isBlacksmithActive = data.isBlacksmith && (!data.blacksmithExpiresAt || data.blacksmithExpiresAt > new Date());
 
   const stats = [
     { label: "Coins Earned", value: `🪙 ${data.totalCoinsEarned.toLocaleString()}`, color: "text-yellow-400" },
@@ -72,6 +73,11 @@ export default async function ProfilePage({
                 {isProActive && (
                   <span className="text-xs bg-gradient-to-r from-yellow-500 to-orange-400 text-black px-2 py-0.5 rounded-full font-bold">
                     ⭐ Pro
+                  </span>
+                )}
+                {isBlacksmithActive && (
+                  <span className="text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-black px-2 py-0.5 rounded-full font-bold">
+                    🔨 Blacksmith
                   </span>
                 )}
                 {isOwnProfile && (

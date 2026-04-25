@@ -8,7 +8,7 @@ afterEach(() => {
 
 // Minimal mock quizlet factory
 function q(id: string, rarity: string, isHidden = false): Quizlet {
-  return { id, name: id, rarity, pack: "test-pack", icon: "🎮", colorFrom: "", colorTo: "", description: "", isHidden, sellValue: 10 };
+  return { id, name: id, rarity, pack: "test-pack", icon: "🎮", colorFrom: "", colorTo: "", description: "", isHidden, sellValue: 10, createdByUserId: null };
 }
 
 const POOL = [

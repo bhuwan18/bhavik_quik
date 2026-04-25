@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { PRO_AMOUNT_INR, MAX_AMOUNT_INR, BUY_COINS_MIN, BUY_COINS_MAX, DAILY_RESET_AMOUNT_INR } from "@/lib/game-config";
+import { BLACKSMITH_AMOUNT_INR, PRO_AMOUNT_INR, MAX_AMOUNT_INR, BUY_COINS_MIN, BUY_COINS_MAX, DAILY_RESET_AMOUNT_INR } from "@/lib/game-config";
 
 // UTR: alphanumeric, 8–30 characters
 const UTR_RE = /^[A-Za-z0-9]{8,30}$/;
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     utrNumber = body.utrNumber;
     coins = body.coins;
 
-    if (type !== "pro" && type !== "max" && type !== "coins" && type !== "reset") throw new Error("Invalid type");
+    if (type !== "pro" && type !== "max" && type !== "coins" && type !== "reset" && type !== "blacksmith") throw new Error("Invalid type");
     if (typeof utrNumber !== "string" || !UTR_RE.test(utrNumber)) {
       throw new Error("UTR must be 8–30 alphanumeric characters");
     }
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   const amountInr =
+    type === "blacksmith" ? BLACKSMITH_AMOUNT_INR :
     type === "pro" ? PRO_AMOUNT_INR :
     type === "max" ? MAX_AMOUNT_INR :
     type === "reset" ? DAILY_RESET_AMOUNT_INR :

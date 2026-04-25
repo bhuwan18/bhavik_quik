@@ -55,9 +55,11 @@ export default function MobileNav() {
   const { theme, setTheme } = useTheme();
   const isLight = theme === "light";
 
-  const user = session?.user as { isAdmin?: boolean; isPro?: boolean } | undefined;
+  const user = session?.user as { isAdmin?: boolean; isPro?: boolean; isMax?: boolean; isBlacksmith?: boolean } | undefined;
   const isAdmin = !!user?.isAdmin;
   const isPro = !!user?.isPro;
+  const isMax = !!user?.isMax;
+  const isBlacksmith = !!user?.isBlacksmith;
 
   const unreadCount = useUnreadCount();
   const hasNewFeed = useHasNewFeed();
@@ -103,13 +105,13 @@ export default function MobileNav() {
                   height={40}
                   className={cn(
                     "rounded-full ring-2",
-                    isPro ? "ring-yellow-400" : "ring-purple-500/50"
+                    isPro || isMax ? "ring-yellow-400" : isBlacksmith ? "ring-amber-500" : "ring-purple-500/50"
                   )}
                 />
               ) : (
                 <div className={cn(
                   "w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-sm font-semibold text-white ring-2",
-                  isPro ? "ring-yellow-400" : "ring-white/20"
+                  isPro || isMax ? "ring-yellow-400" : isBlacksmith ? "ring-amber-500" : "ring-white/20"
                 )}>
                   {session.user.name?.[0] ?? "?"}
                 </div>
@@ -122,9 +124,14 @@ export default function MobileNav() {
                       ADMIN
                     </span>
                   )}
-                  {!isAdmin && isPro && (
+                  {!isAdmin && (isPro || isMax) && (
                     <span className="text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-1.5 py-0.5 rounded-full font-bold shrink-0">
-                      PRO
+                      {isMax ? "MAX" : "PRO"}
+                    </span>
+                  )}
+                  {!isAdmin && isBlacksmith && !isPro && !isMax && (
+                    <span className="text-xs bg-amber-600/20 text-amber-300 border border-amber-600/30 px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                      SMITH
                     </span>
                   )}
                 </div>

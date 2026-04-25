@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, MessageCircle, ChevronDown, Send, Trophy, Flame, Star, Package, RotateCcw, Users, Play } from "lucide-react";
+import { Heart, MessageCircle, ChevronDown, Send, Trophy, Flame, Star, Package, RotateCcw, Users, Play, Hammer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type FeedUser = { id: string; name: string | null; image: string | null; lastSeenAt?: string | null };
@@ -39,6 +39,7 @@ const ACTIVITY_THEME: Record<string, { border: string; gradient: string }> = {
   streak_milestone: { border: "border-orange-500/30", gradient: "from-orange-500/10" },
   leaderboard_top3: { border: "border-yellow-500/35", gradient: "from-yellow-500/10" },
   user_returned:    { border: "border-teal-500/25",   gradient: "from-teal-500/8" },
+  quizlet_created:  { border: "border-amber-500/30",  gradient: "from-amber-500/8" },
 };
 
 const TIER_BADGE: Record<string, { text: string; bg: string; border: string }> = {
@@ -65,6 +66,7 @@ const FILTER_TABS = [
   { key: "milestone_earned", label: "Milestones" },
   { key: "streak_milestone", label: "Streaks" },
   { key: "quizlet_earned",   label: "Quizlets" },
+  { key: "quizlet_created",  label: "Creations" },
 ] as const;
 
 const SOUND_COLORS = ["#d32f2f","#212121","#5d4037","#c2185b","#00acc1","#f0f0dc","#43a047","#1a237e","#c6d400"];
@@ -190,6 +192,7 @@ function ActivityIcon({ type }: { type: string }) {
     case "streak_milestone": return <div className={cn(base, "bg-orange-500/25")}><Flame size={18} className="text-orange-400" /></div>;
     case "user_returned":    return <div className={cn(base, "bg-teal-500/25")}><RotateCcw size={18} className="text-teal-400" /></div>;
     case "leaderboard_top3": return <div className={cn(base, "bg-yellow-500/25")}><Trophy size={18} className="text-yellow-400" /></div>;
+    case "quizlet_created":  return <div className={cn(base, "bg-amber-500/25")}><Hammer size={18} className="text-amber-400" /></div>;
     default:                 return <div className={cn(base, "bg-white/10")}><Star size={18} className="text-gray-400" /></div>;
   }
 }
@@ -395,6 +398,29 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
             <span className="opacity-70 capitalize text-xs font-semibold">{rarity}</span>
           </span>
           <p className="text-xs text-yellow-400 font-bold">Bought for {price} 🪙</p>
+        </div>
+      );
+    }
+    case "quizlet_created": {
+      const { quizletName, rarity, icon, colorFrom, colorTo, pack } = data as {
+        quizletName: string; rarity: string; icon: string;
+        colorFrom: string; colorTo: string; pack: string;
+      };
+      const animClass = RARITY_ANIM[rarity] ?? "";
+      return (
+        <div className="space-y-2" style={feedFont}>
+          <p className="text-sm text-gray-200 font-semibold">
+            🔨 Designed a quizlet that was added to the game!
+          </p>
+          <span
+            className={cn("inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-white border border-white/15", animClass)}
+            style={{ background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` }}
+          >
+            <span className="text-lg">{icon}</span>
+            <span>{quizletName}</span>
+            <span className="opacity-70 capitalize text-xs font-semibold">{rarity}</span>
+          </span>
+          <p className="text-xs text-gray-500 capitalize">{pack.replace(/-/g, " ")}</p>
         </div>
       );
     }
@@ -709,7 +735,7 @@ function FeedCard({ item, index, onLike, onReact }: {
 
 function AchievementSpotlight({ activities }: { activities: FeedItem[] }) {
   const achievements = activities
-    .filter((a) => !a.isOwn && (a.type === "milestone_earned" || a.type === "quizlet_earned"))
+    .filter((a) => !a.isOwn && (a.type === "milestone_earned" || a.type === "quizlet_earned" || a.type === "quizlet_created"))
     .slice(0, 6);
 
   if (achievements.length === 0) return null;

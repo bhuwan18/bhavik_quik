@@ -41,6 +41,8 @@ export async function GET(req: NextRequest) {
         proExpiresAt: true,
         isMax: true,
         maxExpiresAt: true,
+        isBlacksmith: true,
+        blacksmithExpiresAt: true,
         dailyCoinsEarned: true,
         dailyCoinsReset: true,
         totalCorrect: true,

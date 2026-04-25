@@ -55,7 +55,7 @@ export default async function LeaderboardPage({
     id: true, name: true, image: true, email: true,
     coins: true, totalCoinsEarned: true, weeklyCoins: true,
     totalCorrect: true, totalAnswered: true,
-    lastSeenAt: true, createdAt: true, isPro: true, isMax: true,
+    lastSeenAt: true, createdAt: true, isPro: true, isMax: true, isBlacksmith: true,
     _count: { select: { ownedQuizlets: true, quizAttempts: true, followers: true } },
   } as const;
 
@@ -319,6 +319,11 @@ export default async function LeaderboardPage({
                           </Link>
                           {isCurrentUser && (
                             <span className="text-xs text-purple-400 shrink-0">(you)</span>
+                          )}
+                          {user.isBlacksmith && (
+                            <span className="text-xs bg-amber-600/20 text-amber-300 border border-amber-600/30 px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                              🔨
+                            </span>
                           )}
                           {user.isMax && (
                             <span className="text-xs bg-white/15 text-white border border-white/20 px-1.5 py-0.5 rounded-full font-bold shrink-0">

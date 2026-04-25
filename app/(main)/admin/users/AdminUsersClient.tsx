@@ -13,6 +13,8 @@ type UserRow = {
   proExpiresAt: string | null;
   isMax: boolean;
   maxExpiresAt: string | null;
+  isBlacksmith: boolean;
+  blacksmithExpiresAt: string | null;
   dailyCoinsEarned: number;
   dailyCoinsReset: string;
   totalCorrect: number;
@@ -21,7 +23,7 @@ type UserRow = {
   _count: { quizAttempts: number; ownedQuizlets: number };
 };
 
-type Action = "lock" | "unlock" | "reset_daily" | "grant_pro" | "revoke_pro" | "grant_max" | "revoke_max";
+type Action = "lock" | "unlock" | "reset_daily" | "grant_pro" | "revoke_pro" | "grant_max" | "revoke_max" | "grant_blacksmith" | "revoke_blacksmith";
 type NotifyTarget = { userId: string; userName: string };
 
 const DAILY_LIMIT_REGULAR = 500;
@@ -161,6 +163,8 @@ export default function AdminUsersClient() {
     revoke_pro: "revoke Pro tier immediately",
     grant_max: "grant Max tier for 30 days",
     revoke_max: "revoke Max tier immediately",
+    grant_blacksmith: "grant Blacksmith tier for 30 days",
+    revoke_blacksmith: "revoke Blacksmith tier immediately",
   };
 
   return (
@@ -321,6 +325,7 @@ export default function AdminUsersClient() {
                 {users.map((user) => {
                   const isMaxActive = user.isMax && (!user.maxExpiresAt || new Date(user.maxExpiresAt) > new Date());
                   const isProActive = !isMaxActive && user.isPro && (!user.proExpiresAt || new Date(user.proExpiresAt) > new Date());
+                  const isBlacksmithActive = user.isBlacksmith && (!user.blacksmithExpiresAt || new Date(user.blacksmithExpiresAt) > new Date());
                   const tierExpiry = isMaxActive && user.maxExpiresAt
                     ? `Max → ${new Date(user.maxExpiresAt).toLocaleDateString()}`
                     : isProActive && user.proExpiresAt
@@ -365,18 +370,26 @@ export default function AdminUsersClient() {
                       </td>
 
                       {/* Tier */}
-                      <td className="px-4 py-3 text-center">
-                        {isMaxActive ? (
+                      <td className="px-4 py-3 text-center space-y-1">
+                        {isMaxActive && (
                           <div>
                             <span className="text-xs bg-pink-500/20 border border-pink-500/30 text-pink-300 px-2 py-0.5 rounded-full font-bold">MAX</span>
-                            {tierExpiry && <div className="text-xs text-gray-600 mt-1 whitespace-nowrap">{tierExpiry.split("→")[1]?.trim()}</div>}
+                            {user.maxExpiresAt && <div className="text-xs text-gray-600 mt-1 whitespace-nowrap">{new Date(user.maxExpiresAt).toLocaleDateString()}</div>}
                           </div>
-                        ) : isProActive ? (
+                        )}
+                        {isProActive && (
                           <div>
                             <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 px-2 py-0.5 rounded-full font-bold">PRO</span>
-                            {tierExpiry && <div className="text-xs text-gray-600 mt-1 whitespace-nowrap">{tierExpiry.split("→")[1]?.trim()}</div>}
+                            {user.proExpiresAt && <div className="text-xs text-gray-600 mt-1 whitespace-nowrap">{new Date(user.proExpiresAt).toLocaleDateString()}</div>}
                           </div>
-                        ) : (
+                        )}
+                        {isBlacksmithActive && (
+                          <div>
+                            <span className="text-xs bg-amber-600/20 border border-amber-600/30 text-amber-300 px-2 py-0.5 rounded-full font-bold">🔨 SMITH</span>
+                            {user.blacksmithExpiresAt && <div className="text-xs text-gray-600 mt-1 whitespace-nowrap">{new Date(user.blacksmithExpiresAt).toLocaleDateString()}</div>}
+                          </div>
+                        )}
+                        {!isMaxActive && !isProActive && !isBlacksmithActive && (
                           <span className="text-xs text-gray-600">—</span>
                         )}
                       </td>
@@ -436,6 +449,19 @@ export default function AdminUsersClient() {
                             </button>
 
                             <button
+                              onClick={() => requestAction(user.id, user.name ?? user.email, isBlacksmithActive ? "revoke_blacksmith" : "grant_blacksmith", isBlacksmithActive ? "Blacksmith revoked" : "Blacksmith granted")}
+                              disabled={!!actionLoading}
+                              title={isBlacksmithActive ? "Revoke Blacksmith" : "Grant Blacksmith (30 days)"}
+                              className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold transition-colors disabled:opacity-40 ${
+                                isBlacksmithActive
+                                  ? "bg-gray-500/20 hover:bg-gray-500/30 text-gray-300 border border-gray-500/30"
+                                  : "bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-600/30"
+                              }`}
+                            >
+                              {actionLoading === `${user.id}-${isBlacksmithActive ? "revoke_blacksmith" : "grant_blacksmith"}` ? "…" : isBlacksmithActive ? "✖🔨" : "🔨"}
+                            </button>
+
+                            <button
                               onClick={() => setNotifyTarget({ userId: user.id, userName: user.name ?? user.email })}
                               disabled={!!actionLoading || notifyLoading}
                               title="Send push notification"
@@ -478,8 +504,8 @@ export default function AdminUsersClient() {
 
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-600">
-        <span>🔒 Lock · 🔄 Reset daily · ⭐ Pro · 👑 Max · 🔔 Notify</span>
-        <span>✖⭐ = revoke Pro · ✖👑 = revoke Max</span>
+        <span>🔒 Lock · 🔄 Reset daily · ⭐ Pro · 👑 Max · 🔨 Blacksmith · 🔔 Notify</span>
+        <span>✖⭐ = revoke Pro · ✖👑 = revoke Max · ✖🔨 = revoke Blacksmith</span>
       </div>
     </div>
   );

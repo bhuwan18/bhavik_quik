@@ -22,8 +22,10 @@ export type ProfileData = {
   isOnline: boolean;
   isPro: boolean;
   isMax: boolean;
+  isBlacksmith: boolean;
   proExpiresAt: Date | null;
   maxExpiresAt: Date | null;
+  blacksmithExpiresAt: Date | null;
   createdAt: Date;
   followerCount: number;
   followingCount: number;
@@ -54,8 +56,10 @@ export async function getProfileData(
       lastSeenAt: true,
       isPro: true,
       isMax: true,
+      isBlacksmith: true,
       proExpiresAt: true,
       maxExpiresAt: true,
+      blacksmithExpiresAt: true,
       createdAt: true,
       _count: { select: { quizAttempts: true } },
     },
@@ -143,8 +147,10 @@ export async function getProfileData(
     isOnline,
     isPro: user.isPro,
     isMax: user.isMax,
+    isBlacksmith: user.isBlacksmith,
     proExpiresAt: user.proExpiresAt,
     maxExpiresAt: user.maxExpiresAt,
+    blacksmithExpiresAt: user.blacksmithExpiresAt,
     createdAt: user.createdAt,
     followerCount,
     followingCount,

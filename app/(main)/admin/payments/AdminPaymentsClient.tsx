@@ -183,11 +183,21 @@ export default function AdminPaymentsClient() {
                     <span className="text-white font-semibold text-sm">{p.user.name ?? "—"}</span>
                     <StatusBadge status={p.status} />
                     <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                      p.type === "pro"
+                      p.type === "blacksmith"
+                        ? "bg-amber-600/20 text-amber-300"
+                        : p.type === "max"
+                        ? "bg-pink-500/20 text-pink-300"
+                        : p.type === "pro"
                         ? "bg-yellow-500/20 text-yellow-300"
+                        : p.type === "reset"
+                        ? "bg-blue-500/20 text-blue-300"
                         : "bg-purple-500/20 text-purple-300"
                     }`}>
-                      {p.type === "pro" ? "⭐ Pro" : `🪙 ${p.coins} coins`}
+                      {p.type === "blacksmith" ? "🔨 Blacksmith"
+                        : p.type === "max" ? "👑 Max"
+                        : p.type === "pro" ? "⭐ Pro"
+                        : p.type === "reset" ? "🔄 Reset"
+                        : `🪙 ${p.coins} coins`}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mb-2">{p.user.email}</p>

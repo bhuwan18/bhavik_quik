@@ -25,6 +25,7 @@ import {
   ClipboardList,
   MessageCircle,
   Settings,
+  Sparkles,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -52,16 +53,19 @@ const ADMIN_NAV_ITEMS: { href: string; icon: LucideIcon; label: string; color: s
   { href: "/admin/users",      icon: Users,         label: "User Manager", color: "text-sky-400"    },
   { href: "/admin/payments",   icon: CreditCard,    label: "Payments",     color: "text-lime-400"   },
   { href: "/admin/quizzes",    icon: ClipboardList, label: "Edit Quizzes", color: "text-amber-400"  },
-  { href: "/admin/feedback",   icon: MessageCircle, label: "Feedback",     color: "text-rose-400"   },
-  { href: "/admin/settings",   icon: Settings,      label: "Settings",     color: "text-slate-400"  },
+  { href: "/admin/feedback",             icon: MessageCircle, label: "Feedback",            color: "text-rose-400"   },
+  { href: "/admin/quizlet-submissions", icon: Sparkles,      label: "Quizlet Submissions", color: "text-amber-400"  },
+  { href: "/admin/settings",            icon: Settings,      label: "Settings",            color: "text-slate-400"  },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const user = session?.user as { isAdmin?: boolean; isPro?: boolean } | undefined;
+  const user = session?.user as { isAdmin?: boolean; isPro?: boolean; isMax?: boolean; isBlacksmith?: boolean } | undefined;
   const isAdmin = !!user?.isAdmin;
   const isPro = !!user?.isPro;
+  const isMax = !!user?.isMax;
+  const isBlacksmith = !!user?.isBlacksmith;
 
   const unreadCount = useUnreadCount();
   const hasNewFeed = useHasNewFeed();
@@ -216,10 +220,17 @@ export default function Sidebar() {
               </span>
             </div>
           )}
-          {!collapsed && !isAdmin && isPro && (
+          {!collapsed && !isAdmin && (isPro || isMax) && (
             <div className="mb-2.5 text-center">
               <span className="text-xs bg-gradient-to-r from-yellow-500 to-orange-400 text-black px-3 py-0.5 rounded-full font-bold">
-                PRO
+                {isMax ? "MAX" : "PRO"}
+              </span>
+            </div>
+          )}
+          {!collapsed && !isAdmin && isBlacksmith && !isPro && !isMax && (
+            <div className="mb-2.5 text-center">
+              <span className="text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-black px-3 py-0.5 rounded-full font-bold">
+                🔨 SMITH
               </span>
             </div>
           )}
@@ -236,7 +247,7 @@ export default function Sidebar() {
                   title={session.user.name ?? ""}
                   className={cn(
                     "rounded-full ring-2 shrink-0 cursor-pointer",
-                    isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-white/20"
+                    isPro || isMax ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : isBlacksmith ? "ring-amber-500 shadow-md shadow-amber-500/50" : "ring-white/20"
                   )}
                 />
               ) : (
@@ -244,7 +255,7 @@ export default function Sidebar() {
                   title={session.user.name ?? ""}
                   className={cn(
                     "w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-sm font-bold text-white ring-2 shrink-0",
-                    isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-white/20"
+                    isPro || isMax ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : isBlacksmith ? "ring-amber-500 shadow-md shadow-amber-500/50" : "ring-white/20"
                   )}
                 >
                   {session.user.name?.[0] ?? "?"}
@@ -270,13 +281,13 @@ export default function Sidebar() {
                     height={34}
                     className={cn(
                       "rounded-full ring-2 shrink-0",
-                      isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-white/20"
+                      isPro || isMax ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : isBlacksmith ? "ring-amber-500 shadow-md shadow-amber-500/50" : "ring-white/20"
                     )}
                   />
                 ) : (
                   <div className={cn(
                     "w-[34px] h-[34px] rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-sm font-bold text-white ring-2 shrink-0",
-                    isPro ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : "ring-white/20"
+                    isPro || isMax ? "ring-yellow-400 shadow-md shadow-yellow-400/50" : isBlacksmith ? "ring-amber-500 shadow-md shadow-amber-500/50" : "ring-white/20"
                   )}>
                     {session.user.name?.[0] ?? "?"}
                   </div>

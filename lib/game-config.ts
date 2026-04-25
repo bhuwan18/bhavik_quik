@@ -54,6 +54,7 @@ export const MULTIPLIER_MAX = 2;
 
 // ─── Membership Pricing ───────────────────────────────────────────────────────
 
+export const BLACKSMITH_AMOUNT_INR = 100;  // Blacksmith tier monthly price
 export const PRO_AMOUNT_INR = 250;         // Pro membership monthly price
 export const MAX_AMOUNT_INR = 500;         // Max membership monthly price
 export const MEMBERSHIP_DURATION_DAYS = 30; // Duration of a membership period

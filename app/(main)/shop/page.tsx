@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { QRCodeSVG } from "qrcode.react";
 import {
+  BLACKSMITH_AMOUNT_INR,
   PRO_AMOUNT_INR,
   MAX_AMOUNT_INR,
   MEMBERSHIP_DURATION_DAYS,
@@ -24,9 +25,29 @@ const UPI_NAME = process.env.NEXT_PUBLIC_UPI_NAME ?? "BittsQuiz";
 
 // ─── Membership ────────────────────────────────────────────────────────────────
 
-type Tier = "pro" | "max";
+type Tier = "blacksmith" | "pro" | "max";
 
 const TIERS = [
+  {
+    id: "blacksmith" as Tier,
+    name: "Blacksmith",
+    price: BLACKSMITH_AMOUNT_INR,
+    icon: "🔨",
+    tagline: "Create your own quizlets",
+    features: [
+      "Submit custom quizlet designs",
+      "Admin-reviewed & added to the game",
+      "2 submissions/month (standard rarities)",
+      "1 submission/month (hidden rarities)",
+      "🔨 Blacksmith badge on profile & leaderboard",
+      `${MEMBERSHIP_DURATION_DAYS} days access`,
+    ],
+    gradient: "from-amber-900/50 to-orange-900/30",
+    border: "border-amber-600/50",
+    buttonGradient: "from-amber-500 to-orange-600",
+    badge: "SMITH",
+    badgeColor: "bg-gradient-to-r from-amber-500 to-orange-500 text-black",
+  },
   {
     id: "pro" as Tier,
     name: "Pro",
@@ -72,14 +93,14 @@ function applyDiscount(base: number, pct?: number) {
   return pct ? Math.round(base * (1 - pct / 100)) : base;
 }
 
-function MembershipTab({ isPro, isMax, proDiscountPct, maxDiscountPct }: { isPro: boolean; isMax: boolean; proDiscountPct?: number; maxDiscountPct?: number }) {
+function MembershipTab({ isPro, isMax, isBlacksmith, proDiscountPct, maxDiscountPct, blacksmithDiscountPct }: { isPro: boolean; isMax: boolean; isBlacksmith: boolean; proDiscountPct?: number; maxDiscountPct?: number; blacksmithDiscountPct?: number }) {
   const [selectedTier, setSelectedTier] = useState<Tier | null>(null);
   const [utrNumber, setUtrNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
-  const discountPct: Partial<Record<Tier, number>> = { pro: proDiscountPct, max: maxDiscountPct };
+  const discountPct: Partial<Record<Tier, number>> = { blacksmith: blacksmithDiscountPct, pro: proDiscountPct, max: maxDiscountPct };
 
   const activeTier = TIERS.find((t) => t.id === selectedTier);
   const effectivePrice = activeTier ? applyDiscount(activeTier.price, discountPct[activeTier.id]) : 0;
@@ -141,17 +162,26 @@ function MembershipTab({ isPro, isMax, proDiscountPct, maxDiscountPct }: { isPro
           </div>
         </div>
       )}
+      {isBlacksmith && (
+        <div className="mb-6 p-4 bg-amber-600/10 border border-amber-600/30 rounded-2xl flex items-center gap-3">
+          <span className="text-2xl">🔨</span>
+          <div>
+            <p className="text-amber-400 font-semibold">You currently have Blacksmith access</p>
+            <p className="text-gray-400 text-sm">You can renew to extend your subscription by 30 more days.</p>
+          </div>
+        </div>
+      )}
 
       {!selectedTier && (
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
           {TIERS.map((tier) => (
-            <div key={tier.id} className={`bg-gradient-to-br ${tier.gradient} border ${tier.border} rounded-2xl p-6 flex flex-col`}>
+            <div key={tier.id} className={`bg-gradient-to-br ${tier.gradient} border ${tier.border} rounded-2xl p-5 flex flex-col`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <span className="text-4xl">{tier.icon}</span>
+                  <span className="text-3xl">{tier.icon}</span>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">{tier.name}</h2>
-                    <p className="text-gray-400 text-sm">{tier.tagline}</p>
+                    <h2 className="text-xl font-bold text-white">{tier.name}</h2>
+                    <p className="text-gray-400 text-xs">{tier.tagline}</p>
                   </div>
                 </div>
                 <span className={`text-xs font-bold px-2 py-1 rounded-full ${tier.badgeColor}`}>{tier.badge}</span>
@@ -159,7 +189,7 @@ function MembershipTab({ isPro, isMax, proDiscountPct, maxDiscountPct }: { isPro
               {discountPct[tier.id] ? (
                 <div className="mb-1">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-white">₹{applyDiscount(tier.price, discountPct[tier.id])}</span>
+                    <span className="text-2xl font-bold text-white">₹{applyDiscount(tier.price, discountPct[tier.id])}</span>
                     <span className="text-base text-gray-500 line-through">₹{tier.price}</span>
                   </div>
                   <span className="inline-block text-xs font-bold px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 border border-green-500/30 mt-1">
@@ -167,7 +197,7 @@ function MembershipTab({ isPro, isMax, proDiscountPct, maxDiscountPct }: { isPro
                   </span>
                 </div>
               ) : (
-                <div className="text-3xl font-bold text-white mb-1">₹{tier.price}</div>
+                <div className="text-2xl font-bold text-white mb-1">₹{tier.price}</div>
               )}
               <div className="text-gray-500 text-sm mb-5">per month</div>
               <ul className="space-y-2 mb-6 flex-1">
@@ -816,9 +846,10 @@ type ShopTab = "membership" | "coins" | "reset" | "streak";
 
 export default function ShopPage() {
   const { data: session } = useSession();
-  const user = session?.user as { isAdmin?: boolean; isPro?: boolean; isMax?: boolean } | undefined;
+  const user = session?.user as { isAdmin?: boolean; isPro?: boolean; isMax?: boolean; isBlacksmith?: boolean } | undefined;
   const isPro = !!user?.isPro;
   const isMax = !!user?.isMax;
+  const isBlacksmith = !!user?.isBlacksmith;
 
   const [tab, setTab] = useState<ShopTab>("membership");
   const [weeklyOffers, setWeeklyOffers] = useState<{ pro?: { discountPercent: number }; max?: { discountPercent: number }; daily_reset?: { discountPercent: number }; coins?: { discountPercent: number } }>({});
@@ -831,7 +862,7 @@ export default function ShopPage() {
   }, []);
 
   return (
-    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-4xl mx-auto">
+    <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-5xl mx-auto">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-white">🏪 Shop</h1>
         <p className="text-gray-400 mt-1">Upgrade your membership or top up your coins</p>
@@ -881,7 +912,7 @@ export default function ShopPage() {
         </button>
       </div>
 
-      {tab === "membership" && <MembershipTab isPro={isPro} isMax={isMax} proDiscountPct={weeklyOffers.pro?.discountPercent} maxDiscountPct={weeklyOffers.max?.discountPercent} />}
+      {tab === "membership" && <MembershipTab isPro={isPro} isMax={isMax} isBlacksmith={isBlacksmith} proDiscountPct={weeklyOffers.pro?.discountPercent} maxDiscountPct={weeklyOffers.max?.discountPercent} />}
       {tab === "coins" && <BuyCoinsTab coinsDiscountPct={weeklyOffers.coins?.discountPercent} />}
       {tab === "reset" && <DailyResetTab dailyResetDiscountPct={weeklyOffers.daily_reset?.discountPercent} />}
       {tab === "streak" && <StreakFreezeTab />}

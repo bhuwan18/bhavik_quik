@@ -12,6 +12,7 @@ declare module "next-auth" {
       isAdmin: boolean;
       isPro: boolean;
       isMax: boolean;
+      isBlacksmith: boolean;
       isLocked: boolean;
     } & DefaultSession["user"];
   }
@@ -19,6 +20,7 @@ declare module "next-auth" {
     isAdmin?: boolean;
     isPro?: boolean;
     isMax?: boolean;
+    isBlacksmith?: boolean;
     isLocked?: boolean;
   }
 }
@@ -48,7 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               data: { email: testEmail, name: "Test User", emailVerified: new Date(), isAdmin: false },
             });
           }
-          return { id: user.id, email: user.email, name: user.name ?? "Test User", isAdmin: false, isPro: false, isMax: false, isLocked: false };
+          return { id: user.id, email: user.email, name: user.name ?? "Test User", isAdmin: false, isPro: false, isMax: false, isBlacksmith: false, isLocked: false };
         }
         return null;
       },
@@ -73,7 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } else if (!user.isAdmin) {
             await prisma.user.update({ where: { id: user.id }, data: { isAdmin: true } });
           }
-          return { id: user.id, email: user.email, name: user.name ?? "Admin", isAdmin: true, isPro: false, isMax: false, isLocked: false };
+          return { id: user.id, email: user.email, name: user.name ?? "Admin", isAdmin: true, isPro: false, isMax: false, isBlacksmith: false, isLocked: false };
         }
         return null;
       },
@@ -87,6 +89,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token["isAdmin"] = user.isAdmin ?? false;
         token["isPro"] = user.isPro ?? false;
         token["isMax"] = user.isMax ?? false;
+        token["isBlacksmith"] = user.isBlacksmith ?? false;
         token["isLocked"] = user.isLocked ?? false;
       }
       // Refresh user flags on session update or when token lacks flags
@@ -94,13 +97,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (token["id"]) {
           const dbUser = await prisma.user.findUnique({
             where: { id: token["id"] as string },
-            select: { isAdmin: true, isPro: true, isMax: true, isLocked: true, proExpiresAt: true, maxExpiresAt: true },
+            select: { isAdmin: true, isPro: true, isMax: true, isBlacksmith: true, isLocked: true, proExpiresAt: true, maxExpiresAt: true, blacksmithExpiresAt: true },
           });
           if (dbUser) {
             token["isAdmin"] = dbUser.isAdmin;
-            // Auto-expire pro if past proExpiresAt
             token["isPro"] = dbUser.isPro && (!dbUser.proExpiresAt || dbUser.proExpiresAt > new Date());
             token["isMax"] = dbUser.isMax && (!dbUser.maxExpiresAt || dbUser.maxExpiresAt > new Date());
+            token["isBlacksmith"] = dbUser.isBlacksmith && (!dbUser.blacksmithExpiresAt || dbUser.blacksmithExpiresAt > new Date());
             token["isLocked"] = dbUser.isLocked;
           }
         }
@@ -108,11 +111,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      const u = session.user as { id: string; isAdmin: boolean; isPro: boolean; isMax: boolean; isLocked: boolean };
+      const u = session.user as { id: string; isAdmin: boolean; isPro: boolean; isMax: boolean; isBlacksmith: boolean; isLocked: boolean };
       u.id = token.id as string;
       u.isAdmin = Boolean(token["isAdmin"]);
       u.isPro = Boolean(token["isPro"]);
       u.isMax = Boolean(token["isMax"]);
+      u.isBlacksmith = Boolean(token["isBlacksmith"]);
       u.isLocked = Boolean(token["isLocked"]);
       return session;
     },

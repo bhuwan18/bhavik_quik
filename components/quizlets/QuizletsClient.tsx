@@ -7,12 +7,15 @@ import { QUIZLETS_DATA } from "@/lib/quizlets-data";
 import { PACKS_DATA } from "@/lib/packs-data";
 import type { Quizlet } from "@prisma/client";
 
-type OwnedQuizlet = Quizlet & { obtainedAt: string; quantity: number };
+type QuizletWithCreator = Quizlet & { createdBy: { id: string; name: string | null } | null };
+type OwnedQuizlet = QuizletWithCreator & { obtainedAt: string; quantity: number };
 
 type Props = {
   ownedQuizlets: OwnedQuizlet[];
   userCoins: number;
-  allQuizlets: Quizlet[];
+  allQuizlets: QuizletWithCreator[];
+  isBlacksmithActive: boolean;
+  monthlySubmissions: { rarity: string; status: string }[];
 };
 
 /** Returns true if the hex color is perceptually light (luminance > 0.65) */
@@ -45,16 +48,111 @@ const RARITY_SORT_ORDER: Record<string, number> = {
   common: 4,
 };
 
-export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins, allQuizlets }: Props) {
+const ALLOWED_PACKS = [
+  { slug: "tech-pack", label: "Tech" },
+  { slug: "sports-pack", label: "Sports" },
+  { slug: "magic-pack", label: "Magic" },
+  { slug: "hero-pack", label: "Hero" },
+  { slug: "music-pack", label: "Music" },
+  { slug: "science-pack", label: "Science" },
+  { slug: "math-pack", label: "Math" },
+  { slug: "english-pack", label: "English" },
+];
+
+const SUBMITTABLE_RARITIES = ["common", "uncommon", "rare", "epic", "legendary", "secret", "unique", "impossible"];
+const SUBMISSION_HIDDEN = new Set(["secret", "unique", "impossible"]);
+
+type SubmissionRow = {
+  id: string;
+  name: string;
+  icon: string;
+  colorFrom: string;
+  colorTo: string;
+  rarity: string;
+  pack: string;
+  status: string;
+  adminNote: string | null;
+  createdAt: string;
+};
+
+export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins, allQuizlets, isBlacksmithActive, monthlySubmissions }: Props) {
   const [coins, setCoins] = useState(initialCoins);
   const [quizlets, setQuizlets] = useState(ownedQuizlets);
   const [rarityFilter, setRarityFilter] = useState("all");
   const [selling, setSelling] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [view, setView] = useState<"mine" | "all">("mine");
+  const [view, setView] = useState<"mine" | "all" | "create">("mine");
+
+  // Create form state
+  const [cName, setCName] = useState("");
+  const [cIcon, setCIcon] = useState("");
+  const [cColorFrom, setCColorFrom] = useState("#6366f1");
+  const [cColorTo, setCColorTo] = useState("#8b5cf6");
+  const [cRarity, setCRarity] = useState("common");
+  const [cPack, setCPack] = useState("tech-pack");
+  const [cDescription, setCDescription] = useState("");
+  const [cSubmitting, setCSubmitting] = useState(false);
+  const [cError, setCError] = useState("");
+  const [cSuccess, setCSuccess] = useState(false);
+  const [userSubmissions, setUserSubmissions] = useState<SubmissionRow[]>([]);
+  const [loadingSubs, setLoadingSubs] = useState(false);
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current); }, []);
+
+  const fetchUserSubmissions = async () => {
+    setLoadingSubs(true);
+    try {
+      const res = await fetch("/api/quizlets/my-submissions");
+      if (res.ok) {
+        const data = await res.json();
+        setUserSubmissions(data.submissions ?? []);
+      }
+    } finally {
+      setLoadingSubs(false);
+    }
+  };
+
+  useEffect(() => {
+    if (view === "create" && isBlacksmithActive) fetchUserSubmissions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, isBlacksmithActive]);
+
+  const handleCreateSubmit = async () => {
+    setCError("");
+    if (!cName.trim() || !cIcon.trim() || !cDescription.trim()) {
+      setCError("Name, icon, and description are required.");
+      return;
+    }
+    if ([...cIcon].length > 2) {
+      setCError("Icon must be 1–2 emoji characters.");
+      return;
+    }
+    const limitForRarity = SUBMISSION_HIDDEN.has(cRarity) ? 1 : 2;
+    const usedThisMonth = monthlySubmissions.filter((s) => s.rarity === cRarity).length;
+    if (usedThisMonth >= limitForRarity) {
+      setCError(`Monthly limit reached for ${cRarity} (${limitForRarity}/month).`);
+      return;
+    }
+    setCSubmitting(true);
+    try {
+      const res = await fetch("/api/quizlets/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: cName.trim(), icon: cIcon.trim(), colorFrom: cColorFrom, colorTo: cColorTo, rarity: cRarity, pack: cPack, description: cDescription.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Submission failed");
+      setCSuccess(true);
+      setCName(""); setCIcon(""); setCDescription(""); setCColorFrom("#6366f1"); setCColorTo("#8b5cf6"); setCRarity("common"); setCPack("tech-pack");
+      fetchUserSubmissions();
+      setTimeout(() => setCSuccess(false), 5000);
+    } catch (e: unknown) {
+      setCError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setCSubmitting(false);
+    }
+  };
 
   const ownedIds = useMemo(() => new Set(quizlets.map((q) => q.id)), [quizlets]);
 
@@ -89,7 +187,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
 
   // Group all (non-hidden, non-mystical) quizlets by pack for dex view
   const dexPackSections = useMemo(() => {
-    const byPack: Record<string, Quizlet[]> = {};
+    const byPack: Record<string, QuizletWithCreator[]> = {};
     for (const q of allQuizlets) {
       if (q.pack === MYSTICAL_PACK) continue;
       if (!byPack[q.pack]) byPack[q.pack] = [];
@@ -160,8 +258,11 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
           <span className="text-3xl mb-2">{quizlet.icon}</span>
           <p className={`font-bold text-sm leading-tight mb-1 ${light ? "text-gray-900" : "text-white"}`}>{quizlet.name}</p>
           <span className={`text-xs font-semibold mb-3 rounded-full px-2 py-0.5 ${light ? "bg-black/15 text-gray-800" : `bg-black/30 ${rarityInfo.text}`}`}>{rarityInfo.label}</span>
-          <p className={`text-xs mb-4 line-clamp-2 ${light ? "text-gray-800" : "text-white/80"}`}>{quizlet.description}</p>
-          <div className="w-full flex gap-1.5">
+          <p className={`text-xs mb-2 line-clamp-2 ${light ? "text-gray-800" : "text-white/80"}`}>{quizlet.description}</p>
+          {quizlet.createdBy && (
+            <p className="text-xs text-amber-400/80 font-medium mb-2">🔨 by {quizlet.createdBy.name ?? "Blacksmith"}</p>
+          )}
+          <div className="w-full flex gap-1.5 mt-auto">
             {quizlet.pack !== "mystical" && (
               <button
                 onClick={() => handleSell(quizlet)}
@@ -186,7 +287,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
     );
   };
 
-  const DexCard = ({ quizlet }: { quizlet: Quizlet }) => {
+  const DexCard = ({ quizlet }: { quizlet: QuizletWithCreator }) => {
     const rarityInfo = RARITY_COLORS[quizlet.rarity] ?? RARITY_COLORS.common;
     const owned = ownedIds.has(quizlet.id);
     const isLegendary = quizlet.rarity === "legendary";
@@ -213,6 +314,9 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
             {owned ? quizlet.name : "???"}
           </p>
           <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${light ? "bg-black/15 text-gray-800" : `bg-black/30 ${rarityInfo.text}`}`}>{rarityInfo.label}</span>
+          {owned && quizlet.createdBy && (
+            <p className="text-xs text-amber-400/80 font-medium mt-1.5">🔨 by {quizlet.createdBy.name ?? "Blacksmith"}</p>
+          )}
         </div>
       </div>
     );
@@ -265,27 +369,41 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
         >
           📖 All Quizlets
         </button>
+        {isBlacksmithActive && (
+          <button
+            onClick={() => setView("create")}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              view === "create"
+                ? "bg-amber-500 text-black"
+                : "bg-amber-600/20 text-amber-300 border border-amber-600/30 hover:bg-amber-600/30"
+            }`}
+          >
+            🔨 Create
+          </button>
+        )}
       </div>
 
-      {/* Rarity Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mb-5">
-        {RARITIES.filter((r) => r !== "all").map((r) => {
-          const info = RARITY_COLORS[r];
-          return (
-            <span key={r} className="flex items-center gap-1.5 text-xs text-gray-400">
-              <span className={`w-2 h-2 rounded-full shrink-0 ${RARITY_DOT[r]}`} />
-              {info.label}{r === "mystical" ? " ✨" : ""}
+      {/* Rarity Legend + Filter — hidden on create tab */}
+      {view !== "create" && (
+        <>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-5">
+            {RARITIES.filter((r) => r !== "all").map((r) => {
+              const info = RARITY_COLORS[r];
+              return (
+                <span key={r} className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${RARITY_DOT[r]}`} />
+                  {info.label}{r === "mystical" ? " ✨" : ""}
+                </span>
+              );
+            })}
+            <span className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span className="w-2 h-2 rounded-full shrink-0 bg-gray-700" />
+              Secret / Unique / Impossible hidden
             </span>
-          );
-        })}
-        <span className="flex items-center gap-1.5 text-xs text-gray-600">
-          <span className="w-2 h-2 rounded-full shrink-0 bg-gray-700" />
-          Secret / Unique / Impossible hidden
-        </span>
-      </div>
+          </div>
 
-      {/* Rarity Filter */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-8">
+          {/* Rarity Filter */}
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-8">
         {RARITIES.map((r) => {
           const info = r !== "all" ? RARITY_COLORS[r] : null;
           return (
@@ -301,6 +419,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
           );
         })}
       </div>
+      </>)}
 
       {/* ── MY COLLECTION VIEW ── */}
       {view === "mine" && (
@@ -456,6 +575,216 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
             </div>
           )}
         </>
+      )}
+
+      {/* ── CREATE VIEW ── */}
+      {view === "create" && isBlacksmithActive && (
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Form */}
+          <div className="bg-white/5 border border-amber-600/20 rounded-2xl p-6">
+            <h2 className="text-lg font-bold text-amber-300 mb-1">Submit a Quizlet Design</h2>
+            <p className="text-xs text-gray-500 mb-5">Admin will review your design before adding it to the game.</p>
+
+            {cError && (
+              <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-300">
+                {cError}
+              </div>
+            )}
+            {cSuccess && (
+              <div className="mb-4 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-sm text-green-300">
+                ✅ Submitted! Your design is pending admin review.
+              </div>
+            )}
+
+            <form onSubmit={(e) => { e.preventDefault(); handleCreateSubmit(); }} className="space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1.5">Quizlet Name <span className="text-red-400">*</span></label>
+                <input
+                  type="text"
+                  maxLength={40}
+                  value={cName}
+                  onChange={(e) => setCName(e.target.value)}
+                  placeholder="e.g. Shadow Fox"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50"
+                />
+                <p className="text-xs text-gray-600 mt-1">{cName.length}/40 characters</p>
+              </div>
+
+              {/* Icon + Color Preview Row */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Icon */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Icon (emoji) <span className="text-red-400">*</span></label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={cIcon}
+                      onChange={(e) => setCIcon(e.target.value)}
+                      placeholder="🦊"
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50"
+                    />
+                    {cIcon && (
+                      <span className="text-3xl leading-none">{cIcon}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">One or two emoji characters</p>
+                </div>
+
+                {/* Gradient Preview */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Card Gradient</label>
+                  <div
+                    className="h-[44px] rounded-xl flex items-center justify-center text-2xl border border-white/10"
+                    style={{ background: `linear-gradient(135deg, ${cColorFrom}, ${cColorTo})` }}
+                  >
+                    {cIcon || "🎴"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Color pickers */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Color From</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={cColorFrom}
+                      onChange={(e) => setCColorFrom(e.target.value)}
+                      className="w-10 h-10 rounded-lg cursor-pointer border border-white/10 bg-transparent"
+                    />
+                    <span className="text-xs text-gray-500 font-mono">{cColorFrom}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Color To</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={cColorTo}
+                      onChange={(e) => setCColorTo(e.target.value)}
+                      className="w-10 h-10 rounded-lg cursor-pointer border border-white/10 bg-transparent"
+                    />
+                    <span className="text-xs text-gray-500 font-mono">{cColorTo}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rarity + Pack */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Rarity <span className="text-red-400">*</span></label>
+                  <select
+                    value={cRarity}
+                    onChange={(e) => setCRarity(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50"
+                  >
+                    {SUBMITTABLE_RARITIES.map((r) => {
+                      const limit = SUBMISSION_HIDDEN.has(r) ? 1 : 2;
+                      const used = monthlySubmissions.filter((s) => s.rarity === r).length;
+                      return (
+                        <option key={r} value={r} className="bg-gray-900">
+                          {r.charAt(0).toUpperCase() + r.slice(1)} — {used}/{limit} used
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {(() => {
+                    const limit = SUBMISSION_HIDDEN.has(cRarity) ? 1 : 2;
+                    const used = monthlySubmissions.filter((s) => s.rarity === cRarity).length;
+                    const rc = RARITY_COLORS[cRarity];
+                    return (
+                      <p className={`text-xs mt-1 font-medium ${used >= limit ? "text-red-400" : "text-amber-400/80"}`}>
+                        {used >= limit ? "Monthly limit reached" : `${limit - used} submission${limit - used !== 1 ? "s" : ""} left this month`}
+                        {rc && <span className={`ml-1.5 ${rc.text}`}>· {rc.label}</span>}
+                      </p>
+                    );
+                  })()}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Target Pack <span className="text-red-400">*</span></label>
+                  <select
+                    value={cPack}
+                    onChange={(e) => setCPack(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50"
+                  >
+                    {ALLOWED_PACKS.map((p) => (
+                      <option key={p.slug} value={p.slug} className="bg-gray-900">{p.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1.5">Description <span className="text-red-400">*</span></label>
+                <textarea
+                  rows={3}
+                  maxLength={200}
+                  value={cDescription}
+                  onChange={(e) => setCDescription(e.target.value)}
+                  placeholder="Brief lore or flavour text for the quizlet..."
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-amber-500/50"
+                />
+                <p className="text-xs text-gray-600 mt-1">{cDescription.length}/200 characters</p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={cSubmitting || (() => { const limit = SUBMISSION_HIDDEN.has(cRarity) ? 1 : 2; return monthlySubmissions.filter((s) => s.rarity === cRarity).length >= limit; })()}
+                className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-amber-500 to-orange-600 text-black hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {cSubmitting ? "Submitting…" : "Submit for Review"}
+              </button>
+            </form>
+          </div>
+
+          {/* My submissions */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">My Submissions</h3>
+            {loadingSubs ? (
+              <p className="text-sm text-gray-600">Loading…</p>
+            ) : userSubmissions.length === 0 ? (
+              <p className="text-sm text-gray-600">No submissions yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {userSubmissions.map((sub) => (
+                  <div
+                    key={sub.id}
+                    className={`flex items-center gap-4 p-4 rounded-xl border ${
+                      sub.status === "approved" ? "bg-green-500/5 border-green-500/20" :
+                      sub.status === "rejected" ? "bg-red-500/5 border-red-500/20" :
+                      "bg-white/5 border-white/10"
+                    }`}
+                  >
+                    {/* Swatch */}
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-white/10"
+                      style={{ background: `linear-gradient(135deg, ${sub.colorFrom}, ${sub.colorTo})` }}
+                    >
+                      {sub.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-white truncate">{sub.name}</p>
+                      <p className="text-xs text-gray-500 capitalize">{sub.rarity} · {sub.pack}</p>
+                      {sub.adminNote && (
+                        <p className="text-xs text-gray-400 mt-0.5 italic">"{sub.adminNote}"</p>
+                      )}
+                    </div>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
+                      sub.status === "approved" ? "bg-green-500/20 text-green-300" :
+                      sub.status === "rejected" ? "bg-red-500/20 text-red-300" :
+                      "bg-yellow-500/20 text-yellow-300"
+                    }`}>
+                      {sub.status === "approved" ? "✅ Approved" : sub.status === "rejected" ? "❌ Rejected" : "⏳ Pending"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
