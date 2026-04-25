@@ -313,12 +313,12 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
       <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-7 mb-6 select-none">
         {question.imageUrl && (
           <div className="mb-5 flex justify-center">
-            <div className="bg-white rounded-2xl p-4 md:p-6 shadow-lg inline-flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-4 md:p-6 shadow-lg flex items-center justify-center w-[300px] h-[200px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={question.imageUrl}
                 alt={question.text}
-                className="object-contain max-h-48 md:max-h-60 w-auto"
+                className="object-contain w-full h-full"
               />
             </div>
           </div>
