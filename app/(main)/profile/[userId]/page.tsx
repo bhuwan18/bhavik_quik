@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { getProfileData } from "@/lib/profile";
 import { RARITY_COLORS } from "@/lib/utils";
 import FollowButton from "@/components/profile/FollowButton";
@@ -95,12 +96,27 @@ export default async function ProfilePage({
             </div>
           </div>
 
-          {/* Follow button */}
+          {/* Follow button + friend streak badge */}
           {!isOwnProfile && (
-            <FollowButton
-              targetUserId={data.id}
-              initialIsFollowing={data.isFollowing}
-            />
+            <div className="flex flex-col items-end gap-2">
+              <FollowButton
+                targetUserId={data.id}
+                initialIsFollowing={data.isFollowing}
+              />
+              {data.mutualStreakWithViewer && (
+                <div className="flex items-center gap-1.5 bg-orange-500/15 border border-orange-500/30 rounded-xl px-3 py-1.5">
+                  <span className="text-base leading-none">🔥</span>
+                  <div>
+                    <p className="text-sm font-extrabold text-orange-400 leading-none">
+                      {data.mutualStreakWithViewer.count} day streak
+                    </p>
+                    <p className="text-[10px] text-gray-500 leading-tight">
+                      Best: {data.mutualStreakWithViewer.longestCount}d
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -198,6 +214,48 @@ export default async function ProfilePage({
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
           <p className="text-3xl mb-2">🎴</p>
           <p className="text-gray-400 text-sm">No quizlets collected yet</p>
+        </div>
+      )}
+
+      {/* Friend Streaks — own profile only */}
+      {isOwnProfile && data.friendStreaks.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            Friend Streaks
+          </h2>
+          <div className="space-y-2">
+            {data.friendStreaks.map((s) => (
+              <Link
+                key={s.friendId}
+                href={`/profile/${s.friendId}`}
+                className="flex items-center gap-3 bg-white/5 border border-orange-500/20 rounded-xl p-3 hover:bg-white/[0.08] transition-colors"
+              >
+                {s.friendImage ? (
+                  <Image
+                    src={s.friendImage}
+                    alt={s.friendName ?? ""}
+                    width={36}
+                    height={36}
+                    className="rounded-full ring-1 ring-white/20 shrink-0"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-sm font-bold text-white shrink-0">
+                    {s.friendName?.[0] ?? "?"}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">
+                    {s.friendName ?? "Unknown"}
+                  </p>
+                  <p className="text-xs text-gray-500">Best: {s.longestCount} days</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-lg font-extrabold text-orange-400">🔥 {s.count}</p>
+                  <p className="text-[10px] text-gray-600">day streak</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>

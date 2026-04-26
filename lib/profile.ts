@@ -9,6 +9,15 @@ export type ProfileQuizlet = {
   rarity: string;
 };
 
+export type FriendStreakItem = {
+  friendId: string;
+  friendName: string | null;
+  friendImage: string | null;
+  count: number;
+  longestCount: number;
+  lastStreakDate: string | null;
+};
+
 export type ProfileData = {
   id: string;
   name: string | null;
@@ -36,6 +45,8 @@ export type ProfileData = {
   mostPlayedCategory: string | null;
   lastPlayedCategory: string | null;
   totalQuizzes: number;
+  friendStreaks: FriendStreakItem[];
+  mutualStreakWithViewer: FriendStreakItem | null;
 };
 
 export async function getProfileData(
@@ -72,6 +83,12 @@ export async function getProfileData(
   const canCheckFollow =
     viewerUserId !== null && viewerUserId !== profileUserId;
 
+  const isOwnProfile = viewerUserId === profileUserId;
+  const canCheckStreak = viewerUserId !== null && !isOwnProfile;
+  const [streakAId, streakBId] = canCheckStreak
+    ? [viewerUserId!, profileUserId].sort()
+    : ["", ""];
+
   const [
     followerCount,
     followingCount,
@@ -80,6 +97,8 @@ export async function getProfileData(
     allAttempts,
     lastAttempt,
     ownedCount,
+    rawStreaks,
+    mutualStreakRecord,
   ] = await Promise.all([
     prisma.userFollow.count({ where: { followingId: profileUserId } }),
     prisma.userFollow.count({ where: { followerId: profileUserId } }),
@@ -109,6 +128,24 @@ export async function getProfileData(
       include: { quiz: { select: { category: true } } },
     }),
     prisma.userQuizlet.count({ where: { userId: profileUserId } }),
+    isOwnProfile
+      ? prisma.friendStreak.findMany({
+          where: {
+            OR: [{ userAId: profileUserId }, { userBId: profileUserId }],
+            count: { gt: 0 },
+          },
+          include: {
+            userA: { select: { id: true, name: true, image: true } },
+            userB: { select: { id: true, name: true, image: true } },
+          },
+          orderBy: { count: "desc" },
+        })
+      : Promise.resolve([] as Array<{ id: string; userAId: string; userBId: string; count: number; longestCount: number; lastStreakDate: string | null; userA: { id: string; name: string | null; image: string | null }; userB: { id: string; name: string | null; image: string | null } }>),
+    canCheckStreak
+      ? prisma.friendStreak.findUnique({
+          where: { userAId_userBId: { userAId: streakAId, userBId: streakBId } },
+        })
+      : Promise.resolve(null),
   ]);
 
   // Most-played category
@@ -135,6 +172,31 @@ export async function getProfileData(
     user.totalAnswered > 0
       ? Math.round((user.totalCorrect / user.totalAnswered) * 100)
       : 0;
+
+  const friendStreaks: FriendStreakItem[] = rawStreaks.map((s) => {
+    const iAmA = s.userAId === profileUserId;
+    const friend = iAmA ? s.userB : s.userA;
+    return {
+      friendId: friend.id,
+      friendName: friend.name,
+      friendImage: friend.image,
+      count: s.count,
+      longestCount: s.longestCount,
+      lastStreakDate: s.lastStreakDate,
+    };
+  });
+
+  const mutualStreakWithViewer: FriendStreakItem | null =
+    canCheckStreak && mutualStreakRecord && mutualStreakRecord.count > 0
+      ? {
+          friendId: profileUserId,
+          friendName: user.name,
+          friendImage: user.image,
+          count: mutualStreakRecord.count,
+          longestCount: mutualStreakRecord.longestCount,
+          lastStreakDate: mutualStreakRecord.lastStreakDate,
+        }
+      : null;
 
   return {
     id: user.id,
@@ -163,5 +225,7 @@ export async function getProfileData(
     mostPlayedCategory,
     lastPlayedCategory,
     totalQuizzes: user._count.quizAttempts,
+    friendStreaks,
+    mutualStreakWithViewer,
   };
 }

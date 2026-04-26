@@ -17,8 +17,8 @@
 | Framework | Next.js 16 (App Router) + TypeScript |
 | Styling | Tailwind CSS v4 + CSS custom properties for theming |
 | Fonts | Nunito (body) + Rubik (headings) via next/font/google (CSS vars: `--font-jakarta`, `--font-grotesk`) |
-| UI Components | Custom components (shadcn unavailable, built manually) |
-| Auth | NextAuth.js v5 (Google OAuth + admin username/password) |
+| UI Components | Custom components + Radix UI primitives (react-dialog, react-progress, react-slot, react-tabs); shadcn not used |
+| Auth | NextAuth.js v5 beta (Google OAuth + admin username/password) |
 | ORM | Prisma v7 |
 | Database | PostgreSQL (Neon — see `.env`) |
 | Real-time | Pusher Channels (DinoRex multiplayer; socket.io installed but unused for game logic) |
@@ -27,6 +27,9 @@
 | Theming | next-themes (dark-only, `forcedTheme="dark"`) |
 | Email | Nodemailer v7 (SMTP — new user alerts only; feedback is DB-stored) |
 | Analytics | Vercel Analytics + Speed Insights |
+| QR Codes | qrcode.react — UPI payment QR generation in `/shop` |
+| Video | Remotion v4 (`remotion:studio` / `remotion:render` scripts) — standalone promo video; not part of app runtime |
+| React | React 19 |
 
 ---
 
@@ -36,6 +39,8 @@
 npm run db:push      # push schema changes to DB
 npx prisma generate  # regenerate client types
 npm run db:seed      # re-seed data (idempotent)
+npm run db:explain   # seed explanation text into questions (prisma/seed-explanations.ts)
+npm run db:studio    # open Prisma Studio GUI
 ```
 
 ## Environment Variables
@@ -79,25 +84,27 @@ TEST_PASSWORD="..."
 
 ```
 app/
-├── layout.tsx  page.tsx  globals.css  login/  certificate/
+├── layout.tsx  page.tsx  globals.css  login/  certificate/  privacy/  terms/
 └── (main)/
     ├── layout.tsx  loading.tsx
     ├── dashboard/  discover/  quiz/[id]/  marketplace/  quizlets/
     ├── quiz-maker/  leaderboard/  profile/[userId]/  feedback/
     ├── game/  notifications/  feed/  trading/  shop/  milestones/
-    └── admin/  (quizzes/  quizzes/[id]/edit/  users/  payments/  feedback/  settings/)
+    ├── buy-coins/  info/  (legacy routes — kept but /shop is canonical)
+    └── admin/  (quizzes/  quizzes/[id]/edit/  users/  payments/  feedback/  settings/  quizlet-submissions/)
 
 components/
 ├── layout/  (Sidebar, MobileNav, OnlinePing, PushSubscriptionManager, NotificationsProvider, FeedProvider)
-├── quiz/  marketplace/  discover/  quizlets/  milestones/  profile/  trading/  game/  icons/
-└── ThemeProvider  SplashScreen  IntroOverlay  AudioPlayer
+├── quiz/  marketplace/  discover/  quizlets/  milestones/  profile/  trading/  game/  icons/  admin/  dashboard/
+└── ThemeProvider  SplashScreen  SplashScreenClient  IntroOverlay  AudioPlayer
 
 lib/
     auth  db  email  push  pusher  audio-context  profile
     quizlets-data  packs-data  trading  trading-resolve
     festivals  roll  time  game-config  app-settings  utils  milestones-data
 
-prisma/  schema.prisma (27 models)  seed.ts
+prisma/  schema.prisma (28 models)  seed.ts  seed-explanations.ts
+remotion/  (BittsQuizReel.tsx, BittsQuizVideo.tsx — standalone video generation, not served)
 ```
 
 ---
@@ -105,10 +112,11 @@ prisma/  schema.prisma (27 models)  seed.ts
 ## Core Domain Concepts
 
 ### Quizlets (Characters)
-- 107 total: 9 standard packs + 3 global uniques + 6 festival + 23 mystical
+- Exact count lives in `lib/quizlets-data.ts` (source of truth — do not hardcode a number here)
 - Rarities: `common | uncommon | rare | epic | legendary | secret | unique | mystical | impossible`
 - `isHidden: true` → Secret/Unique/Impossible — "Hidden" section in My Collection only; excluded from All Quizlets dex and pack descriptions
 - Mystical: `isHidden: false`, `pack: "mystical"` — visible in dex; never sold in packs
+- `Quizlet.createdByUserId`: links to the user whose `QuizletSubmission` was approved; `null` for official quizlets
 
 ### Rarity Visual System
 Defined in `lib/utils.ts → RARITY_COLORS`:
@@ -118,9 +126,10 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 
 ### Mystical Quizlets
 - Granted by `/api/attempt` only — never from packs
-- Category condition: 10+ distinct quizzes in that category → grants `CATEGORY_MYSTICAL_MAP[category]` (brand-logos is unmapped)
-- Atypical Choices condition: `quizAttempt.count === 1` after recording (first-ever attempt by any user)
-- On grant: creates `UserQuizlet` + `Notification` (type `milestone`); already-owned silently skipped
+- **Condition 1 — Category mastery**: 10+ distinct quizzes attempted in a category → grants `CATEGORY_MYSTICAL_MAP[category]`; map has 20 entries covering all categories except `brand-logos`; `logical-reasoning` → `"Cerebrix"` is the newest entry
+- **Condition 2 — Atypical Choices**: `quizAttempt.count === 1` after recording (this quiz has never been attempted by anyone before)
+- **Condition 3 — Follow the Path**: the submitted quiz is currently the most-attempted quiz globally (checked via `prisma.quizAttempt.groupBy` top-1 after inserting the new attempt)
+- On grant: creates `UserQuizlet` (fire-and-forget feed `quizlet_earned` activity); already-owned silently skipped; no `Notification` created — push is handled elsewhere
 - To add a new one: add to `lib/quizlets-data.ts` (rarity `mystical`, pack `mystical`) AND `CATEGORY_MYSTICAL_MAP` in `app/api/attempt/route.ts`
 
 ### Coin Economy
@@ -128,11 +137,16 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - Multipliers: Regular 1×, Pro 1.5×, Max 2× (applied before daily cap)
 - Daily earn limits: Regular 500, Pro 1000, Max 1500 (resets UTC midnight)
 - No duplicate coins: `CorrectAnswer` `@@unique([userId, questionId])`; use `createMany({ skipDuplicates: true })`
+- `EXPLANATION_READ_COINS = 2`: flat 2 coins (before multiplier) awarded when a user reads an explanation, via `POST /api/explanation-read/`
+- Retake behavior: controlled by `retakeCoinsEnabled` AppSetting (default `true`). When `true`, all correct answers in the submission earn coins (base = total correct). When `false`, only answers NOT already in `CorrectAnswer` earn coins (base = new correct only). Both paths still respect daily cap.
+- Weekly tracking: `User.weeklyCoins` + `User.weeklyCoinsWeek` (ISO week string) updated atomically in `/api/attempt`; resets automatically when the ISO week changes
 
 ### Membership Tiers
 - Regular: default, 1×, 500/day | Pro: ₹250/mo, 1.5×, 1000/day (`isPro + proExpiresAt`) | Max: ₹500/mo, 2×, 1500/day (`isMax + maxExpiresAt`)
-- Check active: `isMax && (!maxExpiresAt || maxExpiresAt > new Date())` — same pattern for Pro; Max > Pro > Regular
+- **Blacksmith**: ₹100/mo entry-level tier (`isBlacksmith + blacksmithExpiresAt`); multiplier/daily limit not yet defined in `lib/game-config.ts` — check there before implementing any Blacksmith coin logic
+- Check active: `isMax && (!maxExpiresAt || maxExpiresAt > new Date())` — same pattern for Pro and Blacksmith; hierarchy: Max > Pro > Blacksmith > Regular
 - Renewal extends from current expiry date, not today
+- `User.dailyCoinsSpent` / `User.dailySpentReset`: track coins spent today (available for shop spending-cap logic)
 
 ### Pack Opening (`lib/roll.ts`)
 - Guaranteed slots: 2 common, 2 uncommon, 1 rare; 1 bonus roll can hit epic/legendary/secret/unique
@@ -142,9 +156,14 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - 6 festivals by `MM-DD` in `lib/festivals.ts`; `/api/packs` includes festival pack slug on matching dates — pure date comparison, no DB change
 
 ### Quiz Content
-- ~193 official quizzes across 20 categories seeded via `prisma/seed.ts`
-- Premium categories: grade-6/geography (tier 1), world-travel/gaming (tier 2), memes (tier 3)
-- Brand-logos is the only category with no `CATEGORY_MYSTICAL_MAP` entry
+- ~193 official quizzes across 21 categories seeded via `prisma/seed.ts`
+- **21 categories** (5 premium). Full list in `lib/utils.ts → CATEGORIES`. The most recently added: `logical-reasoning`.
+- **Premium category unlock**: gated by `totalCoinsEarned` thresholds, NOT by membership tier
+  - Tier 1 "🎓 Scholar" (grade-6, geography): 3,000 coins
+  - Tier 2 "🧠 Expert" (world-travel, gaming): 6,000 coins
+  - Tier 3 "🏆 Master" (memes): 11,000 coins
+  - Constants: `PREMIUM_TIER_UNLOCK_COINS` and `PREMIUM_TIER_NAMES` in `lib/game-config.ts` — use these, never hardcode
+- `brand-logos` is the only category with no `CATEGORY_MYSTICAL_MAP` entry
 
 ### Weekly Offers & Splash Screen
 - Stored as `AppSetting` keys: `weeklyOffer_pro`, `weeklyOffer_max`, `weeklyOffer_daily_reset`, `weeklyOffer_coins` — value: `{ discountPercent, weekStart }`
@@ -184,6 +203,7 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 ### Social Feed
 - Activity types in `FeedActivity.type`: `quiz_completed | milestone_earned | quizlet_earned | streak_milestone | leaderboard_top3 | user_returned`
 - `quizlet_earned.source`: `"pack" | "mystical"`; `user_returned` fires in `POST /api/user/ping` only when `lastSeenAt > 48h ago`
+- `quiz_completed` activities are **merged within a 2-hour window**: if the user already has a `quiz_completed` activity in the last 2 hours, the new quiz is appended to its `data.quizzes` array instead of creating a new record
 - All feed writes are **fire-and-forget** (`.catch(() => {})`); never `await` in the hot path
 - New activity types need a matching renderer in `feed/page.tsx → ActivityBody`
 - Likes: `FeedLike` `@@unique([userId, activityId])`; Comments: `FeedComment` (max 280 chars)
@@ -195,7 +215,8 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - Follow fan-out notifications (`follow_milestone`, `follow_streak_milestone`) created in `/api/attempt`
 
 ### Online Status
-- `User.lastSeenAt` updated every 5 min by `OnlinePing`; green dot if `lastSeenAt > now - 5 min`
+- `User.lastSeenAt` updated every 5 min by `OnlinePing` (`ONLINE_PING_INTERVAL_MS`); DB write skipped if updated within 3 min (`ONLINE_PING_DEBOUNCE_MS`)
+- Green dot shown if `lastSeenAt > now - 6 min` (`ONLINE_THRESHOLD_MS = 6 * 60 * 1000` in `lib/game-config.ts`)
 - Leaderboard: ⭐ Pro, 👑 Max (Max takes priority); podium renders only on default sort (coins desc, page 1)
 - Leaderboard sort via URL params (`sort`/`dir`/`page`); accuracy is computed, NOT sortable
 
@@ -216,6 +237,15 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 ### Global Settings
 - `AppSetting` model: `key` (unique), `value` (string); read via `lib/app-settings.ts`; write via PATCH `/api/admin/settings` or `POST /api/admin/weekly-offer`
 - Never hardcode setting keys outside `lib/app-settings.ts`
+- Known keys: `schoolHoursEnabled`, `retakeCoinsEnabled`, `weeklyOffer_pro`, `weeklyOffer_max`, `weeklyOffer_daily_reset`, `weeklyOffer_coins`
+- `retakeCoinsEnabled` (default `true`): when `false`, coin awards in `/api/attempt` only count new correct answers — read via `getRetakeCoinsEnabled()` from `lib/app-settings.ts`
+
+### QuizletSubmission System
+- Users propose custom quizlets via `POST /api/quizlets/submit/` → creates `QuizletSubmission` (status: `pending`)
+- Admin reviews at `/admin/quizlet-submissions/` (API: `/api/admin/quizlet-submissions/`)
+- Admin can approve (promoting submission to a real `Quizlet` entry with `createdByUserId` set) or reject (with optional `adminNote`)
+- `QuizletSubmission` fields: `name, icon, colorFrom, colorTo, rarity, description, pack, status, adminNote`
+- Approved quizlets appear in the dex immediately; the submitter is credited via `Quizlet.createdByUserId`
 
 ### Milestone System
 - 5 types: `coins | quizzes | answers | categories | streak`; 6 tiers: bronze · silver · gold · platinum · diamond · cosmic
@@ -265,13 +295,13 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 |------|---------|
 | `lib/profile.ts` | `getProfileData(userId, viewerUserId)` — returns `null` for admins; parallel queries |
 | `lib/milestones-data.ts` | All milestone definitions + `ALL_MILESTONES`, `TIER_COLORS` — edit names/tiers here |
-| `lib/quizlets-data.ts` | All 107 quizlet definitions |
-| `lib/packs-data.ts` | All 15 pack definitions |
+| `lib/quizlets-data.ts` | All quizlet definitions — source of truth for count; check here, never hardcode |
+| `lib/packs-data.ts` | All pack definitions — source of truth for count |
 | `lib/roll.ts` | Pack opening RNG — edit drop rates here |
 | `lib/festivals.ts` | Add/modify festival dates here |
-| `lib/utils.ts` | `RARITY_COLORS`, `SELL_VALUES`, `CATEGORIES` (20 total, 4 premium), `CategorySlug` |
+| `lib/utils.ts` | `RARITY_COLORS`, `SELL_VALUES`, `CATEGORIES` (21 total, 5 premium), `CategorySlug` |
 | `lib/time.ts` | `isSchoolHours()`, `getISTDateString()`, IST offset helpers |
-| `lib/game-config.ts` | Coin earn amounts, daily limits, membership pricing, `STREAK_MILESTONES` |
+| `lib/game-config.ts` | Coin earn amounts, daily limits, membership pricing, `STREAK_MILESTONES`, `PREMIUM_TIER_UNLOCK_COINS`, `PREMIUM_TIER_NAMES`, `EXPLANATION_READ_COINS`, online ping constants |
 | `lib/app-settings.ts` | `getSchoolHoursEnabled()`, `getRetakeCoinsEnabled()`, `getWeeklyOffers()` |
 | `lib/trading.ts` | `TRADING_CONFIG` + `calculateSellerProceeds()` |
 | `lib/trading-resolve.ts` | `maybeResolveExpired()` — call at start of every trading read endpoint |
@@ -279,7 +309,7 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 | `lib/push.ts` | `sendPushToUser()` — VAPID web push; fire-and-forget; auto-cleans expired |
 | `lib/pusher.ts` | `pusherServer` + DinoRex shared types (DinoRexPlayer, DinoRexQuestion, PusherEvent) |
 | `app/globals.css` | Dark-only CSS variables + animation keyframes |
-| `prisma/schema.prisma` | DB schema (27 models) — run `db:push` + `prisma generate` after changes |
+| `prisma/schema.prisma` | DB schema (28 models) — run `db:push` + `prisma generate` after changes |
 | `app/(main)/shop/page.tsx` | Pro/Max membership + coin purchase + daily limit reset |
 | `app/(main)/feed/page.tsx` | Social feed — `ActivityBody` renderer (add new activity types here) |
 | `app/(main)/admin/settings/page.tsx` | Global toggles + weekly discount offers |
@@ -288,6 +318,7 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 | `components/layout/Sidebar.tsx` | Desktop sidebar — edit nav items here |
 | `components/layout/MobileNav.tsx` | Mobile bottom nav — edit items here |
 | `public/sw.js` | Service worker — push events + notificationclick |
+| `app/(main)/admin/quizlet-submissions/page.tsx` | Admin review queue for user-submitted quizlet proposals |
 
 ---
 
@@ -319,14 +350,15 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - **Shop vs Upgrade**: `/shop` replaced `/upgrade` and `/buy-coins` everywhere — do not link to either old route
 - **Weekly offers**: managed via `/admin/settings` → `POST /api/admin/weekly-offer`; stored as `AppSetting` keys; read via `getWeeklyOffers()` from `lib/app-settings.ts` — no `lib/promotions.ts` file exists
 - **Notifications context**: `useUnreadCount()` from `components/layout/NotificationsProvider.tsx` gives the current unread count client-side; already available everywhere inside `(main)/layout.tsx`
-- **isMax**: always check `isMax && (!maxExpiresAt || maxExpiresAt > new Date())` for active Max status, same pattern for Pro
+- **isMax**: always check `isMax && (!maxExpiresAt || maxExpiresAt > new Date())` for active Max status, same pattern for Pro and Blacksmith; hierarchy Max > Pro > Blacksmith > Regular
 - **CorrectAnswer**: never skip the dedup check in `/api/attempt` — it prevents infinite coin farming
-- **Mystical quizlets**: never add them to packs or the pack-opening flow — they're granted exclusively via `CATEGORY_MYSTICAL_MAP` logic in `/api/attempt`; to add a new one, add to `lib/quizlets-data.ts` (rarity `mystical`, pack `mystical`) AND add to `CATEGORY_MYSTICAL_MAP` in `app/api/attempt/route.ts`
+- **Mystical quizlets**: never add them to packs or the pack-opening flow — they're granted exclusively in `/api/attempt` via three conditions: CATEGORY_MYSTICAL_MAP (10+ distinct quizzes in category), Atypical Choices (first-ever attempt on quiz), Follow the Path (quiz is currently most-attempted globally); to add a new category quizlet: add to `lib/quizlets-data.ts` (rarity `mystical`, pack `mystical`) AND `CATEGORY_MYSTICAL_MAP` in `app/api/attempt/route.ts`
 - **School hours**: IST = UTC+5:30; use `lib/time.ts → isSchoolHours()` rather than inline time math; check `getSchoolHoursEnabled()` from `lib/app-settings.ts` before enforcing
-- **Categories**: CATEGORIES has 20 entries — all are seeded; grade-6/geography (premiumTier 1), world-travel/gaming (premiumTier 2), memes (premiumTier 3) are premium-gated
+- **Categories**: CATEGORIES has 21 entries — all are seeded; premium categories (5 total) are unlocked by `totalCoinsEarned` thresholds from `PREMIUM_TIER_UNLOCK_COINS` in `lib/game-config.ts` (NOT by membership tier); tier 1: grade-6/geography (3K coins), tier 2: world-travel/gaming (6K coins), tier 3: memes (11K coins); never hardcode these thresholds
 - **Notifications**: use `Notification` model for in-app messages; use `lib/push.ts → sendPushToUser()` for browser push — these are separate channels
 - **Admin users**: actions go through PATCH `/api/admin/users/[id]` with `action` field (`lock`, `unlock`, `reset_daily`, `grant_pro`, `revoke_pro`, `grant_max`, `revoke_max`)
-- **AppSetting**: read via `lib/app-settings.ts`; write via PATCH `/api/admin/settings` or `POST /api/admin/weekly-offer`; never hardcode setting keys outside `lib/app-settings.ts`
+- **AppSetting**: read via `lib/app-settings.ts`; write via PATCH `/api/admin/settings` or `POST /api/admin/weekly-offer`; never hardcode setting keys outside `lib/app-settings.ts`; known keys: `schoolHoursEnabled`, `retakeCoinsEnabled`, `weeklyOffer_*`
+- **retakeCoinsEnabled**: when `false`, `/api/attempt` only awards coins for answers NOT already in `CorrectAnswer`; when `true` (default) all correct answers in the submission earn coins; read via `getRetakeCoinsEnabled()` — never inline this logic
 - **Trading**: mystical quizlets cannot be listed (`BLOCKED_PACKS`); always use `calculateSellerProceeds()` for seller payout (5% fee); call `maybeResolveExpired()` at the start of any trading read endpoint
 - **Milestones**: 5 types (coins/quizzes/answers/categories/streak); `UserMilestone` unique key is `[userId, milestoneType, threshold]`; always pass `milestoneType` when inserting; use `skipDuplicates: true`; push is fire-and-forget
 - **Streaks**: always use `getISTDateString()` from `lib/time.ts` for IST date comparison — never inline IST math; streak DB write is skipped when `lastDateIST === todayIST`; freeze purchase uses `streakFreezes: { increment: 1 }` (atomic, no read-modify-write)

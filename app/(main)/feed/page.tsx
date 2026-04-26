@@ -39,7 +39,8 @@ const ACTIVITY_THEME: Record<string, { border: string; gradient: string }> = {
   streak_milestone: { border: "border-orange-500/30", gradient: "from-orange-500/10" },
   leaderboard_top3: { border: "border-yellow-500/35", gradient: "from-yellow-500/10" },
   user_returned:    { border: "border-teal-500/25",   gradient: "from-teal-500/8" },
-  quizlet_created:  { border: "border-amber-500/30",  gradient: "from-amber-500/8" },
+  quizlet_created:        { border: "border-amber-500/30",  gradient: "from-amber-500/8" },
+  friend_streak_extended: { border: "border-orange-500/30", gradient: "from-orange-500/10" },
 };
 
 const TIER_BADGE: Record<string, { text: string; bg: string; border: string }> = {
@@ -64,8 +65,9 @@ const FILTER_TABS = [
   { key: "all",              label: "All" },
   { key: "quiz_completed",   label: "Quizzes" },
   { key: "milestone_earned", label: "Milestones" },
-  { key: "streak_milestone", label: "Streaks" },
-  { key: "quizlet_earned",   label: "Quizlets" },
+  { key: "streak_milestone",       label: "Streaks" },
+  { key: "friend_streak_extended", label: "Friend Streaks" },
+  { key: "quizlet_earned",         label: "Quizlets" },
   { key: "quizlet_created",  label: "Creations" },
 ] as const;
 
@@ -192,8 +194,9 @@ function ActivityIcon({ type }: { type: string }) {
     case "streak_milestone": return <div className={cn(base, "bg-orange-500/25")}><Flame size={18} className="text-orange-400" /></div>;
     case "user_returned":    return <div className={cn(base, "bg-teal-500/25")}><RotateCcw size={18} className="text-teal-400" /></div>;
     case "leaderboard_top3": return <div className={cn(base, "bg-yellow-500/25")}><Trophy size={18} className="text-yellow-400" /></div>;
-    case "quizlet_created":  return <div className={cn(base, "bg-amber-500/25")}><Hammer size={18} className="text-amber-400" /></div>;
-    default:                 return <div className={cn(base, "bg-white/10")}><Star size={18} className="text-gray-400" /></div>;
+    case "quizlet_created":        return <div className={cn(base, "bg-amber-500/25")}><Hammer size={18} className="text-amber-400" /></div>;
+    case "friend_streak_extended": return <div className={cn(base, "bg-orange-500/25")}><Flame size={18} className="text-orange-400" /></div>;
+    default:                       return <div className={cn(base, "bg-white/10")}><Star size={18} className="text-gray-400" /></div>;
   }
 }
 
@@ -421,6 +424,41 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
             <span className="opacity-70 capitalize text-xs font-semibold">{rarity}</span>
           </span>
           <p className="text-xs text-gray-500 capitalize">{pack.replace(/-/g, " ")}</p>
+        </div>
+      );
+    }
+    case "friend_streak_extended": {
+      const { friendId, friendName, friendImage, streakCount } = data as {
+        friendId: string; friendName: string; friendImage: string | null; streakCount: number;
+      };
+      return (
+        <div className="flex items-center gap-3" style={feedFont}>
+          {friendImage ? (
+            <Image
+              src={friendImage}
+              alt={friendName ?? ""}
+              width={32}
+              height={32}
+              className="rounded-full ring-1 ring-white/20 shrink-0"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
+              {(friendName ?? "?")[0]}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-gray-200 font-semibold">
+              Extended a friend streak with{" "}
+              <Link href={`/profile/${friendId}`} className="text-orange-400 hover:text-orange-300 transition-colors">
+                {friendName}
+              </Link>
+            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-lg leading-none">🔥</span>
+              <span className="font-extrabold text-orange-400 text-base">{streakCount} days</span>
+              <span className="text-xs text-gray-500">in a row</span>
+            </div>
+          </div>
         </div>
       );
     }

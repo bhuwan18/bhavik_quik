@@ -49,5 +49,11 @@ export async function DELETE(
     where: { followerId: session.user.id, followingId: targetId },
   });
 
+  // Clean up friend streak — mutual follow is now broken
+  const [aId, bId] = [session.user.id, targetId].sort();
+  prisma.friendStreak.deleteMany({
+    where: { userAId: aId, userBId: bId },
+  }).catch(() => {});
+
   return NextResponse.json({ ok: true });
 }

@@ -25,6 +25,9 @@ const TYPE_META: Record<string, { icon: string; label: string; color: string }> 
   trade_won:              { icon: "🎉", label: "Trade Won",        color: "bg-green-500/15 border-green-500/30" },
   trade_sold:             { icon: "💰", label: "Trade Sold",       color: "bg-yellow-500/15 border-yellow-500/30" },
   trade_expired:          { icon: "⏰", label: "Expired",          color: "bg-gray-500/15 border-gray-500/30" },
+  friend_streak_reminder:   { icon: "🔥", label: "Streak Reminder",  color: "bg-orange-500/15 border-orange-500/30" },
+  friend_streak_broken:     { icon: "💔", label: "Streak Broken",    color: "bg-red-500/15 border-red-500/30" },
+  friend_streak_freeze_used:{ icon: "🧊", label: "Freeze Used",      color: "bg-cyan-500/15 border-cyan-500/30" },
 };
 
 export default function NotificationsPage() {

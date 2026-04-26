@@ -12,6 +12,11 @@ export function getISTDateString(date: Date): string {
   return istTime.toISOString().split("T")[0];
 }
 
+/** Returns the YYYY-MM-DD IST date string for the day before the given date */
+export function getYesterdayISTDateString(date: Date): string {
+  return getISTDateString(new Date(date.getTime() - 24 * 60 * 60 * 1000));
+}
+
 /** Returns true if the current IST time falls within school hours (Mon–Fri 8–15) */
 export function isSchoolHours(): boolean {
   const now = new Date();

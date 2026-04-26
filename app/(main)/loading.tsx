@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 
 const FACTS = [
   "💡 Each correct answer earns you coins — harder quizzes pay more!",
-  "🎴 There are 84 unique Quizlet characters to collect across 8 rarity tiers.",
+  "🎴 There are 107 unique Quizlet characters to collect across 9 rarity tiers.",
   "⚡ The Impossible Quizlet has a 0.001% chance from the Rainbow Pack.",
-  "🏆 Collect all 84 Quizlets to unlock the BittsQuiz Master Certificate!",
+  "🏆 Collect all 107 Quizlets to unlock the BittsQuiz Master Certificate!",
   "🪙 Pro members earn 1.5× coins — Max members earn 2× coins!",
   "🌍 There are quizzes in 20 categories including World Languages!",
   "🎮 Try Survival Mode — answer correctly or it's game over!",

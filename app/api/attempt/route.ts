@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { SCHOOL_EMAIL_DOMAIN, isSchoolHours, getISTDateString, getISOWeek } from "@/lib/time";
+import { SCHOOL_EMAIL_DOMAIN, isSchoolHours, getISTDateString, getYesterdayISTDateString, getISOWeek } from "@/lib/time";
 import { getSchoolHoursEnabled, getRetakeCoinsEnabled } from "@/lib/app-settings";
 import {
   COINS_BY_DIFFICULTY,
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
         dailyCoinsReset: true,
         totalCoinsEarned: true,
         name: true,
+        image: true,
         currentStreak: true,
         longestStreak: true,
         lastStreakDate: true,
@@ -277,6 +278,185 @@ export async function POST(req: NextRequest) {
       }).catch(() => {});
     }
   }
+
+  // Friend streak processing — fire-and-forget
+  Promise.resolve().then(async () => {
+    const yesterdayIST = getYesterdayISTDateString(now);
+    const myName = dbUser.name ?? "Someone";
+    const myImage = dbUser.image ?? null;
+
+    // Find mutual follows (2 queries)
+    const [followersOfMe, iFollow] = await Promise.all([
+      prisma.userFollow.findMany({
+        where: { followingId: session.user.id },
+        select: { followerId: true },
+      }),
+      prisma.userFollow.findMany({
+        where: { followerId: session.user.id },
+        select: { followingId: true },
+      }),
+    ]);
+
+    const followerIds = new Set(followersOfMe.map((f) => f.followerId));
+    const mutualIds = iFollow
+      .map((f) => f.followingId)
+      .filter((id) => followerIds.has(id));
+
+    if (mutualIds.length === 0) return;
+
+    const friends = await prisma.user.findMany({
+      where: { id: { in: mutualIds } },
+      select: { id: true, name: true, image: true, streakFreezes: true },
+    });
+    const friendMap = new Map(friends.map((f) => [f.id, f]));
+
+    for (const mutualFriendId of mutualIds) {
+      const friend = friendMap.get(mutualFriendId);
+      const friendName = friend?.name ?? "A friend";
+      const friendImage = friend?.image ?? null;
+
+      const [aId, bId] = [session.user.id, mutualFriendId].sort();
+      const iAmA = session.user.id === aId;
+
+      // Fetch-or-create streak record
+      const streak = await prisma.friendStreak.upsert({
+        where: { userAId_userBId: { userAId: aId, userBId: bId } },
+        create: { userAId: aId, userBId: bId },
+        update: {},
+      });
+
+      const myLastDate = iAmA ? streak.userALastQuizDate : streak.userBLastQuizDate;
+
+      // Already processed today for this pair — skip
+      if (myLastDate === todayIST) continue;
+
+      // Break detection: streak was alive and lastStreakDate is stale (missed ≥1 day)
+      if (streak.count > 0 && streak.lastStreakDate && streak.lastStreakDate < yesterdayIST) {
+        // Account for a freeze the personal streak may have already consumed this attempt
+        const myFreezes = streakFreezeUsed ? dbUser.streakFreezes - 1 : dbUser.streakFreezes;
+        const friendFreezes = friend?.streakFreezes ?? 0;
+
+        if (myFreezes > 0 && friendFreezes > 0) {
+          // Both have a freeze — auto-apply: bridge the gap and decrement both users
+          await Promise.all([
+            prisma.user.update({
+              where: { id: session.user.id },
+              data: { streakFreezes: { decrement: 1 } },
+            }),
+            prisma.user.update({
+              where: { id: mutualFriendId },
+              data: { streakFreezes: { decrement: 1 } },
+            }),
+            prisma.friendStreak.update({
+              where: { userAId_userBId: { userAId: aId, userBId: bId } },
+              data: { lastStreakDate: yesterdayIST },
+            }),
+          ]);
+          prisma.notification.createMany({
+            data: [
+              {
+                userId: session.user.id,
+                type: "friend_streak_freeze_used",
+                message: `A streak freeze was used to save your ${streak.count}-day streak with ${friendName}! `,
+              },
+              {
+                userId: mutualFriendId,
+                type: "friend_streak_freeze_used",
+                message: `A streak freeze was used to save your ${streak.count}-day streak with ${myName}! `,
+              },
+            ],
+          }).catch(() => {});
+        } else {
+          // One or both lack a freeze — break the streak
+          // await the reset to prevent double-notification from concurrent requests
+          const oldCount = streak.count;
+          await prisma.friendStreak.update({
+            where: { userAId_userBId: { userAId: aId, userBId: bId } },
+            data: { count: 0 },
+          });
+          prisma.notification.createMany({
+            data: [
+              {
+                userId: session.user.id,
+                type: "friend_streak_broken",
+                message: `Your ${oldCount}-day streak with ${friendName} just broke. Start a new one today!`,
+              },
+              {
+                userId: mutualFriendId,
+                type: "friend_streak_broken",
+                message: `Your ${oldCount}-day streak with ${myName} just broke. Start a new one today!`,
+              },
+            ],
+          }).catch(() => {});
+          import("@/lib/push").then(({ sendPushToUser }) => {
+            sendPushToUser(session.user.id, "Streak Broken 💔", `Your ${oldCount}-day streak with ${friendName} just broke.`, `/profile/${mutualFriendId}`).catch(() => {});
+            sendPushToUser(mutualFriendId, "Streak Broken 💔", `Your ${oldCount}-day streak with ${myName} just broke.`, `/profile/${session.user.id}`).catch(() => {});
+          }).catch(() => {});
+        }
+      }
+
+      // Re-fetch after potential reset
+      const freshStreak = await prisma.friendStreak.findUnique({
+        where: { userAId_userBId: { userAId: aId, userBId: bId } },
+      });
+      if (!freshStreak) continue;
+
+      const friendLastDate = iAmA ? freshStreak.userBLastQuizDate : freshStreak.userALastQuizDate;
+      const myDatePatch = iAmA
+        ? { userALastQuizDate: todayIST }
+        : { userBLastQuizDate: todayIST };
+
+      if (friendLastDate === todayIST && freshStreak.lastStreakDate !== todayIST) {
+        // Both done today — extend streak
+        const base = freshStreak.lastStreakDate === yesterdayIST ? freshStreak.count : 0;
+        const newCount = base + 1;
+        await prisma.friendStreak.update({
+          where: { userAId_userBId: { userAId: aId, userBId: bId } },
+          data: {
+            ...myDatePatch,
+            count: newCount,
+            longestCount: Math.max(freshStreak.longestCount, newCount),
+            lastStreakDate: todayIST,
+          },
+        });
+        // Feed activities for both users (fire-and-forget)
+        prisma.feedActivity.create({
+          data: {
+            userId: session.user.id,
+            type: "friend_streak_extended",
+            data: { friendId: mutualFriendId, friendName, friendImage, streakCount: newCount },
+          },
+        }).catch(() => {});
+        prisma.feedActivity.create({
+          data: {
+            userId: mutualFriendId,
+            type: "friend_streak_extended",
+            data: { friendId: session.user.id, friendName: myName, friendImage: myImage, streakCount: newCount },
+          },
+        }).catch(() => {});
+      } else if (friendLastDate !== todayIST) {
+        // Friend hasn't done their quiz yet — stamp my date and nudge them
+        await prisma.friendStreak.update({
+          where: { userAId_userBId: { userAId: aId, userBId: bId } },
+          data: myDatePatch,
+        });
+        const currentCount = freshStreak.lastStreakDate === yesterdayIST ? freshStreak.count : 0;
+        const nudgeMsg = `${myName} just completed a quiz! Keep your${currentCount > 0 ? ` ${currentCount}-day` : ""} streak alive 🔥`;
+        prisma.notification.create({
+          data: { userId: mutualFriendId, type: "friend_streak_reminder", message: nudgeMsg },
+        }).catch(() => {});
+        import("@/lib/push").then(({ sendPushToUser }) => {
+          sendPushToUser(mutualFriendId, `${myName} is waiting! 🔥`, nudgeMsg, "/dashboard").catch(() => {});
+        }).catch(() => {});
+      } else {
+        // Streak already extended today — just stamp my completion date
+        await prisma.friendStreak.update({
+          where: { userAId_userBId: { userAId: aId, userBId: bId } },
+          data: myDatePatch,
+        });
+      }
+    }
+  }).catch(() => {});
 
   // Coin milestone rewards — fire-and-forget for notifications/followers
   if (coinsEarned > 0) {

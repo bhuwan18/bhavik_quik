@@ -61,6 +61,8 @@ model User {
   blacksmithExpiresAt  DateTime?
   quizletSubmissions   QuizletSubmission[]
   createdQuizlets      Quizlet[]
+  friendStreaksAsA     FriendStreak[] @relation("FriendStreakA")
+  friendStreaksAsB     FriendStreak[] @relation("FriendStreakB")
 
   @@index([totalCoinsEarned])
   @@index([lastSeenAt])
@@ -310,6 +312,25 @@ model UserFollow {
   @@unique([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+model FriendStreak {
+  id                String   @id @default(cuid())
+  userAId           String   // always the lexicographically smaller userId
+  userBId           String   // always the lexicographically larger userId
+  userA             User     @relation("FriendStreakA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB             User     @relation("FriendStreakB", fields: [userBId], references: [id], onDelete: Cascade)
+  count             Int      @default(0)
+  longestCount      Int      @default(0)
+  lastStreakDate    String?  // "YYYY-MM-DD" IST — last day both completed a quiz
+  userALastQuizDate String?  // "YYYY-MM-DD" IST — last day A completed a quiz
+  userBLastQuizDate String?  // "YYYY-MM-DD" IST — last day B completed a quiz
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
 }
 
 model FeedActivity {
