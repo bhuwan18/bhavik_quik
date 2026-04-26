@@ -136,7 +136,7 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className={cn("flex-1 py-3 space-y-0.5 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
         {NAV_ITEMS.map(({ href, icon: Icon, label, color }) => {
-          const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+          const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
           const isFeed = href === "/feed";
           return (
             <Link key={href} href={href} title={collapsed ? label : undefined} className={navItemClass(active)}>

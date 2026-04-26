@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
   Wand2, Cpu, Palette, Music,
-  Calculator, FlaskConical, Atom, Globe, Flag, Tag, PawPrint, Swords, GraduationCap, Map, Plane, Gamepad2, Laugh,
+  Calculator, FlaskConical, Atom, Globe, Flag, Tag, PawPrint, Swords, GraduationCap, Map, Plane, Gamepad2, Laugh, Brain,
 } from "lucide-react";
 import SoccerBallIcon from "@/components/icons/SoccerBallIcon";
 import CricketWicketIcon from "@/components/icons/CricketWicketIcon";
@@ -27,7 +27,8 @@ export const CATEGORIES = [
   { slug: "flags",           label: "Flags",           icon: Flag,              color: "text-rose-400"    },
   { slug: "brand-logos",     label: "Brand Logos",     icon: Tag,               color: "text-lime-400"    },
   { slug: "animals",         label: "Animals",         icon: PawPrint,          color: "text-yellow-400"  },
-  { slug: "anime",           label: "Anime",           icon: Swords,            color: "text-fuchsia-400" },
+  { slug: "anime",              label: "Anime",              icon: Swords,  color: "text-fuchsia-400" },
+  { slug: "logical-reasoning", label: "Logical Reasoning", icon: Brain,   color: "text-amber-500"   },
   { slug: "grade-6",         label: "Grade 6",         icon: GraduationCap,     color: "text-teal-400",   premiumTier: 1 as const },
   { slug: "geography",       label: "Geography",       icon: Map,               color: "text-green-600",  premiumTier: 1 as const },
   { slug: "world-travel",   label: "World Travel",    icon: Plane,             color: "text-sky-500",    premiumTier: 2 as const },

@@ -135,6 +135,7 @@ export const QUIZLETS_DATA: QuizletDef[] = [
   { name: "Follow the Path", rarity: "mystical", pack: "mystical", icon: "🌟", colorFrom: "#f59e0b", colorTo: "#ef4444", description: "You walked the road most taken. Awarded for completing the most popular quiz in the realm — the one everyone comes to conquer.", isHidden: false, sellValue: 500 },
   { name: "Spending Machine", rarity: "mystical", pack: "mystical", icon: "💸", colorFrom: "#22c55e", colorTo: "#064e3b", description: "Coins burn a hole in their pocket. Earned by spending over 5,000 coins in a single day — a true high-roller of the quiz economy.", isHidden: false, sellValue: 500 },
   { name: "Completion", rarity: "mystical", pack: "mystical", icon: "🎯", colorFrom: "#e879f9", colorTo: "#7c3aed", description: "A collector's dream realized. Every common, uncommon, rare, epic, and legendary quizlet in the realm is yours.", isHidden: false, sellValue: 500 },
+  { name: "Cerebrix", rarity: "mystical", pack: "mystical", icon: "🧠", colorFrom: "#f59e0b", colorTo: "#d97706", description: "Born from pure deductive thought, Cerebrix materialises only for those who have mastered the art of logic across ten rigorous challenges.", isHidden: false, sellValue: 500 },
 
   // ── SPACE PACK ─────────────────────────────────────────────────
   { name: "Voidwalker",    rarity: "secret", pack: "space-pack", icon: "🌌", colorFrom: "#020617", colorTo: "#0c0a1e", description: "A being that drifts between galaxies, leaving trails of frozen starlight in the void.",                         isHidden: true, sellValue: 1000 },

@@ -583,8 +583,8 @@ const QUIZZES = [
       { text: "What is the powerhouse of the cell?", options: ["Nucleus", "Ribosome", "Mitochondria", "Vacuole"], correctIndex: 2 },
       { text: "What does DNA stand for?", options: ["Deoxyribonucleic Acid", "Deoxynucleo Acid", "Direct Nucleic Acid", "Deoxyribose Amino Acid"], correctIndex: 0 },
       { text: "Which blood type is the universal donor?", options: ["A", "B", "AB", "O"], correctIndex: 3 },
-      { text: "What is osmosis?", options: ["Movement of water through a membrane", "Movement of solutes", "Protein synthesis", "Cell division"], correctIndex: 0 },
-      { text: "What is meiosis?", options: ["Cell duplication", "Protein folding", "Cell division producing gametes", "Energy production"], correctIndex: 2 },
+      { text: "What is osmosis?", options: ["Movement of water through a membrane", "Movement of dissolved solutes down a concentration gradient", "Protein synthesis", "Cell division"], correctIndex: 0 },
+      { text: "What is meiosis?", options: ["An exact duplication process that produces two genetically identical cells", "Protein folding", "Cell division producing gametes", "Energy production"], correctIndex: 2 },
     ],
   },
   {
@@ -594,8 +594,8 @@ const QUIZZES = [
     difficulty: 4,
     questions: [
       { text: "What is the speed of light (approx)?", options: ["200,000 km/s", "300,000 km/s", "400,000 km/s", "500,000 km/s"], correctIndex: 1 },
-      { text: "What is a catalyst?", options: ["A product of a reaction", "A substance that speeds up a reaction without being consumed", "A type of element", "An inhibitor"], correctIndex: 1 },
-      { text: "What is the Krebs cycle?", options: ["DNA replication", "Cellular respiration cycle", "Photosynthesis stage", "Protein synthesis"], correctIndex: 1 },
+      { text: "What is a catalyst?", options: ["A substance produced as an end result of a chemical reaction", "A substance that speeds up a reaction without being consumed", "A type of element", "An inhibitor"], correctIndex: 1 },
+      { text: "What is the Krebs cycle?", options: ["The step-by-step process of DNA strand replication in the nucleus", "Cellular respiration cycle", "Photosynthesis stage", "Protein synthesis"], correctIndex: 1 },
       { text: "What particle carries no electric charge?", options: ["Proton", "Electron", "Neutron", "Positron"], correctIndex: 2 },
       { text: "What does CRISPR do?", options: ["Sequences DNA", "Edits genes", "Replicates RNA", "Synthesizes proteins"], correctIndex: 1 },
     ],
@@ -606,10 +606,10 @@ const QUIZZES = [
     category: "science",
     difficulty: 5,
     questions: [
-      { text: "What is the Higgs boson?", options: ["A type of dark matter", "A particle that gives mass to other particles", "A quantum state", "An anti-particle"], correctIndex: 1 },
-      { text: "What is quantum entanglement?", options: ["Particle fusion", "When particles are linked regardless of distance", "Electron bonding", "Magnetic coupling"], correctIndex: 1 },
+      { text: "What is the Higgs boson?", options: ["A hypothetical invisible substance that permeates the entire universe", "A particle that gives mass to other particles", "A quantum state", "An anti-particle"], correctIndex: 1 },
+      { text: "What is quantum entanglement?", options: ["The process where two high-energy particles fuse into one heavier particle", "When particles are linked regardless of distance", "Electron bonding", "Magnetic coupling"], correctIndex: 1 },
       { text: "What is the half-life of Carbon-14?", options: ["1,420 years", "5,730 years", "10,000 years", "14,000 years"], correctIndex: 1 },
-      { text: "What is a quark?", options: ["A type of atom", "A fundamental particle in protons/neutrons", "A photon variant", "An electron type"], correctIndex: 1 },
+      { text: "What is a quark?", options: ["A large multi-electron atom with a heavy radioactive nucleus", "A fundamental particle in protons/neutrons", "A photon variant", "An electron type"], correctIndex: 1 },
       { text: "What is the name of the enzyme that unzips DNA?", options: ["Polymerase", "Ligase", "Helicase", "Topoisomerase"], correctIndex: 2 },
     ],
   },
@@ -4381,12 +4381,12 @@ const QUIZZES = [
     questions: [
       { text: "How many planets are in our solar system?", options: ["7", "8", "9", "10"], correctIndex: 1 },
       { text: "What is the largest planet in our solar system?", options: ["Saturn", "Neptune", "Uranus", "Jupiter"], correctIndex: 3 },
-      { text: "What is a light-year?", options: ["The speed of light", "The distance light travels in one year", "A unit of time", "The brightness of a star"], correctIndex: 1 },
+      { text: "What is a light-year?", options: ["The speed at which electromagnetic radiation travels through a vacuum", "The distance light travels in one year", "A unit of time", "The brightness of a star"], correctIndex: 1 },
       { text: "What type of star is our Sun?", options: ["Red giant", "White dwarf", "Yellow dwarf", "Blue supergiant"], correctIndex: 2 },
       { text: "What is the name of the galaxy we live in?", options: ["Andromeda", "Triangulum", "The Milky Way", "Centaurus A"], correctIndex: 2 },
       { text: "Who was the first human to walk on the Moon?", options: ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "Alan Shepard"], correctIndex: 1 },
       { text: "In which year did humans first land on the Moon?", options: ["1965", "1967", "1969", "1971"], correctIndex: 2 },
-      { text: "What is a black hole?", options: ["A star that exploded", "A region of space where gravity is so strong nothing can escape", "A dark nebula", "An empty void between galaxies"], correctIndex: 1 },
+      { text: "What is a black hole?", options: ["A star that exploded", "A region of space where gravity is so strong nothing can escape", "A dark nebula", "A vast region of completely empty space lying between distant galaxy clusters"], correctIndex: 1 },
       { text: "What is the name of Mars's largest volcano?", options: ["Olympus Mons", "Vesuvius", "Mauna Kea", "Valles Marineris"], correctIndex: 0 },
       { text: "How long does light from the Sun take to reach Earth?", options: ["1 second", "8 minutes", "1 hour", "1 day"], correctIndex: 1 },
     ],
@@ -4402,10 +4402,10 @@ const QUIZZES = [
       { text: "Which organ pumps blood through the body?", options: ["Liver", "Lungs", "Heart", "Brain"], correctIndex: 2 },
       { text: "What is the normal human body temperature (Celsius)?", options: ["35°C", "36°C", "37°C", "38°C"], correctIndex: 2 },
       { text: "How many chambers does the human heart have?", options: ["2", "3", "4", "5"], correctIndex: 2 },
-      { text: "What is the hardest substance in the human body?", options: ["Bone", "Cartilage", "Tooth enamel", "Keratin"], correctIndex: 2 },
-      { text: "Which blood cells fight infection?", options: ["Red blood cells", "Platelets", "White blood cells", "Plasma"], correctIndex: 2 },
+      { text: "What is the hardest substance in the human body?", options: ["Bone", "Flexible cartilage tissue connecting bones at joints", "Tooth enamel", "Keratin"], correctIndex: 2 },
+      { text: "Which blood cells fight infection?", options: ["Red blood cells", "Tiny platelets that aggregate to seal wounds and stop bleeding", "White blood cells", "Plasma"], correctIndex: 2 },
       { text: "What percentage of the human body is water?", options: ["45%", "55%", "60%", "75%"], correctIndex: 2 },
-      { text: "What is the largest muscle in the human body?", options: ["Biceps", "Quadriceps", "Gluteus Maximus", "Deltoid"], correctIndex: 2 },
+      { text: "What is the largest muscle in the human body?", options: ["Biceps", "The quadriceps femoris group spanning the front of the thigh", "Gluteus Maximus", "Deltoid"], correctIndex: 2 },
       { text: "Which vitamin do we get primarily from sunlight?", options: ["Vitamin A", "Vitamin B12", "Vitamin C", "Vitamin D"], correctIndex: 3 },
     ],
   },
@@ -4468,13 +4468,13 @@ const QUIZZES = [
       },
       {
         text: "What is deforestation?",
-        options: ["Planting new forests", "Clearing or removing forests for other uses", "A natural forest fire", "Moving forests to new areas"],
+        options: ["Planting new forests", "Clearing or removing forests for other uses", "A natural forest fire", "The gradual natural migration of forest ecosystems into new geographical zones"],
         correctIndex: 1,
         explanation: "Deforestation is the removal of trees on a large scale, often for agriculture or urban development, leading to habitat loss and increased CO₂.",
       },
       {
         text: "In an ecosystem, what are 'producers'?",
-        options: ["Animals that eat other animals", "Organisms that eat plants", "Organisms that make their own food via photosynthesis", "Fungi that decompose matter"],
+        options: ["Animals that hunt and consume other animals or organisms to obtain energy", "Organisms that eat plants", "Organisms that make their own food via photosynthesis", "Fungi that decompose matter"],
         correctIndex: 2,
         explanation: "Producers (mainly plants and algae) use sunlight to convert CO₂ and water into glucose through photosynthesis, forming the base of every food web.",
       },
@@ -4507,7 +4507,7 @@ const QUIZZES = [
       },
       {
         text: "In genetics, what does 'dominant' mean?",
-        options: ["A trait only expressed in males", "A trait that masks the effect of a recessive allele", "A trait that skips generations", "A trait always expressed in offspring"],
+        options: ["A trait linked to the Y chromosome that appears exclusively in males", "A trait that masks the effect of a recessive allele", "A trait that skips generations", "A trait always expressed in offspring"],
         correctIndex: 1,
         explanation: "A dominant allele expresses its trait even when only one copy is present (heterozygous). It masks the recessive allele's effect.",
       },
@@ -4519,31 +4519,31 @@ const QUIZZES = [
       },
       {
         text: "What does the 'central dogma' of molecular biology describe?",
-        options: ["Cell division process", "DNA → RNA → Protein information flow", "Photosynthesis pathway", "Evolution by mutation"],
+        options: ["The tightly regulated step-by-step process of eukaryotic cell division", "DNA → RNA → Protein information flow", "Photosynthesis pathway", "Evolution by mutation"],
         correctIndex: 1,
         explanation: "The central dogma describes the flow of genetic information: DNA is transcribed into messenger RNA, which is then translated into proteins.",
       },
       {
         text: "What is a phenotype?",
-        options: ["An organism's complete DNA", "The set of observable traits of an organism", "The number of chromosomes in a cell", "A type of mutation"],
+        options: ["The complete set of all genetic instructions encoded within an organism's DNA", "The set of observable traits of an organism", "The number of chromosomes in a cell", "A type of mutation"],
         correctIndex: 1,
         explanation: "Phenotype refers to the observable characteristics of an organism — like eye colour or height — resulting from the interaction of genotype and environment.",
       },
       {
         text: "What is a genotype?",
-        options: ["The physical appearance of an organism", "The genetic makeup or allele combination of an organism", "The number of offspring produced", "The rate of mutation"],
+        options: ["The visible physical characteristics and outward appearance expressed by an organism", "The genetic makeup or allele combination of an organism", "The number of offspring produced", "The rate of mutation"],
         correctIndex: 1,
         explanation: "Genotype is the specific set of alleles an organism carries for a given trait — it determines what traits can potentially be expressed.",
       },
       {
         text: "What is natural selection?",
-        options: ["Random mutation of genes", "Artificial breeding of animals", "The process where organisms with favourable traits reproduce more", "Genetic engineering of species"],
+        options: ["A random change in the nucleotide sequence caused by radiation or chemical exposure", "Artificial breeding of animals", "The process where organisms with favourable traits reproduce more", "Genetic engineering of species"],
         correctIndex: 2,
         explanation: "Natural selection is the mechanism by which individuals with advantageous traits are more likely to survive and pass those traits to offspring, driving evolution.",
       },
       {
         text: "What are homologous chromosomes?",
-        options: ["Identical copies of a chromosome", "Paired chromosomes carrying the same gene loci", "Chromosomes with no genes", "Extra chromosomes in mutant cells"],
+        options: ["Identical sister copies produced when a chromosome replicates during cell division", "Paired chromosomes carrying the same gene loci", "Chromosomes with no genes", "Extra chromosomes in mutant cells"],
         correctIndex: 1,
         explanation: "Homologous chromosomes are pairs that carry the same genes at the same locations (loci), one inherited from each parent. Humans have 23 such pairs.",
       },
@@ -4558,7 +4558,7 @@ const QUIZZES = [
     questions: [
       {
         text: "What is a reducing agent?",
-        options: ["A substance that gains electrons", "A substance that donates electrons to another", "An acid in a reaction", "A catalyst that slows reactions"],
+        options: ["A substance that attracts and gains electrons from other reactive species", "A substance that donates electrons to another", "An acid in a reaction", "A catalyst that slows reactions"],
         correctIndex: 1,
         explanation: "A reducing agent donates electrons to another substance (oxidising agent), becoming oxidised itself. Hydrogen and carbon are common reducing agents.",
       },
@@ -4570,31 +4570,31 @@ const QUIZZES = [
       },
       {
         text: "What does Le Chatelier's Principle state?",
-        options: ["Reactions always go to completion", "A system at equilibrium shifts to oppose any imposed change", "Temperature has no effect on equilibrium", "Catalysts shift equilibrium position"],
+        options: ["All chemical reactions inevitably proceed until every last reactant is consumed", "A system at equilibrium shifts to oppose any imposed change", "Temperature has no effect on equilibrium", "Catalysts shift equilibrium position"],
         correctIndex: 1,
         explanation: "Le Chatelier's Principle states that if a stress (temperature, pressure, concentration change) is applied to an equilibrium system, it shifts to counteract that stress.",
       },
       {
         text: "What is an isotope?",
-        options: ["An atom with a different number of protons", "An atom of the same element with a different number of neutrons", "A charged atom", "A molecule with equal atoms"],
+        options: ["An atom with a different number of protons", "An atom of the same element with a different number of neutrons", "A charged atom formed by gaining or losing electrons from its outer shell", "A molecule with equal atoms"],
         correctIndex: 1,
         explanation: "Isotopes are atoms of the same element with the same number of protons but different neutron counts — e.g. Carbon-12 and Carbon-14.",
       },
       {
         text: "What is electronegativity?",
-        options: ["The charge on an ion", "An atom's tendency to attract bonding electrons towards itself", "The number of electrons in an outer shell", "The energy released in a reaction"],
+        options: ["The net electrical charge carried by an ion after gaining or losing electrons", "An atom's tendency to attract bonding electrons towards itself", "The number of electrons in an outer shell", "The energy released in a reaction"],
         correctIndex: 1,
         explanation: "Electronegativity measures how strongly an atom attracts electrons in a covalent bond. Fluorine is the most electronegative element.",
       },
       {
         text: "What is a buffer solution?",
-        options: ["A solution that changes pH rapidly", "A solution that resists changes in pH", "A neutral solution of pure water", "A solution with no dissolved ions"],
+        options: ["A solution that undergoes rapid and dramatic changes in pH upon dilution", "A solution that resists changes in pH", "A neutral solution of pure water", "A solution with no dissolved ions"],
         correctIndex: 1,
         explanation: "A buffer solution maintains a nearly constant pH when small amounts of acid or base are added, typically consisting of a weak acid and its conjugate base.",
       },
       {
         text: "What is activation energy?",
-        options: ["The total energy released in a reaction", "The minimum energy required for a reaction to start", "The energy stored in chemical bonds", "The energy needed to break a buffer"],
+        options: ["The total thermal energy liberated over the entire course of a chemical reaction", "The minimum energy required for a reaction to start", "The energy stored in chemical bonds", "The energy needed to break a buffer"],
         correctIndex: 1,
         explanation: "Activation energy (Ea) is the minimum energy colliding particles must have for a reaction to occur. Catalysts lower Ea, speeding up reactions.",
       },
@@ -4612,7 +4612,7 @@ const QUIZZES = [
       },
       {
         text: "What does 'oxidation state' represent?",
-        options: ["The physical state of an oxidised metal", "The hypothetical charge on an atom if all bonds were ionic", "The speed of an oxidation reaction", "The mass of oxygen in a compound"],
+        options: ["The observable physical condition of a metal that has undergone oxidation in air", "The hypothetical charge on an atom if all bonds were ionic", "The speed of an oxidation reaction", "The mass of oxygen in a compound"],
         correctIndex: 1,
         explanation: "Oxidation state (oxidation number) is the hypothetical charge an atom would have if all bonds were fully ionic. It helps track electron transfer in redox reactions.",
       },
@@ -4633,7 +4633,7 @@ const QUIZZES = [
       },
       {
         text: "What causes most earthquakes?",
-        options: ["Volcanic eruptions", "Underground explosions", "Movement of tectonic plates", "Lunar gravitational pull"],
+        options: ["Volcanic eruptions that release built-up underground pressure suddenly", "Underground explosions", "Movement of tectonic plates", "Lunar gravitational pull"],
         correctIndex: 2,
         explanation: "Earthquakes occur when stress built up along tectonic plate boundaries is suddenly released, sending seismic waves through the ground.",
       },
@@ -4651,7 +4651,7 @@ const QUIZZES = [
       },
       {
         text: "What is erosion?",
-        options: ["The build-up of sediment", "The wearing away of rock or soil by wind, water, or ice", "A type of volcanic activity", "The splitting of rocks by heat"],
+        options: ["The gradual accumulation and layering of sediment deposited on riverbeds", "The wearing away of rock or soil by wind, water, or ice", "A type of volcanic activity", "The splitting of rocks by heat"],
         correctIndex: 1,
         explanation: "Erosion is the process by which weathered rock and soil are transported by agents like water, wind, glaciers, or gravity to new locations.",
       },
@@ -4663,7 +4663,7 @@ const QUIZZES = [
       },
       {
         text: "What is a geological fault?",
-        options: ["A type of volcano", "A crack or fracture in Earth's crust along which movement occurs", "A layer of sedimentary rock", "A magnetic anomaly underground"],
+        options: ["A type of volcano", "A crack or fracture in Earth's crust along which movement occurs", "A layer of sedimentary rock", "An underground magnetic anomaly caused by variations in deep rock composition"],
         correctIndex: 1,
         explanation: "A fault is a fracture in Earth's crust where rocks on either side have moved relative to each other. The San Andreas Fault is a famous example.",
       },
@@ -4675,13 +4675,13 @@ const QUIZZES = [
       },
       {
         text: "What are fossils?",
-        options: ["Rare minerals found in caves", "Preserved remains or traces of ancient organisms", "Crystals formed under pressure", "Mineral deposits in riverbeds"],
+        options: ["Rare crystalline minerals that form naturally inside limestone cave systems", "Preserved remains or traces of ancient organisms", "Crystals formed under pressure", "Mineral deposits in riverbeds"],
         correctIndex: 1,
         explanation: "Fossils are preserved remains, imprints, or traces of organisms that lived long ago, typically found in sedimentary rock. They are the primary record of past life.",
       },
       {
         text: "What is the theory of plate tectonics?",
-        options: ["Earth's crust is a single rigid shell", "Earth's outer shell is divided into moving plates that interact at boundaries", "Continents are fixed in place", "Volcanoes create new tectonic plates"],
+        options: ["Earth's crust is a single rigid shell", "Earth's outer shell is divided into moving plates that interact at boundaries", "Continents are fixed in place", "Volcanic activity near mid-ocean ridges is solely responsible for generating entirely new tectonic plates"],
         correctIndex: 1,
         explanation: "Plate tectonics describes how Earth's lithosphere is divided into large plates that move over the asthenosphere, causing earthquakes, volcanoes, and mountain-building.",
       },
@@ -4696,7 +4696,7 @@ const QUIZZES = [
     questions: [
       {
         text: "What is a hypothesis?",
-        options: ["A proven scientific law", "A testable prediction or explanation for an observation", "A final conclusion", "An experimental result"],
+        options: ["A widely accepted and universally proven law of the natural world", "A testable prediction or explanation for an observation", "A final conclusion", "An experimental result"],
         correctIndex: 1,
         explanation: "A hypothesis is a specific, testable prediction made before an experiment. It guides the investigation and can be supported or refuted by evidence.",
       },
@@ -4726,7 +4726,7 @@ const QUIZZES = [
       },
       {
         text: "What is 'peer review' in science?",
-        options: ["Scientists working in pairs", "Evaluation of research by independent experts before publication", "A student grading another student's work", "A government review of research funding"],
+        options: ["A system where scientists always collaborate in matched pairs to check each other's work", "Evaluation of research by independent experts before publication", "A student grading another student's work", "A government review of research funding"],
         correctIndex: 1,
         explanation: "Peer review is the process where independent experts scrutinise a study's methods, data, and conclusions before it's published, ensuring scientific quality.",
       },
@@ -4738,7 +4738,7 @@ const QUIZZES = [
       },
       {
         text: "What is the dependent variable in an experiment?",
-        options: ["The variable the scientist changes", "The variable that is measured and responds to changes", "The variable kept constant", "The variable that controls the experiment"],
+        options: ["The variable that the experimenter deliberately and independently adjusts or controls", "The variable that is measured and responds to changes", "The variable kept constant", "The variable that controls the experiment"],
         correctIndex: 1,
         explanation: "The dependent variable is what scientists measure — it 'depends' on changes made to the independent variable. For example, plant height is dependent on amount of sunlight.",
       },
@@ -4750,7 +4750,7 @@ const QUIZZES = [
       },
       {
         text: "What does 'reproducibility' mean in science?",
-        options: ["Creating duplicate lab equipment", "The ability of an experiment to be repeated with the same results", "Publishing research multiple times", "Using the same scientist for all experiments"],
+        options: ["The process of manufacturing exact duplicate copies of all laboratory instruments used", "The ability of an experiment to be repeated with the same results", "Publishing research multiple times", "Using the same scientist for all experiments"],
         correctIndex: 1,
         explanation: "Reproducibility means independent researchers can repeat an experiment and obtain the same results, which is a cornerstone of scientific validity.",
       },
@@ -4773,7 +4773,7 @@ const QUIZZES = [
       },
       {
         text: "What is refraction?",
-        options: ["The bouncing of light off a surface", "The bending of light as it passes between different materials", "The splitting of white light into individual wavelengths", "The absorption of light by a dark surface"],
+        options: ["The way light bounces back when it strikes a smooth or highly polished surface", "The bending of light as it passes between different materials", "The splitting of white light into individual wavelengths", "The absorption of light by a dark surface"],
         correctIndex: 1,
         explanation: "Refraction occurs when light changes speed as it moves between media (e.g. air to glass), causing it to bend. Snell's Law mathematically describes the change in angle.",
       },
@@ -4785,43 +4785,43 @@ const QUIZZES = [
       },
       {
         text: "What is the Doppler effect?",
-        options: ["Light slowing in a denser material", "The apparent change in frequency due to relative motion between source and observer", "Diffraction of sound around obstacles", "The interference pattern of two wave sources"],
+        options: ["Light slowing in a denser material", "The apparent change in frequency due to relative motion between source and observer", "The spreading of sound waves as they bend around large solid obstacles in their path", "The interference pattern of two wave sources"],
         correctIndex: 1,
         explanation: "The Doppler effect is the shift in observed frequency when source and observer move relative to each other. A siren sounds higher-pitched as it approaches and lower-pitched as it moves away.",
       },
       {
         text: "What phenomenon causes a glass prism to split white light into a rainbow?",
-        options: ["Diffraction", "Polarisation", "Dispersion (differential refraction)", "Total internal reflection"],
+        options: ["Diffraction", "The selective polarisation of different wavelengths by a filter or optical medium", "Dispersion (differential refraction)", "Total internal reflection"],
         correctIndex: 2,
         explanation: "Dispersion occurs because different wavelengths of light refract by slightly different amounts in glass, separating white light into its component colours (ROYGBIV).",
       },
       {
         text: "What is total internal reflection?",
-        options: ["All light is absorbed inside a material", "Light is completely reflected back when striking a boundary at an angle beyond the critical angle", "Light is refracted at exactly 90°", "Light splits into all wavelengths at a boundary"],
+        options: ["All incident light energy is absorbed and fully converted into thermal energy within the material", "Light is completely reflected back when striking a boundary at an angle beyond the critical angle", "Light is refracted at exactly 90°", "Light splits into all wavelengths at a boundary"],
         correctIndex: 1,
         explanation: "Total internal reflection (TIR) occurs when light in a denser medium hits a boundary at an angle greater than the critical angle and reflects entirely back. This is the principle behind optical fibres.",
       },
       {
         text: "What is diffraction?",
-        options: ["The reflection of light off a rough surface", "The bending of waves around edges or through small openings", "The conversion of light into heat", "The polarisation of light by a filter"],
+        options: ["The scattering of light in many directions when it reflects off an irregular or rough surface", "The bending of waves around edges or through small openings", "The conversion of light into heat", "The polarisation of light by a filter"],
         correctIndex: 1,
         explanation: "Diffraction is the spreading of waves around obstacles or through apertures. It is most noticeable when the obstacle or gap size is comparable to the wavelength of the wave.",
       },
       {
         text: "What is polarisation of light?",
-        options: ["Increasing light intensity by focusing it", "Restricting the vibration of light waves to a single plane", "Bending light around obstacles", "Converting light into electrical energy"],
+        options: ["Concentrating and amplifying light intensity by passing it through a converging optical lens system", "Restricting the vibration of light waves to a single plane", "Bending light around obstacles", "Converting light into electrical energy"],
         correctIndex: 1,
         explanation: "Polarised light oscillates in only one plane. Polaroid sunglasses reduce glare by blocking horizontally polarised light reflected from flat surfaces like roads and water.",
       },
       {
         text: "In which part of the electromagnetic spectrum does a microwave oven operate?",
-        options: ["Infrared", "Ultraviolet", "X-ray", "Microwave (radio)"],
+        options: ["Infrared", "Near-ultraviolet and UV-A radiation used in water sterilisation", "X-ray", "Microwave (radio)"],
         correctIndex: 3,
         explanation: "Microwave ovens use microwave radiation (wavelengths ~12 cm, frequency ~2.45 GHz) to excite water molecules in food, generating heat through molecular vibration.",
       },
       {
         text: "What is constructive interference?",
-        options: ["When two waves cancel each other out", "When two waves combine to produce a larger amplitude", "When a wave is reflected at a boundary", "When a wave passes through a narrow slit"],
+        options: ["When two waves cancel each other out", "When two waves combine to produce a larger amplitude", "When a wave is reflected at a boundary", "When a wave is forced through a narrow aperture and spreads into the region beyond it"],
         correctIndex: 1,
         explanation: "Constructive interference occurs when two waves meet in phase (crests align with crests), adding together to produce a wave of greater amplitude. Destructive interference is the opposite.",
       },
@@ -4842,13 +4842,13 @@ const QUIZZES = [
       },
       {
         text: "What are neurons?",
-        options: ["Immune cells found in the brain", "Cells that store oxygen in the blood", "Specialised nerve cells that transmit electrical and chemical signals", "Blood vessels supplying the brain with nutrients"],
+        options: ["Immune cells that patrol the brain and defend against infection and inflammation", "Cells that store oxygen in the blood", "Specialised nerve cells that transmit electrical and chemical signals", "Blood vessels supplying the brain with nutrients"],
         correctIndex: 2,
         explanation: "Neurons are specialised cells with a cell body, dendrites (which receive signals), and an axon (which sends signals). The human brain contains approximately 86 billion neurons.",
       },
       {
         text: "What is the main function of the cerebellum?",
-        options: ["Regulating breathing and heart rate", "Coordinating movement, balance, and fine motor skills", "Forming long-term memories", "Processing emotions and fear responses"],
+        options: ["Regulating the automatic rhythms of breathing, heartbeat, and blood pressure", "Coordinating movement, balance, and fine motor skills", "Forming long-term memories", "Processing emotions and fear responses"],
         correctIndex: 1,
         explanation: "The cerebellum (Latin for 'little brain') coordinates voluntary movements, balance, and precision. Damage to it causes ataxia — a loss of coordination and balance.",
       },
@@ -4860,13 +4860,13 @@ const QUIZZES = [
       },
       {
         text: "What is a synapse?",
-        options: ["The fatty myelin sheath around a nerve fibre", "The tiny gap between two neurons where signals are transmitted", "The cell body of a neuron", "The nucleus of a brain cell"],
+        options: ["The fatty myelin sheath around a nerve fibre", "The tiny gap between two neurons where signals are transmitted", "The central soma or cell body of a neuron containing the nucleus and organelles", "The nucleus of a brain cell"],
         correctIndex: 1,
         explanation: "A synapse is the junction between the axon terminal of one neuron and the dendrite of another. Neurotransmitter molecules are released across this gap to carry the signal chemically.",
       },
       {
         text: "What does myelin do?",
-        options: ["Stores nutrients for neurons", "Insulates axons and significantly speeds up electrical signal transmission", "Receives incoming signals from other neurons", "Produces and stores neurotransmitters"],
+        options: ["Stores and supplies essential lipid-based nutrients to maintain healthy surrounding neurons", "Insulates axons and significantly speeds up electrical signal transmission", "Receives incoming signals from other neurons", "Produces and stores neurotransmitters"],
         correctIndex: 1,
         explanation: "Myelin is a fatty sheath wrapped around axons that acts as an insulator, increasing signal conduction speed up to ~100×. Multiple sclerosis (MS) is a disease where the immune system attacks myelin.",
       },
@@ -4884,13 +4884,13 @@ const QUIZZES = [
       },
       {
         text: "What is the blood-brain barrier?",
-        options: ["A physical membrane separating the left and right brain hemispheres", "A selective barrier that controls which substances can pass from the bloodstream into the brain", "The bony skull that protects the brain from physical impact", "The layer of cerebrospinal fluid cushioning the brain"],
+        options: ["A thin physical membrane running along the midline that fully separates the left and right cerebral hemispheres", "A selective barrier that controls which substances can pass from the bloodstream into the brain", "The bony skull that protects the brain from physical impact", "The layer of cerebrospinal fluid cushioning the brain"],
         correctIndex: 1,
         explanation: "The blood-brain barrier (BBB) is formed by tightly joined endothelial cells lining brain capillaries. It allows oxygen and glucose through but blocks most toxins and pathogens, protecting the brain's delicate environment.",
       },
       {
         text: "What is the primary role of the amygdala?",
-        options: ["Regulating hunger and thirst", "Coordinating balance and fine movement", "Processing emotions — especially fear — and forming emotional memories", "Controlling sleep-wake cycles and circadian rhythms"],
+        options: ["Regulating hunger, thirst, and other homeostatic drives through hypothalamic hormone signalling", "Coordinating balance and fine movement", "Processing emotions — especially fear — and forming emotional memories", "Controlling sleep-wake cycles and circadian rhythms"],
         correctIndex: 2,
         explanation: "The amygdala is an almond-shaped structure in the temporal lobe that detects threats, triggers fear responses, and encodes emotional memories — central to how we experience and remember emotionally significant events.",
       },
@@ -4905,61 +4905,61 @@ const QUIZZES = [
     questions: [
       {
         text: "What does PCR (Polymerase Chain Reaction) do?",
-        options: ["Sequences an entire genome in one run", "Amplifies a specific segment of DNA into billions of copies", "Edits genes at targeted locations using guide RNA", "Translates messenger RNA into protein"],
+        options: ["Determines the complete nucleotide sequence of a full genome from a single biological sample", "Amplifies a specific segment of DNA into billions of copies", "Edits genes at targeted locations using guide RNA", "Translates messenger RNA into protein"],
         correctIndex: 1,
         explanation: "PCR uses repeated heating and cooling cycles with DNA polymerase to exponentially replicate a target DNA sequence. It is essential in diagnostics (e.g. COVID-19 tests), forensics, and research.",
       },
       {
         text: "How do traditional vaccines (e.g. flu vaccines) create immunity?",
-        options: ["By injecting antibiotics that kill the pathogen", "By introducing dead, weakened, or partial pathogens to stimulate an immune response", "By providing ready-made antibodies directly into the blood", "By permanently altering the host's DNA to encode resistance"],
+        options: ["By delivering a course of broad-spectrum antibiotics that directly destroy the target pathogen", "By introducing dead, weakened, or partial pathogens to stimulate an immune response", "By providing ready-made antibodies directly into the blood", "By permanently altering the host's DNA to encode resistance"],
         correctIndex: 1,
         explanation: "Traditional vaccines use killed, attenuated, or partial pathogens to stimulate the immune system to produce antibodies and memory cells — so the body can respond swiftly if the real pathogen is encountered.",
       },
       {
         text: "What are stem cells?",
-        options: ["Cells that produce antibodies only in response to infection", "Mature specialised cells in cardiac tissue", "Undifferentiated cells capable of self-renewal and developing into many specialised cell types", "Red blood cells produced exclusively in the bone marrow"],
+        options: ["Cells that produce antibodies only in response to infection", "Fully differentiated and highly specialised cells found exclusively within cardiac muscle tissue", "Undifferentiated cells capable of self-renewal and developing into many specialised cell types", "Red blood cells produced exclusively in the bone marrow"],
         correctIndex: 2,
         explanation: "Stem cells are unspecialised cells that can divide and differentiate into various cell types. Embryonic stem cells are pluripotent (most cell types); adult stem cells have more restricted potential. They are key to regenerative medicine.",
       },
       {
         text: "What does CRISPR-Cas9 enable scientists to do?",
-        options: ["Sequence DNA 1,000× faster than earlier methods", "Edit specific genes by cutting DNA at precise, guide-RNA-directed locations", "Clone entire organisms from a single somatic cell", "Predict 3D protein structures using artificial intelligence"],
+        options: ["Read the complete nucleotide sequence of DNA fragments at speeds 1,000× faster than earlier methods", "Edit specific genes by cutting DNA at precise, guide-RNA-directed locations", "Clone entire organisms from a single somatic cell", "Predict 3D protein structures using artificial intelligence"],
         correctIndex: 1,
         explanation: "CRISPR-Cas9 uses a short guide RNA to direct the Cas9 protein to a specific DNA sequence, where it acts as molecular scissors to cut both strands. Genes can then be disrupted, corrected, or replaced.",
       },
       {
         text: "What is antibiotic resistance?",
-        options: ["A person's immune system becoming unresponsive to antibiotics", "Bacteria evolving through natural selection to survive antibiotic treatment", "Antibiotics permanently damaging the body's immune defences", "Viruses developing resistance to antibacterial drugs"],
+        options: ["A patient's immune system gradually losing its ability to respond to any antibiotic medication over repeated exposure", "Bacteria evolving through natural selection to survive antibiotic treatment", "Antibiotics permanently damaging the body's immune defences", "Viruses developing resistance to antibacterial drugs"],
         correctIndex: 1,
         explanation: "Antibiotic resistance arises when bacteria with resistance mutations survive drug treatment and proliferate. Misuse and overuse of antibiotics speeds this process, making once-treatable infections life-threatening.",
       },
       {
         text: "How do mRNA vaccines (like COVID-19 vaccines) work?",
-        options: ["By injecting weakened live virus particles", "By delivering mRNA instructions for cells to produce a viral protein that triggers an immune response", "By inserting viral DNA permanently into the host genome", "By boosting overall white blood cell production non-specifically"],
+        options: ["By administering live attenuated virus particles weakened so they cannot cause full-blown disease", "By delivering mRNA instructions for cells to produce a viral protein that triggers an immune response", "By inserting viral DNA permanently into the host genome", "By boosting overall white blood cell production non-specifically"],
         correctIndex: 1,
         explanation: "mRNA vaccines deliver messenger RNA encoding a harmless viral antigen (e.g. the spike protein). Human cells read the mRNA, produce the protein, the immune system responds and builds memory — no live virus is involved and the mRNA does not enter the cell nucleus.",
       },
       {
         text: "What is gene therapy?",
-        options: ["Using genetic data to predict future disease risk statistically", "Treating or preventing disease by correcting, adding, or replacing genes within a patient's cells", "Cloning a healthy individual to serve as an organ donor", "Producing therapeutic proteins using recombinant bacteria in bioreactors"],
+        options: ["Using large genetic databases and statistical modelling to estimate an individual's lifetime risk of heritable disease", "Treating or preventing disease by correcting, adding, or replacing genes within a patient's cells", "Cloning a healthy individual to serve as an organ donor", "Producing therapeutic proteins using recombinant bacteria in bioreactors"],
         correctIndex: 1,
         explanation: "Gene therapy introduces or alters genetic material in a patient's cells to treat disease — for example, delivering a functional copy of the CFTR gene to correct cystic fibrosis, or engineering immune cells to fight cancer (CAR-T therapy).",
       },
       {
         text: "What was the Human Genome Project?",
-        options: ["A project to sequence the complete DNA genome of all major animal species", "The international scientific collaboration that sequenced all ~3.2 billion base pairs of human DNA", "An effort to create the world's first entirely synthetic human cell", "A global database cataloguing all known human genetic diseases"],
+        options: ["A global initiative to map complete genome sequences of all major vertebrate and invertebrate animal species", "The international scientific collaboration that sequenced all ~3.2 billion base pairs of human DNA", "An effort to create the world's first entirely synthetic human cell", "A global database cataloguing all known human genetic diseases"],
         correctIndex: 1,
         explanation: "Completed in 2003, the Human Genome Project sequenced the ~3.2 billion base pairs of human DNA. It revealed ~20,000–25,000 protein-coding genes and laid the groundwork for personalised medicine and genomics.",
       },
       {
         text: "What is herd immunity?",
-        options: ["Natural immunity unique to domesticated animals", "Immunity reached when enough of a population is immune that a pathogen can no longer spread effectively", "An individual's immunity developed after surviving a severe infection", "The simultaneous mass vaccination of an entire country in a single campaign"],
+        options: ["A form of innate immunity that develops naturally only in certain breeds of domesticated farm animals over generations", "Immunity reached when enough of a population is immune that a pathogen can no longer spread effectively", "An individual's immunity developed after surviving a severe infection", "The simultaneous mass vaccination of an entire country in a single campaign"],
         correctIndex: 1,
         explanation: "Herd immunity occurs when a sufficient proportion of a population (the threshold varies by disease — ~95% for measles) is immune, so chains of transmission break and even unvaccinated individuals gain indirect protection.",
       },
       {
         text: "What are monoclonal antibodies used for?",
-        options: ["Non-specifically destroying all bacteria during sepsis", "Precisely targeting a specific antigen for use in cancer treatment, autoimmune disease therapy, or diagnostics", "Stimulating rapid T-cell proliferation in immunocompromised patients", "Inhibiting viral RNA transcription in infected cells broadly"],
+        options: ["Non-specifically eliminating all bacterial pathogens throughout the bloodstream during a life-threatening systemic infection", "Precisely targeting a specific antigen for use in cancer treatment, autoimmune disease therapy, or diagnostics", "Stimulating rapid T-cell proliferation in immunocompromised patients", "Inhibiting viral RNA transcription in infected cells broadly"],
         correctIndex: 1,
         explanation: "Monoclonal antibodies are identical antibodies produced from a single B-cell clone, engineered to bind one specific target. Examples include trastuzumab (Herceptin) for HER2+ breast cancer and adalimumab (Humira) for autoimmune conditions.",
       },
@@ -5010,7 +5010,7 @@ const QUIZZES = [
       },
       {
         text: "What does the period number in the periodic table indicate?",
-        options: ["The group (column) the element belongs to", "The highest electron energy shell occupied by the element", "The element's reactivity ranking", "The number of isotopes the element has"],
+        options: ["The numbered group or column in which the element is positioned within the periodic table layout", "The highest electron energy shell occupied by the element", "The element's reactivity ranking", "The number of isotopes the element has"],
         correctIndex: 1,
         explanation: "The period (row) number tells you which outermost electron shell is occupied. Period 2 elements (Li–Ne) fill the second shell; period 3 elements (Na–Ar) fill the third, and so on.",
       },
@@ -5022,7 +5022,7 @@ const QUIZZES = [
       },
       {
         text: "What are transition metals characteristically known for?",
-        options: ["Being the lightest elements in the table", "Having variable oxidation states and forming coloured compounds", "Being completely chemically inert at room temperature", "Existing only as gases at standard conditions"],
+        options: ["Being among the lowest-mass and least-dense elements found anywhere across the entire periodic table", "Having variable oxidation states and forming coloured compounds", "Being completely chemically inert at room temperature", "Existing only as gases at standard conditions"],
         correctIndex: 1,
         explanation: "Transition metals (groups 3–12) have partially filled d-orbitals, giving them multiple oxidation states and the ability to form brightly coloured complexes — e.g. copper(II) sulfate is vivid blue, iron(III) oxide is rust-red.",
       },
@@ -5043,13 +5043,13 @@ const QUIZZES = [
     questions: [
       {
         text: "What does the First Law of Thermodynamics state?",
-        options: ["Heat spontaneously flows from cold objects to hot ones", "Energy can be created from nothing inside a closed system", "Energy cannot be created or destroyed — only converted from one form to another", "The entropy of the universe always decreases"],
+        options: ["Heat spontaneously flows from cold objects to hot ones", "Energy can be spontaneously generated from nothing within a perfectly isolated closed thermodynamic system", "Energy cannot be created or destroyed — only converted from one form to another", "The entropy of the universe always decreases"],
         correctIndex: 2,
         explanation: "The First Law is the law of energy conservation: ΔU = Q − W (change in internal energy = heat added minus work done by the system). No energy is created or lost; it only changes form — from chemical to thermal, electrical, etc.",
       },
       {
         text: "What is entropy?",
-        options: ["The total thermal energy stored in a system", "A measure of the disorder or number of possible microstates in a system", "The temperature at which a substance changes phase", "The rate of heat conduction through a solid material"],
+        options: ["The total thermal energy stored in a system", "A measure of the disorder or number of possible microstates in a system", "The temperature at which a substance changes phase", "The rate at which thermal energy is transferred and conducted through the bulk of a solid material"],
         correctIndex: 1,
         explanation: "Entropy (S) quantifies disorder or randomness. A gas has far higher entropy than the same substance as a solid (more possible arrangements of molecules). The Second Law says entropy in an isolated system always increases.",
       },
@@ -5061,25 +5061,25 @@ const QUIZZES = [
       },
       {
         text: "What is absolute zero?",
-        options: ["0°C — the freezing point of pure water at 1 atm", "−100°C — the temperature of liquid nitrogen at 1 atm", "0 Kelvin (−273.15°C) — the theoretical minimum temperature where particles have minimum thermal energy", "−100 K — the lower boundary of the thermodynamic temperature scale"],
+        options: ["0°C — the freezing point of pure water at 1 atm", "−100°C — the exact temperature at which liquid nitrogen boils and vaporises at standard atmospheric pressure", "0 Kelvin (−273.15°C) — the theoretical minimum temperature where particles have minimum thermal energy", "−100 K — the lower boundary of the thermodynamic temperature scale"],
         correctIndex: 2,
         explanation: "Absolute zero (0 K = −273.15°C) is the theoretical lowest possible temperature. At 0 K, particles are in their quantum mechanical ground state with minimum energy. It can never be fully reached, but scientists have cooled systems to within billionths of a kelvin.",
       },
       {
         text: "What is the Carnot efficiency formula for a heat engine?",
-        options: ["It depends solely on the type of working fluid used", "η = 1 − (Tc / Th), where Tc and Th are the cold and hot reservoir temperatures in Kelvin", "100% efficiency in any ideally frictionless system", "It is determined by the mechanical design and material of the engine alone"],
+        options: ["It depends on the specific thermal properties and molecular structure of the working fluid used in the engine", "η = 1 − (Tc / Th), where Tc and Th are the cold and hot reservoir temperatures in Kelvin", "100% efficiency in any ideally frictionless system", "It is determined by the mechanical design and material of the engine alone"],
         correctIndex: 1,
         explanation: "Carnot efficiency η = 1 − (Tc/Th), where temperatures are in Kelvin. It is the maximum theoretical efficiency any heat engine operating between two temperatures can achieve. Real engines always fall short due to irreversibilities.",
       },
       {
         text: "What is enthalpy (H)?",
-        options: ["The kinetic energy of molecules in an ideal gas", "The total heat content of a system at constant pressure (H = U + PV)", "A measure of the disorder or randomness in a thermodynamic system", "The work done by a gas purely during reversible isothermal expansion"],
+        options: ["The kinetic energy of molecules in an ideal gas", "The total heat content of a system at constant pressure (H = U + PV)", "A precise numerical measure of the molecular-level disorder and randomness present within a closed thermodynamic system", "The work done by a gas purely during reversible isothermal expansion"],
         correctIndex: 1,
         explanation: "Enthalpy H = U + PV (internal energy plus pressure-volume work). For reactions at constant pressure, ΔH equals the heat exchanged. Exothermic reactions (heat released) have ΔH < 0; endothermic reactions have ΔH > 0.",
       },
       {
         text: "What does Gibbs free energy (ΔG) predict?",
-        options: ["The total energy stored in all chemical bonds of a compound", "Whether a reaction is spontaneous under constant temperature and pressure (ΔG < 0 = spontaneous)", "The rate at which a chemical reaction proceeds", "The temperature at which a pure substance melts at 1 atm"],
+        options: ["The cumulative total potential energy chemically stored within every covalent and ionic bond in a given compound", "Whether a reaction is spontaneous under constant temperature and pressure (ΔG < 0 = spontaneous)", "The rate at which a chemical reaction proceeds", "The temperature at which a pure substance melts at 1 atm"],
         correctIndex: 1,
         explanation: "ΔG = ΔH − TΔS. When ΔG < 0, a reaction is thermodynamically spontaneous; when ΔG > 0, it requires energy input. It does NOT tell you how fast a reaction goes — that is kinetics, not thermodynamics.",
       },
@@ -5097,7 +5097,7 @@ const QUIZZES = [
       },
       {
         text: "Why is a perpetual motion machine impossible?",
-        options: ["Modern materials are not yet strong enough to build one", "It would violate the First Law (creating energy) or the Second Law (100% efficiency) of thermodynamics", "It is theoretically possible but cannot be powered without an initial energy source", "It requires a frictionless vacuum environment that cannot be sustained indefinitely"],
+        options: ["The engineering materials and manufacturing technologies available today are not yet sufficiently advanced to construct one", "It would violate the First Law (creating energy) or the Second Law (100% efficiency) of thermodynamics", "It is theoretically possible but cannot be powered without an initial energy source", "It requires a frictionless vacuum environment that cannot be sustained indefinitely"],
         correctIndex: 1,
         explanation: "A perpetual motion machine of the first kind would create energy from nothing (violating the First Law); one of the second kind would convert heat entirely into work with no waste (violating the Second Law). Neither is physically possible.",
       },
@@ -9549,6 +9549,688 @@ const QUIZZES = [
       { text: "The 'Woman Yelling at Cat' meme combines two separate viral images. Who is the yelling woman?", imageUrl: "https://i.imgflip.com/345v97.jpg", options: ["Kim Kardashian from Keeping Up", "Taylor Armstrong from The Real Housewives", "Wendy Williams from her talk show", "Cardi B at an awards ceremony"], correctIndex: 1 },
     ],
   },
+
+  // ── LOGICAL REASONING ─────────────────────────────────────────
+  {
+    title: "Deductive Reasoning Basics",
+    description: "Master the fundamentals of deductive logic and valid argument forms.",
+    category: "logical-reasoning",
+    difficulty: 1,
+    questions: [
+      {
+        text: "If all birds have feathers, and a penguin is a bird, which statement must be true?",
+        options: ["Penguins can fly", "Penguins have feathers", "All feathered animals are birds", "Penguins are warm-blooded"],
+        correctIndex: 1,
+        explanation: "Deductive reasoning: all birds have feathers (premise 1) + a penguin is a bird (premise 2) → a penguin has feathers. Flight is not implied by the premises, and the third option incorrectly reverses the rule.",
+      },
+      {
+        text: "Which is a valid deductive argument?",
+        options: ["The sun rose today, so it will rise tomorrow", "All prime numbers greater than 2 are odd; 7 is prime and greater than 2, so 7 is odd", "Most students pass, so this student will pass", "It usually rains in July, so it will rain this July"],
+        correctIndex: 1,
+        explanation: "The second option is a valid deductive syllogism: a universal rule (all primes > 2 are odd) plus a specific case (7 is prime and > 2) yields a necessary conclusion (7 is odd). The others are inductive — probabilistic, not logically necessary.",
+      },
+      {
+        text: "If 'all cats are animals' and 'some animals are pets', what can we definitely conclude?",
+        options: ["All cats are pets", "Some cats are pets", "No cats are pets", "Nothing definite about cats being pets"],
+        correctIndex: 3,
+        explanation: "'Some animals are pets' does not specify which animals. It may or may not include cats. We cannot draw a definite conclusion about cats being pets from these two premises alone.",
+      },
+      {
+        text: "A implies B. B is true. Can we conclude A is true?",
+        options: ["Yes, because B is true", "No, B being true does not guarantee A", "Only if A and B imply each other", "Yes, always"],
+        correctIndex: 1,
+        explanation: "This is the 'affirming the consequent' fallacy. A→B being true and B being true does not mean A is true. Example: 'If it rains the road is wet' — a wet road could also be caused by a sprinkler.",
+      },
+      {
+        text: "If P then Q. If Q then R. What can we conclude?",
+        options: ["If P then R", "If R then P", "If Q then P", "Nothing can be concluded"],
+        correctIndex: 0,
+        explanation: "Hypothetical syllogism: P→Q and Q→R chain together by transitivity to give P→R. It works like a transitive property for conditional statements.",
+      },
+      {
+        text: "What is a 'non sequitur'?",
+        options: ["A conclusion that contradicts the premises", "A conclusion that does not follow logically from the premises", "A premise that cannot be verified", "Two contradictory premises"],
+        correctIndex: 1,
+        explanation: "'Non sequitur' is Latin for 'it does not follow'. It describes any argument where the conclusion has no logical connection to the given premises.",
+      },
+      {
+        text: "If 'no reptiles are warm-blooded' is true, which must also be true?",
+        options: ["All warm-blooded animals are mammals", "No warm-blooded animal is a reptile", "Some reptiles might be warm-blooded", "Warm-blooded animals have scales"],
+        correctIndex: 1,
+        explanation: "'No reptiles are warm-blooded' means reptiles and warm-blooded animals share no members. Reversing the statement: 'no warm-blooded animal is a reptile' is logically equivalent and must also be true.",
+      },
+      {
+        text: "What type of reasoning moves from specific observations to a general conclusion?",
+        options: ["Deductive", "Inductive", "Abductive", "Hypothetical"],
+        correctIndex: 1,
+        explanation: "Inductive reasoning generalises from specific cases — e.g., 'Every swan I have seen is white, therefore all swans are white.' Deductive reasoning moves from a general rule to a specific conclusion.",
+      },
+      {
+        text: "'Either it is raining or it is sunny. It is not raining. Therefore, it is sunny.' What reasoning rule is this?",
+        options: ["Modus Ponens", "Modus Tollens", "Disjunctive Syllogism", "Hypothetical Syllogism"],
+        correctIndex: 2,
+        explanation: "Disjunctive Syllogism: given 'A or B' and 'not A', we can conclude B. It works when exactly two options exist and one is eliminated.",
+      },
+      {
+        text: "Which of the following is a logically valid argument?",
+        options: ["All dogs bark. Rex barks. Therefore Rex is a dog.", "All dogs bark. Rex is a dog. Therefore Rex barks.", "Some dogs are brown. Rex is a dog. Therefore Rex is brown.", "All dogs bark. Rex is not a dog. Therefore Rex does not bark."],
+        correctIndex: 1,
+        explanation: "Only the second option is valid: universal rule (all dogs bark) + membership (Rex is a dog) = necessary conclusion (Rex barks). Option A commits 'affirming the consequent'. Option C is probabilistic. Option D commits 'denying the antecedent'.",
+      },
+    ],
+  },
+  {
+    title: "Number Sequences",
+    description: "Spot the pattern and find the next term in each sequence.",
+    category: "logical-reasoning",
+    difficulty: 1,
+    questions: [
+      {
+        text: "What is the next number? 2, 4, 6, 8, ___",
+        options: ["9", "10", "11", "12"],
+        correctIndex: 1,
+        explanation: "Arithmetic sequence with a common difference of +2. Adding 2 to 8 gives 10.",
+      },
+      {
+        text: "What is the next number? 1, 3, 9, 27, ___",
+        options: ["54", "63", "81", "99"],
+        correctIndex: 2,
+        explanation: "Geometric sequence — each term is multiplied by 3. 27 × 3 = 81.",
+      },
+      {
+        text: "What comes next? 0, 1, 1, 2, 3, 5, 8, ___",
+        options: ["11", "12", "13", "14"],
+        correctIndex: 2,
+        explanation: "Fibonacci sequence: each term equals the sum of the two before it. 5 + 8 = 13.",
+      },
+      {
+        text: "Find the missing number: 100, 91, 82, 73, ___",
+        options: ["64", "63", "62", "60"],
+        correctIndex: 0,
+        explanation: "The sequence decreases by 9 each step: 100→91→82→73→64.",
+      },
+      {
+        text: "What is the next term? 2, 6, 12, 20, 30, ___",
+        options: ["38", "40", "42", "44"],
+        correctIndex: 2,
+        explanation: "The differences between consecutive terms are 4, 6, 8, 10, 12 — increasing by 2 each time. 30 + 12 = 42.",
+      },
+      {
+        text: "Which number completes the sequence? 1, 4, 9, 16, 25, ___",
+        options: ["30", "36", "32", "28"],
+        correctIndex: 1,
+        explanation: "These are perfect squares: 1², 2², 3², 4², 5². The next is 6² = 36.",
+      },
+      {
+        text: "What comes next? 3, 6, 11, 18, 27, ___",
+        options: ["36", "38", "39", "40"],
+        correctIndex: 1,
+        explanation: "The differences between terms are 3, 5, 7, 9, 11 — consecutive odd numbers. Adding 11 to 27 gives 38.",
+      },
+      {
+        text: "Find the next number: 1, 2, 4, 7, 11, 16, ___",
+        options: ["21", "22", "23", "24"],
+        correctIndex: 1,
+        explanation: "The differences increase by 1 each step: 1, 2, 3, 4, 5, 6. Adding 6 to 16 gives 22.",
+      },
+      {
+        text: "What is the next term? 256, 128, 64, 32, ___",
+        options: ["8", "12", "16", "20"],
+        correctIndex: 2,
+        explanation: "Each term is halved: 256÷2=128, 128÷2=64, 64÷2=32, 32÷2=16.",
+      },
+      {
+        text: "Which value completes the sequence? 2, 3, 5, 7, 11, 13, ___",
+        options: ["15", "16", "17", "19"],
+        correctIndex: 2,
+        explanation: "These are consecutive prime numbers: 2, 3, 5, 7, 11, 13. The next prime after 13 is 17.",
+      },
+    ],
+  },
+  {
+    title: "Odd One Out",
+    description: "Identify the item that doesn't belong with the others.",
+    category: "logical-reasoning",
+    difficulty: 2,
+    questions: [
+      {
+        text: "Which word does NOT belong? Apple, Mango, Carrot, Grape",
+        options: ["Apple", "Mango", "Carrot", "Grape"],
+        correctIndex: 2,
+        explanation: "Apple, Mango, and Grape are fruits. Carrot is a vegetable — the odd one out.",
+      },
+      {
+        text: "Which does NOT belong? Hydrogen, Oxygen, Nitrogen, Water",
+        options: ["Hydrogen", "Oxygen", "Nitrogen", "Water"],
+        correctIndex: 3,
+        explanation: "Hydrogen, Oxygen, and Nitrogen are chemical elements. Water (H₂O) is a compound made from elements, not an element itself.",
+      },
+      {
+        text: "Which does NOT belong in the group? Mars, Jupiter, Moon, Saturn",
+        options: ["Mars", "Jupiter", "Moon", "Saturn"],
+        correctIndex: 2,
+        explanation: "Mars, Jupiter, and Saturn are planets in our solar system. The Moon is Earth's natural satellite — not a planet.",
+      },
+      {
+        text: "Which is the odd one out? Centimetre, Kilogram, Metre, Kilometre",
+        options: ["Centimetre", "Kilogram", "Metre", "Kilometre"],
+        correctIndex: 1,
+        explanation: "Centimetre, Metre, and Kilometre are all units of length. Kilogram is a unit of mass — it belongs to a different category of measurement.",
+      },
+      {
+        text: "Which does NOT fit? Violin, Cello, Piano, Viola",
+        options: ["Violin", "Cello", "Piano", "Viola"],
+        correctIndex: 2,
+        explanation: "Violin, Cello, and Viola are bowed string instruments (played with a bow). A piano uses hammers to strike strings, placing it in a different instrument family.",
+      },
+      {
+        text: "Which is the odd one out? Square, Circle, Triangle, Cube",
+        options: ["Square", "Circle", "Triangle", "Cube"],
+        correctIndex: 3,
+        explanation: "Square, Circle, and Triangle are all 2D (flat) shapes. A Cube is a 3D solid — it belongs to a different spatial dimension.",
+      },
+      {
+        text: "Which does NOT belong? Nurse, Doctor, Teacher, Surgeon",
+        options: ["Nurse", "Doctor", "Teacher", "Surgeon"],
+        correctIndex: 2,
+        explanation: "Nurse, Doctor, and Surgeon are all medical/healthcare professions. Teacher is an educational profession — the odd one out.",
+      },
+      {
+        text: "Which does NOT fit the pattern? Paris, London, Rome, Sahara",
+        options: ["Paris", "London", "Rome", "Sahara"],
+        correctIndex: 3,
+        explanation: "Paris, London, and Rome are capital cities of European countries. The Sahara is a desert — not a city at all.",
+      },
+      {
+        text: "Which word is the odd one out? Running, Swimming, Cycling, Sleeping",
+        options: ["Running", "Swimming", "Cycling", "Sleeping"],
+        correctIndex: 3,
+        explanation: "Running, Swimming, and Cycling are all physical exercises or sports. Sleeping is a rest activity — not a sport.",
+      },
+      {
+        text: "Which does NOT belong? Adjective, Noun, Verb, Comma",
+        options: ["Adjective", "Noun", "Verb", "Comma"],
+        correctIndex: 3,
+        explanation: "Adjective, Noun, and Verb are parts of speech (word classes). A Comma is a punctuation mark — it belongs to a different grammatical category.",
+      },
+    ],
+  },
+  {
+    title: "Analogies",
+    description: "Complete each analogy by identifying the logical relationship.",
+    category: "logical-reasoning",
+    difficulty: 2,
+    questions: [
+      {
+        text: "Pen is to Writer as Brush is to ___",
+        options: ["Canvas", "Painter", "Colour", "Museum"],
+        correctIndex: 1,
+        explanation: "A pen is the primary tool of a writer; a brush is the primary tool of a painter. The pattern is: tool → its user.",
+      },
+      {
+        text: "Fish is to Water as Bird is to ___",
+        options: ["Tree", "Air", "Nest", "Wing"],
+        correctIndex: 1,
+        explanation: "Fish live and move in water; birds live and move in air. The analogy follows: creature → its natural medium of movement.",
+      },
+      {
+        text: "Doctor is to Patient as Teacher is to ___",
+        options: ["School", "Book", "Student", "Chalk"],
+        correctIndex: 2,
+        explanation: "A doctor's primary professional relationship is with their patient; a teacher's is with their student.",
+      },
+      {
+        text: "Hot is to Cold as Day is to ___",
+        options: ["Sun", "Night", "Dark", "Moon"],
+        correctIndex: 1,
+        explanation: "Hot and Cold are antonyms; Day and Night are antonyms. The pattern is: word → its opposite.",
+      },
+      {
+        text: "Kilometre is to Distance as Kilogram is to ___",
+        options: ["Weight", "Speed", "Temperature", "Volume"],
+        correctIndex: 0,
+        explanation: "A kilometre measures distance; a kilogram measures weight (mass). Both are units of measurement for a specific physical quantity.",
+      },
+      {
+        text: "Gloves are to Hands as Helmet is to ___",
+        options: ["Hair", "Neck", "Head", "Eyes"],
+        correctIndex: 2,
+        explanation: "Gloves are protective wear for the hands; a helmet is protective wear for the head. The pattern is: protective item → the body part it protects.",
+      },
+      {
+        text: "Author is to Novel as Composer is to ___",
+        options: ["Painting", "Song", "Symphony", "Theatre"],
+        correctIndex: 2,
+        explanation: "An author creates a novel; a composer creates a symphony. Both are large formal works in their respective arts. A 'song' is too small — symphonies are the composer's equivalent of a novel.",
+      },
+      {
+        text: "Eye is to See as Ear is to ___",
+        options: ["Face", "Sound", "Hear", "Noise"],
+        correctIndex: 2,
+        explanation: "The function of the eye is to see; the function of the ear is to hear. The pattern is: sense organ → its function.",
+      },
+      {
+        text: "Caterpillar is to Butterfly as Tadpole is to ___",
+        options: ["Fish", "Frog", "Toad", "Salamander"],
+        correctIndex: 1,
+        explanation: "A caterpillar undergoes metamorphosis to become a butterfly; a tadpole undergoes metamorphosis to become a frog. Both are juvenile forms that transform into their adult counterparts.",
+      },
+      {
+        text: "Library is to Books as Gallery is to ___",
+        options: ["Music", "Sculptures", "Paintings", "Films"],
+        correctIndex: 2,
+        explanation: "A library stores and displays books; an art gallery stores and displays paintings. Both are institutions dedicated to a specific creative medium.",
+      },
+    ],
+  },
+  {
+    title: "Coding & Decoding",
+    description: "Crack the code and decode hidden messages using logical rules.",
+    category: "logical-reasoning",
+    difficulty: 2,
+    questions: [
+      {
+        text: "If A=1, B=2, C=3 ... Z=26, and CAT = 3-1-20, what is DOG in the same code?",
+        options: ["3-14-6", "4-15-7", "5-16-8", "4-14-7"],
+        correctIndex: 1,
+        explanation: "Each letter maps to its position in the alphabet. D=4, O=15, G=7, so DOG = 4-15-7.",
+      },
+      {
+        text: "If APPLE is coded as BQQMF (each letter shifted +1), what is MANGO coded as?",
+        options: ["NBOHP", "NBNHP", "OBOHP", "NBOHQ"],
+        correctIndex: 0,
+        explanation: "Each letter shifts +1 in the alphabet. M→N, A→B, N→O, G→H, O→P gives NBOHP.",
+      },
+      {
+        text: "In a code, PENCIL is written as LICNEP. How is PAPER written?",
+        options: ["REPAP", "RAPEP", "PERPA", "PRAPE"],
+        correctIndex: 0,
+        explanation: "The coding rule reverses the letters of the word. PENCIL reversed = LICNEP. PAPER reversed = REPAP.",
+      },
+      {
+        text: "If STAR is coded as RATS, what is STOP coded as?",
+        options: ["POTS", "TOPS", "SPOT", "OPTS"],
+        correctIndex: 0,
+        explanation: "The code reverses the letters. STAR reversed = RATS. STOP reversed = POTS.",
+      },
+      {
+        text: "If A=1, B=2 ... Z=26, what word does the code 2-12-21-5 spell?",
+        options: ["BLOW", "BLUE", "BLUR", "BLED"],
+        correctIndex: 1,
+        explanation: "2=B, 12=L, 21=U, 5=E. The decoded word is BLUE.",
+      },
+      {
+        text: "In a coded language: + means ×, × means −, − means ÷, ÷ means +. What is 4 + 3 × 2?",
+        options: ["10", "14", "6", "4"],
+        correctIndex: 0,
+        explanation: "Substituting actual operations: + means × and × means −. So 4 + 3 × 2 becomes 4 × 3 − 2 = 12 − 2 = 10.",
+      },
+      {
+        text: "If CHAIR is coded as DIBJS (each letter +1), what is TABLE coded as?",
+        options: ["UBCMF", "SZBKD", "VCNMG", "UBDMF"],
+        correctIndex: 0,
+        explanation: "Each letter shifts +1. T→U, A→B, B→C, L→M, E→F = UBCMF.",
+      },
+      {
+        text: "In a direction code: NORTH is coded as SOUTH, EAST as WEST. What is LEFT coded as?",
+        options: ["DOWN", "RIGHT", "ABOVE", "BACK"],
+        correctIndex: 1,
+        explanation: "The code pairs opposite directions: NORTH↔SOUTH, EAST↔WEST. Following the same rule, the opposite of LEFT is RIGHT.",
+      },
+      {
+        text: "If A=1, B=2, C=3 ... what word does 8-5-12-12-15 spell?",
+        options: ["WORLD", "HELLO", "HELIO", "HELLS"],
+        correctIndex: 1,
+        explanation: "8=H, 5=E, 12=L, 12=L, 15=O. The decoded word is HELLO.",
+      },
+      {
+        text: "If FIRE is coded as GJSF (each letter +1), and WATER as XBUFS, what is EARTH coded as?",
+        options: ["FBSUI", "ECSUI", "GCTUJ", "FCSUI"],
+        correctIndex: 0,
+        explanation: "Each letter shifts +1. E→F, A→B, R→S, T→U, H→I = FBSUI.",
+      },
+    ],
+  },
+  {
+    title: "Syllogisms",
+    description: "Apply formal syllogistic logic to draw valid conclusions from premises.",
+    category: "logical-reasoning",
+    difficulty: 3,
+    questions: [
+      {
+        text: "All mammals are warm-blooded. All whales are mammals. Conclusion: ___",
+        options: ["Some whales may be warm-blooded", "All whales are warm-blooded", "Some mammals are whales", "Warm-blooded animals are all mammals"],
+        correctIndex: 1,
+        explanation: "Barbara syllogism: all mammals are warm-blooded (M⊆W) and all whales are mammals (Wh⊆M) → all whales are warm-blooded (Wh⊆W). Both premises are universal affirmatives.",
+      },
+      {
+        text: "No reptiles are warm-blooded. All lizards are reptiles. What follows?",
+        options: ["Some lizards are warm-blooded", "No lizards are warm-blooded", "Some reptiles are lizards", "All warm-blooded animals are lizards"],
+        correctIndex: 1,
+        explanation: "Celarent syllogism: no reptiles are warm-blooded (universal negative) + all lizards are reptiles → no lizards are warm-blooded. Every lizard is a reptile, and no reptile is warm-blooded.",
+      },
+      {
+        text: "Some students are athletes. All athletes are disciplined. Which conclusion is valid?",
+        options: ["All students are disciplined", "Some students are disciplined", "No students are disciplined", "All disciplined people are students"],
+        correctIndex: 1,
+        explanation: "Some students are athletes (particular affirmative) + all athletes are disciplined → some students are disciplined. We can only say 'some' because only athlete-students are guaranteed to be disciplined.",
+      },
+      {
+        text: "All cats are animals. Some animals are dangerous. What can we conclude about cats?",
+        options: ["All cats are dangerous", "Some cats are dangerous", "No cats are dangerous", "Nothing definite about cats and danger"],
+        correctIndex: 3,
+        explanation: "'Some animals are dangerous' doesn't specify which animals. The dangerous animals may or may not include cats. No definite conclusion about cats and danger can be drawn from these premises.",
+      },
+      {
+        text: "No birds are fish. A sparrow is a bird. What follows?",
+        options: ["Sparrows cannot fly", "A sparrow is not a fish", "All birds are sparrows", "Fish cannot fly"],
+        correctIndex: 1,
+        explanation: "No birds are fish (universal negative) + a sparrow is a bird → a sparrow is not a fish. A direct application of the universal negative to a specific member of the category.",
+      },
+      {
+        text: "All P are Q. No Q are R. Which conclusion is valid?",
+        options: ["Some P are R", "No P are R", "All R are Q", "Some R are P"],
+        correctIndex: 1,
+        explanation: "All P are Q (P⊆Q) and No Q are R (Q∩R=∅). Since P is entirely within Q, and Q has no overlap with R, P and R are also completely disjoint: No P are R.",
+      },
+      {
+        text: "Some A are B. Some B are C. What can we conclude?",
+        options: ["Some A are C", "All A are C", "No A are C", "No definite conclusion about A and C"],
+        correctIndex: 3,
+        explanation: "When both premises are particular ('Some'), no definite conclusion can be drawn. The B's that overlap with A might be entirely different from the B's that overlap with C.",
+      },
+      {
+        text: "All honest people are trustworthy. Rahul is not trustworthy. What follows?",
+        options: ["Rahul is dishonest", "Rahul is honest", "Rahul might be honest", "Nothing can be concluded"],
+        correctIndex: 0,
+        explanation: "Modus Tollens: All H→T. Rahul is ¬T. Therefore Rahul is ¬H (dishonest). If he were honest he would have to be trustworthy — a contradiction with the given premise.",
+      },
+      {
+        text: "If it is not raining, Priya goes for a walk. Priya did not go for a walk. What can we conclude?",
+        options: ["It is raining", "It is not raining", "Priya is sick", "Nothing can be concluded"],
+        correctIndex: 0,
+        explanation: "Modus Tollens: ¬Rain→Walk (premise) and ¬Walk (given) → Rain (conclusion). If it were not raining, Priya would have walked. Since she didn't walk, it must be raining.",
+      },
+      {
+        text: "All squares are rectangles. No circles are rectangles. Which statement must be true?",
+        options: ["No squares are circles", "Some circles are squares", "All rectangles are squares", "Some squares are circles"],
+        correctIndex: 0,
+        explanation: "All squares are rectangles (squares⊆rectangles) and no circles are rectangles (circles∩rectangles=∅). Since squares lie within rectangles, and circles are entirely outside rectangles, squares and circles share no members: No squares are circles.",
+      },
+    ],
+  },
+  {
+    title: "Spatial & Visual Patterns",
+    description: "Reason about shapes, space, and visual sequences.",
+    category: "logical-reasoning",
+    difficulty: 3,
+    questions: [
+      {
+        text: "A square piece of paper is folded in half diagonally, then folded in half again. How many layers does it have?",
+        options: ["2", "4", "6", "8"],
+        correctIndex: 1,
+        explanation: "Each fold doubles the number of layers. Starting with 1 layer: fold once → 2 layers; fold again → 4 layers.",
+      },
+      {
+        text: "A clock shows 3:00. What is the angle between the hour and minute hands?",
+        options: ["60°", "90°", "120°", "45°"],
+        correctIndex: 1,
+        explanation: "Each hour mark represents 30° (360° ÷ 12). At 3:00 the minute hand is at 0° and the hour hand is at 90° (3 × 30°). The angle between them is 90°.",
+      },
+      {
+        text: "How many squares are there in total in a 3×3 grid (including overlapping squares of different sizes)?",
+        options: ["9", "12", "14", "16"],
+        correctIndex: 2,
+        explanation: "Count by size: nine 1×1 squares, four 2×2 squares, and one 3×3 square. Total = 9 + 4 + 1 = 14.",
+      },
+      {
+        text: "A cube is painted red on all faces and cut into 27 equal smaller cubes. How many small cubes have exactly 2 red faces?",
+        options: ["8", "10", "12", "6"],
+        correctIndex: 2,
+        explanation: "In a 3×3×3 cube: 8 corner cubes have 3 painted faces, 12 edge-centre cubes have exactly 2 painted faces, 6 face-centre cubes have 1 painted face, and 1 centre cube has none. Total = 27.",
+      },
+      {
+        text: "What is the minimum number of straight cuts through the centre of a circle to divide it into 8 equal pieces?",
+        options: ["3", "4", "7", "8"],
+        correctIndex: 0,
+        explanation: "Each cut through the centre doubles the number of pieces: 1 cut → 2 pieces, 2 cuts → 4, 3 cuts → 8. Three cuts through the centre create 8 equal slices.",
+      },
+      {
+        text: "A sequence of shapes goes: ▲ □ ▲ ▲ □ ▲ ▲ ▲ □ ▲ ▲ ▲ ___. What is the 13th shape?",
+        options: ["▲ (Triangle)", "□ (Square)", "○ (Circle)", "◇ (Diamond)"],
+        correctIndex: 0,
+        explanation: "Pattern: 1 triangle, 1 square, 2 triangles, 1 square, 3 triangles, 1 square, 4 triangles, 1 square... The 13th position falls within the '4 triangles' group (positions 10–13), so it is a triangle.",
+      },
+      {
+        text: "How many faces does a triangular prism have?",
+        options: ["4", "5", "6", "8"],
+        correctIndex: 1,
+        explanation: "A triangular prism has 2 triangular faces (the two ends) and 3 rectangular faces (the sides). Total = 5 faces.",
+      },
+      {
+        text: "You see a clock in a mirror showing 2:45. What is the actual time?",
+        options: ["9:15", "9:45", "10:15", "3:15"],
+        correctIndex: 0,
+        explanation: "To find the actual time from a clock's mirror image, subtract the mirror time from 12:00. 12:00 − 2:45 = 9:15.",
+      },
+      {
+        text: "A piece of paper is folded once and a hole is punched through both layers. How many holes appear when the paper is unfolded?",
+        options: ["1", "2", "3", "4"],
+        correctIndex: 1,
+        explanation: "One fold creates 2 layers. Punching through both layers makes 1 hole in each layer, resulting in 2 holes when the paper is unfolded.",
+      },
+      {
+        text: "Triangular numbers: 1, 3, 6, 10, 15, ___. What is the next one?",
+        options: ["18", "20", "21", "24"],
+        correctIndex: 2,
+        explanation: "Triangular numbers are formed by summing consecutive integers: 1, 1+2=3, 1+2+3=6, ..., up to 1+2+...+5=15. The next is 1+2+...+6 = 21.",
+      },
+    ],
+  },
+  {
+    title: "Blood Relations",
+    description: "Decode family relationships through multi-step logical deduction.",
+    category: "logical-reasoning",
+    difficulty: 4,
+    questions: [
+      {
+        text: "If A is the father of B, and B is the sister of C, how is A related to C?",
+        options: ["Uncle", "Grandfather", "Father", "Brother"],
+        correctIndex: 2,
+        explanation: "A is B's father. B is C's sister, meaning B and C share the same parents. Therefore A is also C's father.",
+      },
+      {
+        text: "Pointing to a woman, a man says 'Her mother is the only daughter of my mother.' How is the man related to the woman?",
+        options: ["Father", "Brother", "Maternal Uncle", "Grandfather"],
+        correctIndex: 2,
+        explanation: "'Only daughter of my mother' refers to the man's sister (assuming the man is a son). The woman's mother is the man's sister, making the man the woman's maternal uncle.",
+      },
+      {
+        text: "X's mother is Y's grandmother. Y is Z's brother. How is X related to Z?",
+        options: ["Parent", "Sibling", "Uncle or Aunt", "Grandparent"],
+        correctIndex: 2,
+        explanation: "X's mother is Y's grandmother → X is Y's parent's sibling (one generation above Y's parent). Since Z is Y's sibling (same generation as Y), X is Z's uncle or aunt.",
+      },
+      {
+        text: "Introducing a man, a woman says 'His mother is the only child of my parents.' How is the woman related to the man?",
+        options: ["Sister", "Aunt", "Mother", "Grandmother"],
+        correctIndex: 2,
+        explanation: "'Only child of my parents' refers to the woman herself. The man's mother is the woman — so the woman is the man's mother.",
+      },
+      {
+        text: "A is B's sister. C is B's mother. D is C's father. How is A related to D?",
+        options: ["Granddaughter", "Daughter", "Niece", "Great-granddaughter"],
+        correctIndex: 0,
+        explanation: "A is B's sister → they share mother C. D is C's father → D is A's grandfather. Therefore A is D's granddaughter.",
+      },
+      {
+        text: "Riya's father is Suresh's only son. How is Riya related to Suresh?",
+        options: ["Daughter", "Granddaughter", "Niece", "Cousin"],
+        correctIndex: 1,
+        explanation: "Suresh's only son is Riya's father. Therefore Suresh is Riya's paternal grandfather, and Riya is Suresh's granddaughter.",
+      },
+      {
+        text: "In a coded family language: A + B means A is the father of B; A − B means A is the wife of B; A ÷ B means A is the daughter of B. What does P ÷ Q − R mean?",
+        options: ["P is the daughter of R", "P is the wife of R", "P is the sister of R", "P is the mother of R"],
+        correctIndex: 0,
+        explanation: "P ÷ Q means P is the daughter of Q. Q − R means Q is the wife of R, so R is Q's husband and therefore P's father. Hence P is the daughter of R.",
+      },
+      {
+        text: "Riya says 'Raj is my brother.' Raj's father is Mr Sharma. How is Riya related to Mr Sharma?",
+        options: ["Wife", "Daughter", "Niece", "Sister"],
+        correctIndex: 1,
+        explanation: "Raj is Riya's brother, so they share the same parents. Raj's father is Mr Sharma, who is therefore also Riya's father. Riya is Mr Sharma's daughter.",
+      },
+      {
+        text: "Vinay introduces Poonam: 'She is the wife of the only son of my father's father.' How is Poonam related to Vinay?",
+        options: ["Sister", "Aunt", "Mother", "Grandmother"],
+        correctIndex: 2,
+        explanation: "Vinay's father's father is his grandfather. The grandfather's only son is Vinay's father. The wife of Vinay's father is Vinay's mother. So Poonam is Vinay's mother.",
+      },
+      {
+        text: "Asha is the sister of Bharat. Bharat is the brother of Chetan. Chetan is the son of Deepa. How is Asha related to Deepa?",
+        options: ["Asha is Deepa's daughter", "Asha is Deepa's niece", "Asha is Deepa's granddaughter", "Asha is Deepa's sister"],
+        correctIndex: 0,
+        explanation: "Asha, Bharat, and Chetan are all siblings (from the first two clues). Since Chetan is Deepa's son, Deepa is the mother of all three. Therefore Asha is Deepa's daughter.",
+      },
+    ],
+  },
+  {
+    title: "Critical Thinking",
+    description: "Evaluate arguments, identify flaws, and strengthen or weaken claims.",
+    category: "logical-reasoning",
+    difficulty: 4,
+    questions: [
+      {
+        text: "An advert claims: 'Our shampoo is used by 9 out of 10 celebrities!' What is the most critical flaw?",
+        options: ["It doesn't say how many celebrities were surveyed", "Celebrities have better hair than regular people", "Shampoo doesn't affect hair quality", "The claim is probably true"],
+        correctIndex: 0,
+        explanation: "Without knowing the sample size and selection method, the statistic is meaningless. '9 out of 10' from a sample of just 10 celebrities is far less convincing than from a sample of 1,000.",
+      },
+      {
+        text: "A politician says: 'My opponent was wrong about the economy, so everything they say about education must also be wrong.' This is:",
+        options: ["Ad Hominem", "Straw Man", "False Cause", "Slippery Slope"],
+        correctIndex: 0,
+        explanation: "Ad Hominem attacks the person rather than their argument. Being wrong about one topic does not logically invalidate someone's views on an unrelated topic.",
+      },
+      {
+        text: "'You either support this new law or you hate your country.' This is an example of:",
+        options: ["Hasty Generalisation", "False Dilemma", "Circular Reasoning", "Appeal to Authority"],
+        correctIndex: 1,
+        explanation: "A False Dilemma (False Dichotomy) presents only two options as if they are the only possibilities. One can oppose a specific law on principled grounds while still being patriotic.",
+      },
+      {
+        text: "Which argument best strengthens: 'The new bridge will reduce traffic on Main Street'?",
+        options: ["The bridge is aesthetically designed", "The bridge links two unconnected districts, giving cross-city commuters an alternative route", "A famous engineer designed the bridge", "Bridge construction will create jobs"],
+        correctIndex: 1,
+        explanation: "Only the second option directly explains the mechanism by which traffic on Main Street decreases — drivers who formerly had no alternative to Main Street now have one. The others are irrelevant to traffic.",
+      },
+      {
+        text: "Study: 'Towns with more ice cream shops have higher crime rates.' Conclusion: ice cream causes crime. What is wrong?",
+        options: ["Ice cream is unhealthy", "Correlation does not imply causation; population size likely explains both", "The sample was too small", "Ice cream shops don't exist everywhere"],
+        correctIndex: 1,
+        explanation: "This is the classic correlation-causation fallacy. Both ice cream sales and crime rates rise in larger, warmer cities. Population size and temperature are confounding variables — not ice cream.",
+      },
+      {
+        text: "Which best weakens: 'Students who sleep 8 hours perform better in exams, so all students must sleep exactly 8 hours'?",
+        options: ["Some students prefer to study at night", "Individual sleep needs vary — some people perform optimally on 6 or 9 hours", "Exams are stressful", "More sleep is always better"],
+        correctIndex: 1,
+        explanation: "The argument assumes a single optimal sleep duration for everyone. The weakness is that sleep needs differ between individuals — prescribing exactly 8 hours ignores this variation.",
+      },
+      {
+        text: "Someone argues: 'Millions believe in this herbal remedy, so it must work.' This is:",
+        options: ["Appeal to Nature", "Appeal to Popularity (Ad Populum)", "False Cause", "Hasty Generalisation"],
+        correctIndex: 1,
+        explanation: "Appeal to Popularity (Ad Populum) treats widespread belief as proof of truth. The number of believers does not establish the effectiveness of a remedy — only evidence does.",
+      },
+      {
+        text: "A headline: 'Children who play video games over 3 hours daily are twice as likely to have attention problems.' What is most important to ask first?",
+        options: ["What games were played?", "Did attention problems lead children to play more games, or did games cause attention problems?", "How many children were in the study?", "Which country conducted the study?"],
+        correctIndex: 1,
+        explanation: "The key issue is directionality: it could be that children who already had attention difficulties turned to longer gaming sessions (reverse causation), rather than games causing the attention problems.",
+      },
+      {
+        text: "Which statement, if true, most strengthens: 'Regular physical exercise reduces the risk of heart disease'?",
+        options: ["A controlled study found sedentary animals developed heart disease faster than active ones", "Athletes look physically fit", "Some athletes have had heart attacks", "Governments worldwide promote exercise"],
+        correctIndex: 0,
+        explanation: "The controlled animal study provides direct experimental evidence linking inactivity to heart disease — it directly supports the causal claim. The other options are anecdotal, irrelevant, or appeal to authority.",
+      },
+      {
+        text: "'This investment returned 15% every year for 5 years, so it will definitely return 15% next year.' What flaw does this contain?",
+        options: ["Assuming future performance is guaranteed by past performance", "The percentage is too high", "Financial advisors are often wrong", "Five years is a very long time"],
+        correctIndex: 0,
+        explanation: "Past returns do not guarantee future returns. This commits the fallacy of treating past performance as a definitive predictor — market conditions, economic factors, and risks change constantly.",
+      },
+    ],
+  },
+  {
+    title: "Advanced Logic Puzzles",
+    description: "Multi-step deduction and classic logic challenges requiring careful reasoning.",
+    category: "logical-reasoning",
+    difficulty: 5,
+    questions: [
+      {
+        text: "Five people (A–E) sit in a row. A is left of B. D is between A and B. C is right of B. E is at the rightmost end. What is the order left to right?",
+        options: ["A, D, B, C, E", "A, B, D, C, E", "D, A, B, C, E", "A, D, C, B, E"],
+        correctIndex: 0,
+        explanation: "A is left of B (A…B). D is between A and B → A, D, B. C is right of B → A, D, B, C. E is rightmost → A, D, B, C, E.",
+      },
+      {
+        text: "Three boxes (all mislabelled): 'Apples', 'Oranges', 'Apples+Oranges'. You pick one fruit from the 'Apples+Oranges' box and get an apple. What is the correct labelling?",
+        options: ["'Apples+Oranges'=Apples, 'Apples'=Oranges, 'Oranges'=Apples+Oranges", "'Apples+Oranges'=Oranges, 'Apples'=Apples+Oranges, 'Oranges'=Apples", "'Apples+Oranges'=Apples, 'Apples'=Apples+Oranges, 'Oranges'=Oranges", "'Apples+Oranges'=Apples+Oranges, 'Apples'=Oranges, 'Oranges'=Apples"],
+        correctIndex: 0,
+        explanation: "Since all labels are wrong, the 'Apples+Oranges' box cannot contain both — drawing an apple means it contains only apples. 'Apples' (wrongly labelled) can't hold apples or both, so it holds oranges. 'Oranges' (wrongly labelled) must hold both.",
+      },
+      {
+        text: "A man must cross a river with a fox, a chicken, and grain. The boat holds one item. Fox eats chicken; chicken eats grain if left together. Minimum number of one-way trips?",
+        options: ["5", "6", "7", "8"],
+        correctIndex: 2,
+        explanation: "Classic river-crossing: (1) Take chicken across. (2) Return alone. (3) Take fox. (4) Bring chicken back. (5) Take grain. (6) Return alone. (7) Take chicken. Total = 7 one-way trips.",
+      },
+      {
+        text: "You have two jars, each with 50 marbles (Jar A: 50 red, Jar B: 50 blue). You pick a jar at random, then a marble. What arrangement maximises your chance of picking red?",
+        options: ["All red in Jar A, all blue in Jar B (~50%)", "1 red in Jar A; 49 red + 50 blue in Jar B (~74.7%)", "25 red + 25 blue in each jar (~50%)", "49 red in Jar A; 1 red + 50 blue in Jar B (~50.5%)"],
+        correctIndex: 1,
+        explanation: "With 1 red marble in Jar A, if that jar is chosen (50% chance) you get red with 100% certainty. If Jar B is chosen (50%), the probability is 49/99 ≈ 49.5%. Total ≈ 50% + 24.75% ≈ 74.75% — the maximum possible.",
+      },
+      {
+        text: "100 prisoners, each with a unique number (1–100), must each find their number in 100 numbered boxes (50 openings allowed). What strategy gives the best collective chance?",
+        options: ["Each opens 50 random boxes", "All open the same 50 boxes", "Each starts at their own number's box and follows the chain of numbers inside", "Each opens boxes 1–50 only"],
+        correctIndex: 2,
+        explanation: "The cycle-following strategy gives about a 31% success probability — vastly better than random (~(0.5)^100 ≈ 0%). Each prisoner follows the number sequence starting from their own number, succeeding if no cycle in the permutation exceeds 50.",
+      },
+      {
+        text: "You have 12 identical balls; one is either heavier or lighter. What is the minimum number of balance-scale weighings needed to identify the odd ball AND determine whether it is heavier or lighter?",
+        options: ["2", "3", "4", "5"],
+        correctIndex: 1,
+        explanation: "Three weighings are both sufficient and necessary for 12 balls. Each weighing has 3 outcomes (left heavy, right heavy, balanced), giving 3³ = 27 distinguishable outcomes — enough to cover 12 × 2 = 24 possibilities (each ball heavier or lighter).",
+      },
+      {
+        text: "If all Bloops are Razzles and all Razzles are Lazzles, are all Bloops definitely Lazzles?",
+        options: ["Yes", "No", "Only some Bloops are Lazzles", "Cannot be determined"],
+        correctIndex: 0,
+        explanation: "By transitivity: Bloops⊆Razzles and Razzles⊆Lazzles → Bloops⊆Lazzles. This is the Barbara syllogism — all Bloops are definitely Lazzles.",
+      },
+      {
+        text: "Two guards, two doors (one to freedom, one to doom). One guard always lies, one always tells the truth. You may ask one guard one question. What do you ask?",
+        options: ["Ask one guard which door leads to freedom and take that door", "Ask one guard: 'What would the other guard say leads to freedom?' then take the OTHER door", "Ask both the same question and take the majority answer", "Ask one guard 'Are you the truth-teller?' and believe them"],
+        correctIndex: 1,
+        explanation: "If you ask the truth-teller, they truthfully report the liar's (wrong) answer. If you ask the liar, they lie about the truth-teller's (correct) answer. Either way the answer points to the WRONG door — so take the other one.",
+      },
+      {
+        text: "A snail is at the bottom of a 10-metre well. Each day it climbs 3 metres; each night it slides back 2 metres. How many days does it take to reach the top?",
+        options: ["8", "9", "10", "7"],
+        correctIndex: 0,
+        explanation: "Net progress per day = +1 m. After 7 days the snail is at 7 m. On day 8 it climbs 3 m, reaching 10 m and escaping before the night slide occurs. Answer: 8 days.",
+      },
+      {
+        text: "Using a 3-litre jug and a 5-litre jug (unlimited water supply), what is the minimum number of steps to measure exactly 4 litres?",
+        options: ["4", "5", "6", "7"],
+        correctIndex: 2,
+        explanation: "Fill 5L (1), pour into 3L (2), empty 3L (3), pour remaining 2L into 3L (4), fill 5L (5), pour from 5L into 3L until full — 5L now holds exactly 4L (6). Six steps is the minimum.",
+      },
+    ],
+  },
 ];
 
 async function main() {
@@ -9595,9 +10277,11 @@ async function main() {
   // Seed quizzes
   let quizCount = 0;
   let questionCount = 0;
+  let questionUpdated = 0;
   for (const quiz of QUIZZES) {
     const existing = await prisma.quiz.findFirst({
       where: { title: quiz.title, isOfficial: true },
+      include: { questions: true },
     });
     if (!existing) {
       const created = await prisma.quiz.create({
@@ -9625,9 +10309,26 @@ async function main() {
       quizCount++;
       questionCount += quiz.questions.length;
       void created;
+    } else {
+      // Sync options/correctIndex/explanation for existing questions (matched by text)
+      for (const q of quiz.questions) {
+        const existingQ = existing.questions.find((eq) => eq.text === q.text);
+        if (existingQ) {
+          await prisma.question.update({
+            where: { id: existingQ.id },
+            data: {
+              options: q.options,
+              correctIndex: q.correctIndex,
+              ...("explanation" in q && typeof q.explanation === "string" ? { explanation: q.explanation } : {}),
+            },
+          });
+          questionUpdated++;
+        }
+      }
     }
   }
   console.log(`✅ ${quizCount} quizzes + ${questionCount} questions seeded`);
+  if (questionUpdated > 0) console.log(`✅ ${questionUpdated} existing questions updated`);
   console.log("🎉 Seeding complete!");
 }
 

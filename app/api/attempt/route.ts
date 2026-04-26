@@ -422,6 +422,7 @@ export async function POST(req: NextRequest) {
       "artists": "Picasso",
       "musicians": "Prodigy",
       "world-languages": "Language Nerd",
+      "logical-reasoning": "Cerebrix",
     };
 
     const mysticalQuizletName = CATEGORY_MYSTICAL_MAP[quiz.category];
