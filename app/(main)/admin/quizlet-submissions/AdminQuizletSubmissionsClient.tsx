@@ -66,6 +66,7 @@ export default function AdminQuizletSubmissionsClient() {
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
   const [rejectModal, setRejectModal] = useState<{ id: string } | null>(null);
   const [rejectNote, setRejectNote] = useState("");
+  const [approveModal, setApproveModal] = useState<{ id: string; description: string; pack: string } | null>(null);
 
   const limit = 20;
 
@@ -90,13 +91,19 @@ export default function AdminQuizletSubmissionsClient() {
 
   useEffect(() => { fetchSubmissions(); }, [fetchSubmissions]);
 
-  const doAction = async (id: string, action: "approve" | "reject", adminNote?: string) => {
+  const doAction = async (
+    id: string,
+    action: "approve" | "reject",
+    adminNote?: string,
+    editedDescription?: string,
+    editedPack?: string,
+  ) => {
     setActionLoading(id);
     try {
       const res = await fetch(`/api/admin/quizlet-submissions/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, adminNote }),
+        body: JSON.stringify({ action, adminNote, description: editedDescription, pack: editedPack }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Action failed");
@@ -114,6 +121,12 @@ export default function AdminQuizletSubmissionsClient() {
     await doAction(rejectModal.id, "reject", rejectNote.trim() || undefined);
     setRejectModal(null);
     setRejectNote("");
+  };
+
+  const handleApproveSubmit = async () => {
+    if (!approveModal) return;
+    await doAction(approveModal.id, "approve", undefined, approveModal.description, approveModal.pack);
+    setApproveModal(null);
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -165,6 +178,51 @@ export default function AdminQuizletSubmissionsClient() {
               <button
                 onClick={() => { setRejectModal(null); setRejectNote(""); }}
                 className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {approveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="border border-white/10 rounded-2xl p-6 w-full max-w-lg" style={{ background: "var(--surface)" }}>
+            <h3 className="text-lg font-bold text-white mb-1">Approve Submission</h3>
+            <p className="text-sm text-gray-400 mb-5">Edit description or pack before the quizlet goes live. Nothing else is editable.</p>
+
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Description</label>
+            <textarea
+              value={approveModal.description}
+              onChange={(e) => setApproveModal({ ...approveModal, description: e.target.value.slice(0, 300) })}
+              rows={3}
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-green-500 mb-4 resize-none"
+            />
+
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Pack</label>
+            <select
+              value={approveModal.pack}
+              onChange={(e) => setApproveModal({ ...approveModal, pack: e.target.value })}
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-green-500 mb-6"
+            >
+              {Object.entries(PACK_LABELS).map(([slug, label]) => (
+                <option key={slug} value={slug} className="bg-gray-900">{label} ({slug})</option>
+              ))}
+            </select>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleApproveSubmit}
+                disabled={!!actionLoading}
+                className="flex-1 py-2.5 bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40"
+              >
+                {actionLoading ? "Approving..." : "✓ Confirm Approve"}
+              </button>
+              <button
+                onClick={() => setApproveModal(null)}
+                disabled={!!actionLoading}
+                className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm transition-colors disabled:opacity-40"
               >
                 Cancel
               </button>
@@ -239,7 +297,7 @@ export default function AdminQuizletSubmissionsClient() {
                   {s.status === "pending" && (
                     <div className="flex gap-2 shrink-0">
                       <button
-                        onClick={() => doAction(s.id, "approve")}
+                        onClick={() => setApproveModal({ id: s.id, description: s.description, pack: s.pack })}
                         disabled={!!actionLoading}
                         className="text-xs px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 rounded-lg font-semibold transition-colors disabled:opacity-40 min-w-[90px] text-center"
                       >

@@ -17,11 +17,13 @@ export async function PATCH(
 
   const { id } = await params;
 
-  let action: string, adminNote: string | undefined;
+  let action: string, adminNote: string | undefined, editedDescription: string | undefined, editedPack: string | undefined;
   try {
     const body = await req.json();
     action = body.action;
     adminNote = body.adminNote;
+    editedDescription = typeof body.description === "string" ? body.description.trim() || undefined : undefined;
+    editedPack = typeof body.pack === "string" ? body.pack.trim() || undefined : undefined;
     if (action !== "approve" && action !== "reject") throw new Error("Invalid action");
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Invalid request" }, { status: 400 });
@@ -51,17 +53,19 @@ export async function PATCH(
 
   const sellValue = SELL_VALUES[submission.rarity] ?? SELL_VALUES.common;
   const isHidden = ["secret", "unique", "impossible"].includes(submission.rarity);
+  const finalDescription = editedDescription ?? submission.description;
+  const finalPack = editedPack ?? submission.pack;
 
   await prisma.$transaction([
     prisma.quizlet.create({
       data: {
         name: submission.name,
         rarity: submission.rarity,
-        pack: submission.pack,
+        pack: finalPack,
         icon: submission.icon,
         colorFrom: submission.colorFrom,
         colorTo: submission.colorTo,
-        description: submission.description,
+        description: finalDescription,
         isHidden,
         sellValue,
         createdByUserId: submission.userId,
@@ -84,7 +88,7 @@ export async function PATCH(
         colorFrom: submission.colorFrom,
         colorTo: submission.colorTo,
         rarity: submission.rarity,
-        pack: submission.pack,
+        pack: finalPack,
       },
     },
   }).catch(() => {});
