@@ -318,24 +318,33 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
       );
     }
     case "quizlet_earned": {
-      const { quizletName, rarity, icon, colorFrom, colorTo, source } = data as {
-        quizletName: string; rarity: string; icon: string;
-        colorFrom: string; colorTo: string; source: string;
-      };
-      const animClass = RARITY_ANIM[rarity] ?? "";
+      type QData = { quizletName: string; rarity: string; icon: string; colorFrom: string; colorTo: string; source: string };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const quizlets: QData[] = Array.isArray((data as any).quizlets)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ? (data as any).quizlets
+        : [(data as QData)];
+      const allMystical = quizlets.every((q) => q.source === "mystical");
       return (
         <div className="space-y-2" style={feedFont}>
           <p className="text-sm text-gray-200 font-semibold">
-            {source === "mystical" ? "Unlocked a mystical quizlet ✨" : "Opened a pack and got:"}
+            {allMystical ? "Unlocked a mystical quizlet ✨" : "Opened a pack and got:"}
           </p>
-          <span
-            className={cn("inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-white border border-white/15", animClass)}
-            style={{ background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` }}
-          >
-            <span className="text-lg">{icon}</span>
-            <span>{quizletName}</span>
-            <span className="opacity-70 capitalize text-xs font-semibold">{rarity}</span>
-          </span>
+          <div className="flex flex-wrap gap-2">
+            {quizlets.map((q, i) => {
+              const animClass = RARITY_ANIM[q.rarity] ?? "";
+              return (
+                <span key={i}
+                  className={cn("inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-white border border-white/15", animClass)}
+                  style={{ background: `linear-gradient(135deg, ${q.colorFrom}, ${q.colorTo})` }}
+                >
+                  <span className="text-lg">{q.icon}</span>
+                  <span>{q.quizletName}</span>
+                  <span className="opacity-70 capitalize text-xs font-semibold">{q.rarity}</span>
+                </span>
+              );
+            })}
+          </div>
         </div>
       );
     }

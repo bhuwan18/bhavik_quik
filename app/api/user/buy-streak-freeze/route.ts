@@ -75,13 +75,26 @@ export async function POST() {
           message: `✨ Mystical Quizlet unlocked: "Spending Machine"! A rare achievement quizlet is now in your collection.`,
         },
       }).catch(() => {});
-      prisma.feedActivity.create({
-        data: {
-          userId: session.user.id,
-          type: "quizlet_earned",
-          data: { quizletName: spendingMachine.name, rarity: "mystical", icon: spendingMachine.icon, colorFrom: spendingMachine.colorFrom, colorTo: spendingMachine.colorTo, source: "mystical" },
-        },
-      }).catch(() => {});
+      const windowStart = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      const existingFeed = await prisma.feedActivity.findFirst({
+        where: { userId: session.user.id, type: "quizlet_earned", createdAt: { gte: windowStart } },
+        orderBy: { createdAt: "desc" },
+      });
+      const incoming = [{ quizletName: spendingMachine.name, rarity: "mystical", icon: spendingMachine.icon, colorFrom: spendingMachine.colorFrom, colorTo: spendingMachine.colorTo, source: "mystical" }];
+      if (existingFeed) {
+        const prev = existingFeed.data as Record<string, unknown>;
+        const prevArr = Array.isArray(prev.quizlets)
+          ? (prev.quizlets as typeof incoming)
+          : prev.quizletName ? [prev as typeof incoming[0]] : [];
+        await prisma.feedActivity.update({
+          where: { id: existingFeed.id },
+          data: { data: { quizlets: [...prevArr, ...incoming] } },
+        });
+      } else {
+        await prisma.feedActivity.create({
+          data: { userId: session.user.id, type: "quizlet_earned", data: { quizlets: incoming } },
+        });
+      }
     }).catch(() => {});
   }
 

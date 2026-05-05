@@ -117,16 +117,32 @@ export async function POST(req: NextRequest) {
         update: { quantity: { increment: 1 } },
       });
     }
-    // Feed: quizlet_earned activity for each newly obtained quizlet (fire-and-forget)
-    for (const q of newQuizlets) {
-      prisma.feedActivity.create({
-        data: {
-          userId: session.user.id,
-          type: "quizlet_earned",
-          data: { quizletName: q.name, rarity: q.rarity, icon: q.icon, colorFrom: q.colorFrom, colorTo: q.colorTo, source: "pack" },
-        },
-      }).catch(() => {});
-    }
+    // Feed: quizlet_earned — merge into 2-hour window (fire-and-forget)
+    (async () => {
+      const windowStart = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      const existing = await prisma.feedActivity.findFirst({
+        where: { userId: session.user.id, type: "quizlet_earned", createdAt: { gte: windowStart } },
+        orderBy: { createdAt: "desc" },
+      });
+      const incoming = newQuizlets.map((q) => ({
+        quizletName: q.name, rarity: q.rarity, icon: q.icon,
+        colorFrom: q.colorFrom, colorTo: q.colorTo, source: "pack",
+      }));
+      if (existing) {
+        const prev = existing.data as Record<string, unknown>;
+        const prevArr = Array.isArray(prev.quizlets)
+          ? (prev.quizlets as typeof incoming)
+          : prev.quizletName ? [prev as typeof incoming[0]] : [];
+        await prisma.feedActivity.update({
+          where: { id: existing.id },
+          data: { data: { quizlets: [...prevArr, ...incoming] } },
+        });
+      } else {
+        await prisma.feedActivity.create({
+          data: { userId: session.user.id, type: "quizlet_earned", data: { quizlets: incoming } },
+        });
+      }
+    })().catch(() => {});
   }
 
   // Credit back refund coins for duplicates (initial debit already applied above)
@@ -181,15 +197,31 @@ export async function POST(req: NextRequest) {
           message: `✨ Mystical Quizlet unlocked: "${mq.name}"! A rare achievement quizlet is now in your collection.`,
         })),
       }).catch(() => {});
-      for (const mq of toGrant) {
-        prisma.feedActivity.create({
-          data: {
-            userId: session.user.id,
-            type: "quizlet_earned",
-            data: { quizletName: mq.name, rarity: "mystical", icon: mq.icon, colorFrom: mq.colorFrom, colorTo: mq.colorTo, source: "mystical" },
-          },
-        }).catch(() => {});
-      }
+      (async () => {
+        const windowStart = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        const existing = await prisma.feedActivity.findFirst({
+          where: { userId: session.user.id, type: "quizlet_earned", createdAt: { gte: windowStart } },
+          orderBy: { createdAt: "desc" },
+        });
+        const incoming = toGrant.map((mq) => ({
+          quizletName: mq.name, rarity: "mystical", icon: mq.icon,
+          colorFrom: mq.colorFrom, colorTo: mq.colorTo, source: "mystical",
+        }));
+        if (existing) {
+          const prev = existing.data as Record<string, unknown>;
+          const prevArr = Array.isArray(prev.quizlets)
+            ? (prev.quizlets as typeof incoming)
+            : prev.quizletName ? [prev as typeof incoming[0]] : [];
+          await prisma.feedActivity.update({
+            where: { id: existing.id },
+            data: { data: { quizlets: [...prevArr, ...incoming] } },
+          });
+        } else {
+          await prisma.feedActivity.create({
+            data: { userId: session.user.id, type: "quizlet_earned", data: { quizlets: incoming } },
+          });
+        }
+      })().catch(() => {});
     }
   }
 

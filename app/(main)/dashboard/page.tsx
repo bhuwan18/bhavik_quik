@@ -33,7 +33,7 @@ export default async function DashboardPage() {
     },
   });
 
-  const [totalQuizlets, ownedQuizlets, latestMilestone, recentAttempts] = await Promise.all([
+  const [totalQuizlets, ownedQuizlets, latestMilestone, recentAttempts, quizzesWithAttempts] = await Promise.all([
     prisma.quizlet.count(),
     prisma.userQuizlet.count({ where: { userId: session.user.id } }),
     prisma.userMilestone.findFirst({
@@ -47,7 +47,15 @@ export default async function DashboardPage() {
       orderBy: { completedAt: "desc" },
       take: 5,
     }),
+    prisma.quiz.findMany({
+      select: { category: true, _count: { select: { attempts: true } } },
+    }),
   ]);
+
+  const categoryPlayCounts: Record<string, number> = {};
+  for (const q of quizzesWithAttempts) {
+    categoryPlayCounts[q.category] = (categoryPlayCounts[q.category] ?? 0) + q._count.attempts;
+  }
 
   const accuracy =
     user && user.totalAnswered > 0
@@ -134,7 +142,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Pick a Category ── */}
-      <CategoryGrid categoriesWithNew={[...categoriesWithNew]} totalCoinsEarned={user?.totalCoinsEarned ?? 0} />
+      <CategoryGrid categoriesWithNew={[...categoriesWithNew]} totalCoinsEarned={user?.totalCoinsEarned ?? 0} categoryPlayCounts={categoryPlayCounts} />
 
       {/* ── Stats ── */}
       <div className="flex gap-4 mb-6">

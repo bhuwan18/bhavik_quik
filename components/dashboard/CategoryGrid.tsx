@@ -8,12 +8,16 @@ import { ChevronDown, ChevronUp, Lock } from "lucide-react";
 
 const VISIBLE_COUNT = 5;
 
+const PINNED_SLUGS = ["geography", "logical-reasoning", "math", "world-languages", "grade-6"];
+
 export default function CategoryGrid({
   categoriesWithNew,
   totalCoinsEarned,
+  categoryPlayCounts,
 }: {
   categoriesWithNew: string[];
   totalCoinsEarned: number;
+  categoryPlayCounts: Record<string, number>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const newSet = new Set(categoriesWithNew);
@@ -21,12 +25,14 @@ export default function CategoryGrid({
   const isTierUnlocked = (tier: 1 | 2 | 3) =>
     totalCoinsEarned >= PREMIUM_TIER_UNLOCK_COINS[tier];
 
-  // Sort: categories with "New" badge first, then the rest in original order
-  const sorted = [...CATEGORIES].sort((a, b) => {
-    const aNew = newSet.has(a.slug) ? 0 : 1;
-    const bNew = newSet.has(b.slug) ? 0 : 1;
-    return aNew - bNew;
-  });
+  // First 5: pinned in fixed order; rest: sorted by most played globally
+  const pinned = PINNED_SLUGS
+    .map((slug) => CATEGORIES.find((c) => c.slug === slug))
+    .filter(Boolean) as (typeof CATEGORIES)[number][];
+  const rest = [...CATEGORIES]
+    .filter((c) => !PINNED_SLUGS.includes(c.slug))
+    .sort((a, b) => (categoryPlayCounts[b.slug] ?? 0) - (categoryPlayCounts[a.slug] ?? 0));
+  const sorted = [...pinned, ...rest];
 
   const visible = expanded ? sorted : sorted.slice(0, VISIBLE_COUNT);
   const hiddenCount = CATEGORIES.length - VISIBLE_COUNT;
