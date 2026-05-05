@@ -176,7 +176,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
         const sorted = [...filtered].sort(
           (a, b) => (RARITY_SORT_ORDER[a.rarity] ?? 9) - (RARITY_SORT_ORDER[b.rarity] ?? 9)
         );
-        const totalInPack = QUIZLETS_DATA.filter((q) => q.pack === p.slug && !q.isHidden).length;
+        const totalInPack = allQuizlets.filter((q) => q.pack === p.slug && !HIDDEN_RARITIES.has(q.rarity) && q.pack !== MYSTICAL_PACK).length;
         return { pack: p, owned: all.length, total: totalInPack, cards: sorted };
       })
       .filter((s) => s.cards.length > 0 || rarityFilter === "all");
@@ -246,7 +246,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
     const light = isLightColor(quizlet.colorFrom);
     return (
       <div
-        className={`relative border-2 rounded-2xl overflow-hidden ${rarityInfo.border} ${rarityInfo.glow} ${isLegendary ? "legendary-card" : ""} ${isRainbow ? "rainbow-card" : ""} ${isMystical ? "mystical-card" : ""}`}
+        className={`relative border-2 rounded-2xl overflow-hidden flex flex-col ${rarityInfo.border} ${rarityInfo.glow} ${isLegendary ? "legendary-card" : ""} ${isRainbow ? "rainbow-card" : ""} ${isMystical ? "mystical-card" : ""}`}
         style={{ background: `linear-gradient(135deg, ${quizlet.colorFrom}, ${quizlet.colorTo})` }}
       >
         {quizlet.quantity > 1 && (
@@ -254,7 +254,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
             ×{quizlet.quantity}
           </span>
         )}
-        <div className="p-4 flex flex-col items-center text-center">
+        <div className="p-4 flex flex-col items-center text-center h-full">
           <span className="text-3xl mb-2">{quizlet.icon}</span>
           <p className={`font-bold text-sm leading-tight mb-1 ${light ? "text-gray-900" : "text-white"}`}>{quizlet.name}</p>
           <span className={`text-xs font-semibold mb-3 rounded-full px-2 py-0.5 ${light ? "bg-black/15 text-gray-800" : `bg-black/30 ${rarityInfo.text}`}`}>{rarityInfo.label}</span>
