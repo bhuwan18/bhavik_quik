@@ -55,6 +55,8 @@ model User {
   tradeBids            TradeBid[]     @relation("TradeBids")
   weeklyCoins          Int     @default(0)
   weeklyCoinsWeek      String  @default("")
+  weeklyCorrect        Int     @default(0)
+  weeklyAnswered       Int     @default(0)
   dailyCoinsSpent      Int     @default(0)
   dailySpentReset      DateTime @default(now())
   isBlacksmith         Boolean   @default(false)

@@ -72,6 +72,8 @@ export async function POST(req: NextRequest) {
         streakFreezes: true,
         weeklyCoins: true,
         weeklyCoinsWeek: true,
+        weeklyCorrect: true,
+        weeklyAnswered: true,
       },
     }),
     prisma.quiz.findUnique({
@@ -201,6 +203,8 @@ export async function POST(req: NextRequest) {
         dailyCoinsEarned: isNewDay ? coinsEarned : { increment: coinsEarned },
         dailyCoinsReset: isNewDay ? now : undefined,
         weeklyCoins: weekChanged ? coinsEarned : { increment: coinsEarned },
+        weeklyCorrect: weekChanged ? score : { increment: score },
+        weeklyAnswered: weekChanged ? total : { increment: total },
         ...(weekChanged ? { weeklyCoinsWeek: currentISOWeek } : {}),
         ...(streakUpdated
           ? {

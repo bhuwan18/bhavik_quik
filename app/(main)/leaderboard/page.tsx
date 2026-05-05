@@ -23,7 +23,7 @@ function getOrderBy(sort: SortCol, dir: SortDir) {
 function sortHref(col: SortCol, currentSort: SortCol, currentDir: SortDir) {
   const newDir: SortDir =
     currentSort === col ? (currentDir === "asc" ? "desc" : "asc") : "desc";
-  const params = new URLSearchParams({ sort: col, dir: newDir, page: "1" });
+  const params = new URLSearchParams({ tab: "alltime", sort: col, dir: newDir, page: "1" });
   return `?${params}`;
 }
 
@@ -35,7 +35,7 @@ export default async function LeaderboardPage({
   const session = await auth();
   const isAdmin = session?.user?.isAdmin ?? false;
   const params = await searchParams;
-  const tab = params.tab === "weekly" ? "weekly" : "alltime";
+  const tab = params.tab === "alltime" ? "alltime" : "weekly";
   const currentWeek = getISOWeek(new Date());
   const page = Math.max(1, parseInt(params.page ?? "1", 10));
   const sort = (["coins", "correct", "quizlets", "quizzes", "followers"].includes(params.sort ?? "")
@@ -55,6 +55,7 @@ export default async function LeaderboardPage({
     id: true, name: true, image: true, email: true,
     coins: true, totalCoinsEarned: true, weeklyCoins: true,
     totalCorrect: true, totalAnswered: true,
+    weeklyCorrect: true, weeklyAnswered: true,
     lastSeenAt: true, createdAt: true, isPro: true, isMax: true, isBlacksmith: true,
     _count: { select: { ownedQuizlets: true, quizAttempts: true, followers: true } },
   } as const;
@@ -93,9 +94,9 @@ export default async function LeaderboardPage({
   // Pagination href — preserve sort/dir/tab
   function pageHref(p: number) {
     const ps = new URLSearchParams(
-      tab === "weekly"
-        ? { tab: "weekly", page: String(p) }
-        : { sort, dir, page: String(p) }
+      tab === "alltime"
+        ? { tab: "alltime", sort, dir, page: String(p) }
+        : { page: String(p) }
     );
     return `?${ps}`;
   }
@@ -117,16 +118,6 @@ export default async function LeaderboardPage({
         <Link
           href="?"
           className={`px-4 py-1.5 rounded-xl text-sm font-bold border transition-colors ${
-            tab === "alltime"
-              ? "bg-purple-500/20 border-purple-500/30 text-purple-200"
-              : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
-          }`}
-        >
-          🏆 All Time
-        </Link>
-        <Link
-          href="?tab=weekly"
-          className={`px-4 py-1.5 rounded-xl text-sm font-bold border transition-colors ${
             tab === "weekly"
               ? "bg-yellow-500/20 border-yellow-500/30 text-yellow-200"
               : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
@@ -134,10 +125,20 @@ export default async function LeaderboardPage({
         >
           📅 This Week
         </Link>
+        <Link
+          href="?tab=alltime"
+          className={`px-4 py-1.5 rounded-xl text-sm font-bold border transition-colors ${
+            tab === "alltime"
+              ? "bg-purple-500/20 border-purple-500/30 text-purple-200"
+              : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          🏆 All Time
+        </Link>
       </div>
 
-      {/* Top 3 podium — page 1 + default alltime sort only */}
-      {tab === "alltime" && page === 1 && sort === "coins" && dir === "desc" && users.length >= 3 && (
+      {/* Top 3 podium — page 1; weekly always, alltime only on default sort */}
+      {page === 1 && users.length >= 3 && (tab === "weekly" || (sort === "coins" && dir === "desc")) && (
         <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
           {([users[1], users[0], users[2]] as (typeof users)[number][]).map((user, i) => {
             const actualRank = i === 0 ? 2 : i === 1 ? 1 : 3;
@@ -176,7 +177,7 @@ export default async function LeaderboardPage({
                   {user.name ?? "Anonymous"}
                 </Link>
                 <p className="text-yellow-400 font-bold text-xs">
-                  🪙 {user.totalCoinsEarned.toLocaleString()}
+                  🪙 {(tab === "weekly" ? user.weeklyCoins : user.totalCoinsEarned).toLocaleString()}
                 </p>
                 <p className="text-gray-500 text-xs">
                   👥 {user._count.followers}
@@ -221,9 +222,13 @@ export default async function LeaderboardPage({
 
                 {/* Correct */}
                 <th className={thClass("correct", "hidden sm:table-cell")} aria-sort={sort === "correct" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("correct", sort, dir)} className="hover:text-white transition-colors">
-                    Correct{arrow("correct")}
-                  </Link>
+                  {tab === "weekly" ? (
+                    <span>Correct</span>
+                  ) : (
+                    <Link href={sortHref("correct", sort, dir)} className="hover:text-white transition-colors">
+                      Correct{arrow("correct")}
+                    </Link>
+                  )}
                 </th>
 
                 {/* Accuracy — not sortable (computed) */}
@@ -233,23 +238,35 @@ export default async function LeaderboardPage({
 
                 {/* Followers */}
                 <th className={thClass("followers", "hidden sm:table-cell")} aria-sort={sort === "followers" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("followers", sort, dir)} className="hover:text-white transition-colors">
-                    Followers{arrow("followers")}
-                  </Link>
+                  {tab === "weekly" ? (
+                    <span>Followers</span>
+                  ) : (
+                    <Link href={sortHref("followers", sort, dir)} className="hover:text-white transition-colors">
+                      Followers{arrow("followers")}
+                    </Link>
+                  )}
                 </th>
 
                 {/* Quizlets */}
                 <th className={thClass("quizlets", "hidden md:table-cell")} aria-sort={sort === "quizlets" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("quizlets", sort, dir)} className="hover:text-white transition-colors">
-                    Quizlets{arrow("quizlets")}
-                  </Link>
+                  {tab === "weekly" ? (
+                    <span>Quizlets</span>
+                  ) : (
+                    <Link href={sortHref("quizlets", sort, dir)} className="hover:text-white transition-colors">
+                      Quizlets{arrow("quizlets")}
+                    </Link>
+                  )}
                 </th>
 
                 {/* Quizzes */}
                 <th className={thClass("quizzes", "hidden md:table-cell")} aria-sort={sort === "quizzes" ? (dir === "asc" ? "ascending" : "descending") : "none"}>
-                  <Link href={sortHref("quizzes", sort, dir)} className="hover:text-white transition-colors">
-                    Quizzes{arrow("quizzes")}
-                  </Link>
+                  {tab === "weekly" ? (
+                    <span>Quizzes</span>
+                  ) : (
+                    <Link href={sortHref("quizzes", sort, dir)} className="hover:text-white transition-colors">
+                      Quizzes{arrow("quizzes")}
+                    </Link>
+                  )}
                 </th>
 
                 {isAdmin && (
@@ -262,9 +279,11 @@ export default async function LeaderboardPage({
             <tbody>
               {users.map((user, idx) => {
                 const rank = skip + idx + 1;
+                const correctCount = tab === "weekly" ? user.weeklyCorrect : user.totalCorrect;
+                const answeredCount = tab === "weekly" ? user.weeklyAnswered : user.totalAnswered;
                 const accuracy =
-                  user.totalAnswered > 0
-                    ? Math.round((user.totalCorrect / user.totalAnswered) * 100)
+                  answeredCount > 0
+                    ? Math.round((correctCount / answeredCount) * 100)
                     : 0;
                 const isCurrentUser = user.id === session?.user?.id;
                 const online = isOnline(user.lastSeenAt);
@@ -277,7 +296,7 @@ export default async function LeaderboardPage({
                   >
                     {/* Rank */}
                     <td className="px-3 md:px-4 py-3.5 text-sm">
-                      {sort === "coins" && dir === "desc" && rank <= 3 ? (
+                      {(tab === "weekly" || (sort === "coins" && dir === "desc")) && rank <= 3 ? (
                         <span className="text-base">{MEDALS[rank - 1]}</span>
                       ) : (
                         <span className="text-gray-500 font-mono text-xs">{rank}</span>
@@ -346,7 +365,7 @@ export default async function LeaderboardPage({
 
                     {/* Correct */}
                     <td className="px-3 md:px-4 py-3.5 text-sm text-green-400 text-right hidden sm:table-cell tabular-nums">
-                      {user.totalCorrect.toLocaleString()}
+                      {correctCount.toLocaleString()}
                     </td>
 
                     {/* Accuracy */}
@@ -467,7 +486,7 @@ export default async function LeaderboardPage({
           </div>
           {tab === "alltime" && (sort !== "coins" || dir !== "desc") ? (
             <Link
-              href="?"
+              href="?tab=alltime"
               className="text-xs text-purple-400 hover:text-purple-300 underline underline-offset-2"
             >
               Reset sort
