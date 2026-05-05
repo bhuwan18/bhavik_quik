@@ -54,7 +54,7 @@ export const SELL_VALUES: Record<string, number> = {
   common: 10,
   uncommon: 25,
   rare: 60,
-  epic: 150,
+  epic: 75,
   legendary: 150,
   secret: 1000,
   mystical: 500,

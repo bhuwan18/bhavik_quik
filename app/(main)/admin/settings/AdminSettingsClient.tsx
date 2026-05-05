@@ -50,14 +50,17 @@ export default function AdminSettingsClient({
   retakeCoinsEnabled: initialRetake,
   weeklyOffers: initialOffers,
   totpConfigured: initialTotpConfigured,
+  maxOpenLimitEnabled: initialMaxOpenLimit,
 }: {
   schoolHoursEnabled: boolean;
   retakeCoinsEnabled: boolean;
   weeklyOffers: WeeklyOffers;
   totpConfigured: boolean;
+  maxOpenLimitEnabled: boolean;
 }) {
   const [schoolHoursEnabled, setSchoolHoursEnabled] = useState(initialSchool);
   const [retakeCoinsEnabled, setRetakeCoinsEnabled] = useState(initialRetake);
+  const [maxOpenLimitEnabled, setMaxOpenLimitEnabled] = useState(initialMaxOpenLimit);
   const [saving, setSaving] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState("");
 
@@ -281,6 +284,48 @@ export default function AdminSettingsClient({
               {retakeCoinsEnabled ? "Enabled" : "Disabled"}
             </span>
             {saving === "retakeCoinsEnabled" && savedMsg && (
+              <span className="text-xs text-purple-300">{savedMsg}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Max Open Daily Limit */}
+        <div className="rounded-2xl border border-white/10 p-6" style={{ background: "var(--surface)" }}>
+          <div className="flex items-start justify-between gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">📦</span>
+                <h2 className="font-semibold text-base">Max Open Daily Limit</h2>
+              </div>
+              <p className="text-sm text-gray-400">
+                When enabled, users can only use the &quot;Max Open&quot; button once per pack per day (resets at IST midnight).
+                Disabling this allows unlimited Max Opens per day.
+              </p>
+            </div>
+            <SettingToggle
+              enabled={maxOpenLimitEnabled}
+              disabled={saving !== null}
+              onToggle={() =>
+                patchSetting(
+                  "maxOpenLimitEnabled",
+                  !maxOpenLimitEnabled,
+                  () => setMaxOpenLimitEnabled((v) => !v),
+                  !maxOpenLimitEnabled ? "Max Open daily limit enabled." : "Max Open daily limit disabled."
+                )
+              }
+            />
+          </div>
+          <div className="mt-4 flex items-center gap-2">
+            <span
+              className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                maxOpenLimitEnabled
+                  ? "bg-green-500/15 text-green-300 border-green-500/30"
+                  : "bg-gray-500/15 text-gray-400 border-gray-600/30"
+              }`}
+            >
+              {maxOpenLimitEnabled ? "Enabled" : "Disabled"}
+            </span>
+            {saving === "maxOpenLimitEnabled" && savedMsg && (
               <span className="text-xs text-purple-300">{savedMsg}</span>
             )}
           </div>

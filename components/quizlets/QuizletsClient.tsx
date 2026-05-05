@@ -80,6 +80,8 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
   const [quizlets, setQuizlets] = useState(ownedQuizlets);
   const [rarityFilter, setRarityFilter] = useState("all");
   const [selling, setSelling] = useState<string | null>(null);
+  const [sellingMode, setSellingMode] = useState<"one" | "all" | null>(null);
+  const [sellDialog, setSellDialog] = useState<OwnedQuizlet | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [view, setView] = useState<"mine" | "all" | "create">("mine");
 
@@ -205,17 +207,17 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
       .filter((s) => s.cards.length > 0);
   }, [allQuizlets, rarityFilter, ownedIds]);
 
-  const handleSell = async (quizlet: OwnedQuizlet) => {
-    const confirmMsg = quizlet.quantity > 1
-      ? `Sell one copy of ${quizlet.name} for ${quizlet.sellValue} coins? (${quizlet.quantity - 1} will remain)`
-      : `Sell ${quizlet.name} for ${quizlet.sellValue} coins?`;
-    if (!confirm(confirmMsg)) return;
+  const handleSell = async (quizlet: OwnedQuizlet, sellAll: boolean) => {
+    if (quizlet.quantity === 1) {
+      if (!confirm(`Sell ${quizlet.name} for ${quizlet.sellValue} coins?`)) return;
+    }
     setSelling(quizlet.id);
+    setSellingMode(sellAll ? "all" : "one");
     try {
       const res = await fetch("/api/quizlets/sell", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quizletId: quizlet.id }),
+        body: JSON.stringify({ quizletId: quizlet.id, sellAll }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -226,9 +228,11 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
         }
         setCoins((c) => c + data.coinsEarned);
         showToast(`Sold ${quizlet.name} for 🪙 ${data.coinsEarned} coins`);
+        setSellDialog(null);
       }
     } finally {
       setSelling(null);
+      setSellingMode(null);
     }
   };
 
@@ -265,7 +269,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
           <div className="w-full flex gap-1.5 mt-auto">
             {quizlet.pack !== "mystical" && (
               <button
-                onClick={() => handleSell(quizlet)}
+                onClick={() => quizlet.quantity > 1 ? setSellDialog(quizlet) : handleSell(quizlet, false)}
                 disabled={selling === quizlet.id}
                 className={`flex-1 py-1.5 text-xs rounded-lg transition-colors ${light ? "bg-black/15 hover:bg-black/25 text-gray-900" : "bg-black/30 hover:bg-black/50 text-white/80"}`}
               >
@@ -330,6 +334,57 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
       {toast && (
         <div className="fixed bottom-24 right-4 md:bottom-8 md:right-6 z-50 bg-green-500/90 text-white px-5 py-3 rounded-xl shadow-lg">
           {toast}
+        </div>
+      )}
+
+      {sellDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => { if (!selling) setSellDialog(null); }}
+        >
+          <div
+            className="bg-gray-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-white/10"
+                style={{ background: `linear-gradient(135deg, ${sellDialog.colorFrom}, ${sellDialog.colorTo})` }}
+              >
+                {sellDialog.icon}
+              </div>
+              <div>
+                <p className="font-bold text-white">{sellDialog.name}</p>
+                <p className="text-sm text-gray-400">You own ×{sellDialog.quantity}</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-400 mb-4">How many would you like to sell?</p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => handleSell(sellDialog, false)}
+                disabled={!!selling}
+                className="w-full py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-between"
+              >
+                <span>{sellingMode === "one" ? "Selling…" : "Sell one copy"}</span>
+                <span className="text-yellow-400 font-bold">🪙 {sellDialog.sellValue}</span>
+              </button>
+              <button
+                onClick={() => handleSell(sellDialog, true)}
+                disabled={!!selling}
+                className="w-full py-3 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-between"
+              >
+                <span>{sellingMode === "all" ? "Selling…" : `Sell all (×${sellDialog.quantity})`}</span>
+                <span className="font-bold text-amber-300">🪙 {sellDialog.sellValue * sellDialog.quantity}</span>
+              </button>
+              <button
+                onClick={() => setSellDialog(null)}
+                disabled={!!selling}
+                className="w-full py-2.5 rounded-xl text-gray-500 hover:text-gray-300 text-sm transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

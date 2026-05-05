@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { rollPackOpening } from "@/lib/roll";
 import { SELL_VALUES } from "@/lib/utils";
 import { getISTDateString } from "@/lib/time";
+import { getMaxOpenLimitEnabled } from "@/lib/app-settings";
 
 // Rarities that allow multiple copies per user
 const STACKABLE_RARITIES = new Set(["secret", "unique", "impossible"]);
@@ -33,10 +34,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const pack = await prisma.pack.findUnique({ where: { slug: packSlug } });
+  const [pack, maxOpenLimitEnabled] = await Promise.all([
+    prisma.pack.findUnique({ where: { slug: packSlug } }),
+    isMaxOpen ? getMaxOpenLimitEnabled() : Promise.resolve(false),
+  ]);
   if (!pack) return NextResponse.json({ error: "Pack not found" }, { status: 404 });
 
-  if (isMaxOpen) {
+  if (isMaxOpen && maxOpenLimitEnabled) {
     const existing = await prisma.packMaxOpen.findUnique({
       where: { userId_packSlug: { userId: session.user.id, packSlug } },
     });
@@ -67,7 +71,7 @@ export async function POST(req: NextRequest) {
   // Track daily spending for "Spending Machine" mystical quizlet
   const now = new Date();
 
-  if (isMaxOpen) {
+  if (isMaxOpen && maxOpenLimitEnabled) {
     await prisma.packMaxOpen.upsert({
       where: { userId_packSlug: { userId: session.user.id, packSlug } },
       create: { userId: session.user.id, packSlug, usedAt: now },

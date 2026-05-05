@@ -16,9 +16,11 @@ export async function POST(req: NextRequest) {
   if (dbUserCheck?.isLocked) return NextResponse.json({ error: "Account is locked" }, { status: 403 });
 
   let quizletId: string;
+  let sellAll = false;
   try {
     const body = await req.json();
     quizletId = body.quizletId;
+    sellAll = body.sellAll === true;
     if (typeof quizletId !== "string" || quizletId.length > 100) throw new Error("Invalid quizletId");
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
@@ -45,8 +47,21 @@ export async function POST(req: NextRequest) {
   }
 
   const sellValue = ownership.quizlet.sellValue;
+  const qty = ownership.quantity;
+
+  if (sellAll) {
+    await prisma.userQuizlet.delete({
+      where: { userId_quizletId: { userId: session.user.id, quizletId } },
+    });
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { coins: { increment: sellValue * qty } },
+    });
+    return NextResponse.json({ coinsEarned: sellValue * qty, quizletName: ownership.quizlet.name, quantityRemaining: 0 });
+  }
+
   const isStackable = STACKABLE_RARITIES.has(ownership.quizlet.rarity);
-  const quantityRemaining = isStackable && ownership.quantity > 1 ? ownership.quantity - 1 : 0;
+  const quantityRemaining = isStackable && qty > 1 ? qty - 1 : 0;
 
   if (quantityRemaining > 0) {
     await prisma.userQuizlet.update({

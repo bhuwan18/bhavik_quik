@@ -14,20 +14,21 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const settings = await prisma.appSetting.findMany({
-    where: { key: { in: ["schoolHoursEnabled", "retakeCoinsEnabled"] } },
+    where: { key: { in: ["schoolHoursEnabled", "retakeCoinsEnabled", "maxOpenLimitEnabled"] } },
   });
   const map = Object.fromEntries(settings.map((s) => [s.key, s.value]));
   const schoolHoursEnabled = map.schoolHoursEnabled !== undefined ? map.schoolHoursEnabled === "true" : true;
   const retakeCoinsEnabled = map.retakeCoinsEnabled !== undefined ? map.retakeCoinsEnabled === "true" : true;
+  const maxOpenLimitEnabled = map.maxOpenLimitEnabled !== undefined ? map.maxOpenLimitEnabled === "true" : true;
 
-  return NextResponse.json({ schoolHoursEnabled, retakeCoinsEnabled });
+  return NextResponse.json({ schoolHoursEnabled, retakeCoinsEnabled, maxOpenLimitEnabled });
 }
 
 export async function PATCH(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const ALLOWED_KEYS = ["schoolHoursEnabled", "retakeCoinsEnabled"] as const;
+  const ALLOWED_KEYS = ["schoolHoursEnabled", "retakeCoinsEnabled", "maxOpenLimitEnabled"] as const;
   type AllowedKey = (typeof ALLOWED_KEYS)[number];
 
   let body: Record<string, unknown>;

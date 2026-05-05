@@ -74,3 +74,14 @@ export async function getRetakeCoinsEnabled(): Promise<boolean> {
   });
   return setting ? setting.value === "true" : true;
 }
+
+/**
+ * Returns true if the "Max Open once per day" restriction is active.
+ * Defaults to true if the setting has never been saved.
+ */
+export async function getMaxOpenLimitEnabled(): Promise<boolean> {
+  const setting = await prisma.appSetting.findUnique({
+    where: { key: "maxOpenLimitEnabled" },
+  });
+  return setting ? setting.value === "true" : true;
+}
