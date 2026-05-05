@@ -65,6 +65,7 @@ model User {
   createdQuizlets      Quizlet[]
   friendStreaksAsA     FriendStreak[] @relation("FriendStreakA")
   friendStreaksAsB     FriendStreak[] @relation("FriendStreakB")
+  packMaxOpens         PackMaxOpen[]
 
   @@index([totalCoinsEarned])
   @@index([coins])
@@ -473,4 +474,15 @@ model QuizletSubmission {
 
   @@index([userId])
   @@index([status])
+}
+
+model PackMaxOpen {
+  id       String   @id @default(cuid())
+  userId   String
+  packSlug String
+  usedAt   DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, packSlug])
+  @@index([userId])
 }

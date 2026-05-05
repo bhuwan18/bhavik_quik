@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { rollPackOpening } from "@/lib/roll";
 import { SELL_VALUES } from "@/lib/utils";
+import { getISTDateString } from "@/lib/time";
 
 // Rarities that allow multiple copies per user
 const STACKABLE_RARITIES = new Set(["secret", "unique", "impossible"]);
@@ -20,18 +21,35 @@ export async function POST(req: NextRequest) {
 
   let packSlug: string;
   let quantity: number;
+  let isMaxOpen = false;
   try {
     const body = await req.json();
     packSlug = body.packSlug;
     if (typeof packSlug !== "string" || packSlug.length > 100) throw new Error("Invalid packSlug");
     quantity = typeof body.quantity === "number" ? Math.floor(body.quantity) : 1;
     if (quantity < 1) throw new Error("Invalid quantity");
+    isMaxOpen = body.isMaxOpen === true;
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   const pack = await prisma.pack.findUnique({ where: { slug: packSlug } });
   if (!pack) return NextResponse.json({ error: "Pack not found" }, { status: 404 });
+
+  if (isMaxOpen) {
+    const existing = await prisma.packMaxOpen.findUnique({
+      where: { userId_packSlug: { userId: session.user.id, packSlug } },
+    });
+    if (existing) {
+      const now = new Date();
+      if (getISTDateString(existing.usedAt) === getISTDateString(now)) {
+        return NextResponse.json(
+          { error: "Max Open already used for this pack today. Come back tomorrow!" },
+          { status: 429 }
+        );
+      }
+    }
+  }
 
   const totalCost = pack.cost * quantity;
 
@@ -48,6 +66,14 @@ export async function POST(req: NextRequest) {
 
   // Track daily spending for "Spending Machine" mystical quizlet
   const now = new Date();
+
+  if (isMaxOpen) {
+    await prisma.packMaxOpen.upsert({
+      where: { userId_packSlug: { userId: session.user.id, packSlug } },
+      create: { userId: session.user.id, packSlug, usedAt: now },
+      update: { usedAt: now },
+    });
+  }
   const spentResetDate = new Date(dbUser.dailySpentReset);
   const isNewSpendDay =
     now.getUTCFullYear() !== spentResetDate.getUTCFullYear() ||

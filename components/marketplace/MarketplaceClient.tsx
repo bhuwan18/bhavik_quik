@@ -10,6 +10,7 @@ type Props = {
   packs: Pack[];
   userCoins: number;
   festival: Festival | null;
+  maxOpenedToday: string[];
 };
 
 const DROP_WEIGHTS: Record<string, number> = {
@@ -53,14 +54,15 @@ function computeDropRates(packSlug: string): { rarity: string; pct: number }[] {
     .map((r) => ({ rarity: r, pct: (byRarity[r] / totalWeight) * 100 }));
 }
 
-export default function MarketplaceClient({ packs, userCoins: initialCoins, festival }: Props) {
+export default function MarketplaceClient({ packs, userCoins: initialCoins, festival, maxOpenedToday }: Props) {
   const [coins, setCoins] = useState(initialCoins);
   const [openingPack, setOpeningPack] = useState<Pack | null>(null);
   const [results, setResults] = useState<null | { results: (Record<string, unknown> & { isDuplicate: boolean })[]; coinsSpent: number; coinsRefunded: number }>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [usedMaxToday, setUsedMaxToday] = useState<Set<string>>(() => new Set(maxOpenedToday));
 
-  const handleOpen = async (pack: Pack, quantity: number = 1) => {
+  const handleOpen = async (pack: Pack, quantity: number = 1, isMaxOpen = false) => {
     const totalCost = pack.cost * quantity;
     if (coins < totalCost) {
       setError(`Not enough coins! You need ${(totalCost - coins).toLocaleString()} more.`);
@@ -73,7 +75,7 @@ export default function MarketplaceClient({ packs, userCoins: initialCoins, fest
       const res = await fetch("/api/packs/open", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packSlug: pack.slug, quantity }),
+        body: JSON.stringify({ packSlug: pack.slug, quantity, isMaxOpen }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -82,6 +84,7 @@ export default function MarketplaceClient({ packs, userCoins: initialCoins, fest
       } else {
         setCoins((c) => c - data.coinsSpent + data.coinsRefunded);
         setResults(data);
+        if (isMaxOpen) setUsedMaxToday((prev) => new Set([...prev, pack.slug]));
       }
     } catch {
       setError("Network error. Please try again.");
@@ -126,7 +129,7 @@ export default function MarketplaceClient({ packs, userCoins: initialCoins, fest
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {festivalPacks.map((pack) => (
-              <PackCard key={pack.id} pack={pack} coins={coins} onOpen={handleOpen} loading={loading} isFestival />
+              <PackCard key={pack.id} pack={pack} coins={coins} onOpen={handleOpen} loading={loading} isFestival maxOpenUsed={usedMaxToday.has(pack.slug)} />
             ))}
           </div>
         </div>
@@ -136,7 +139,7 @@ export default function MarketplaceClient({ packs, userCoins: initialCoins, fest
       <h2 className="text-xl font-bold text-white mb-4">All Packs</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {regularPacks.map((pack) => (
-          <PackCard key={pack.id} pack={pack} coins={coins} onOpen={handleOpen} loading={loading} />
+          <PackCard key={pack.id} pack={pack} coins={coins} onOpen={handleOpen} loading={loading} maxOpenUsed={usedMaxToday.has(pack.slug)} />
         ))}
       </div>
 
@@ -159,13 +162,14 @@ export default function MarketplaceClient({ packs, userCoins: initialCoins, fest
 }
 
 function PackCard({
-  pack, coins, onOpen, loading, isFestival,
+  pack, coins, onOpen, loading, isFestival, maxOpenUsed,
 }: {
   pack: Pack;
   coins: number;
-  onOpen: (pack: Pack, quantity: number) => void;
+  onOpen: (pack: Pack, quantity: number, isMaxOpen?: boolean) => void;
   loading: boolean;
   isFestival?: boolean;
+  maxOpenUsed?: boolean;
 }) {
   const canAfford = (n: number) => coins >= pack.cost * n;
   const maxCount = Math.floor(coins / pack.cost);
@@ -279,17 +283,17 @@ function PackCard({
 
               {/* Max */}
               <button
-                onClick={() => onOpen(pack, maxCount)}
-                disabled={loading || maxCount < 2}
+                onClick={() => onOpen(pack, maxCount, true)}
+                disabled={loading || maxCount < 2 || maxOpenUsed}
                 className={`py-2 rounded-lg font-bold text-xs transition-all ${
-                  maxCount >= 2
+                  maxCount >= 2 && !maxOpenUsed
                     ? "bg-white/20 text-white hover:bg-white/30 active:scale-[0.97]"
                     : "bg-white/10 text-white/30 cursor-not-allowed"
                 }`}
               >
                 Max
                 <span className="block text-[10px] font-normal opacity-70">
-                  {maxCount >= 2 ? `×${maxCount}` : "×1"}
+                  {maxOpenUsed ? "Used today" : maxCount >= 2 ? `×${maxCount}` : "×1"}
                 </span>
               </button>
             </div>
