@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { verify } from "otplib";
 import { prisma } from "@/lib/db";
 import type { Session } from "next-auth";
 
 function adminOnly(session: Session | null): boolean {
   return !!(session?.user?.id && (session.user as { isAdmin?: boolean }).isAdmin);
+}
+
+async function validateTotp(code: string): Promise<boolean> {
+  const setting = await prisma.appSetting.findUnique({ where: { key: "adminTotpSecret" } });
+  if (!setting) return false;
+  const result = await verify({ token: code, secret: setting.value });
+  return result.valid;
 }
 
 export async function PATCH(
@@ -18,14 +26,25 @@ export async function PATCH(
 
   const { id } = await params;
 
-  let action: string, adminNote: string | undefined;
+  let action: string, adminNote: string | undefined, totpCode: string | undefined;
   try {
     const body = await req.json();
     action = body.action;
     adminNote = body.adminNote;
+    totpCode = body.totpCode;
     if (action !== "approve" && action !== "reject") throw new Error("Invalid action");
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Invalid request" }, { status: 400 });
+  }
+
+  if (action === "approve") {
+    if (!totpCode) {
+      return NextResponse.json({ error: "Missing authenticator code" }, { status: 400 });
+    }
+    const valid = await validateTotp(totpCode);
+    if (!valid) {
+      return NextResponse.json({ error: "Invalid or expired authenticator code" }, { status: 401 });
+    }
   }
 
   const payment = await prisma.paymentRequest.findUnique({

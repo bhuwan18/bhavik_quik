@@ -39,6 +39,9 @@ export default function AdminPaymentsClient() {
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
   const [rejectModal, setRejectModal] = useState<{ id: string } | null>(null);
   const [rejectNote, setRejectNote] = useState("");
+  const [approveDialog, setApproveDialog] = useState<{ id: string } | null>(null);
+  const [approveTotpCode, setApproveTotpCode] = useState("");
+  const [approveTotpError, setApproveTotpError] = useState("");
 
   const limit = 20;
 
@@ -63,20 +66,22 @@ export default function AdminPaymentsClient() {
 
   useEffect(() => { fetchPayments(); }, [fetchPayments]);
 
-  const doAction = async (id: string, action: "approve" | "reject", adminNote?: string) => {
+  const doAction = async (id: string, action: "approve" | "reject", adminNote?: string, totpCode?: string): Promise<boolean> => {
     setActionLoading(id);
     try {
       const res = await fetch(`/api/admin/payments/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, adminNote }),
+        body: JSON.stringify({ action, adminNote, totpCode }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Action failed");
       showToast(action === "approve" ? "Payment approved" : "Payment rejected", true);
       fetchPayments();
+      return true;
     } catch (e: unknown) {
       showToast(e instanceof Error ? e.message : "Error", false);
+      return false;
     } finally {
       setActionLoading(null);
     }
@@ -87,6 +92,18 @@ export default function AdminPaymentsClient() {
     await doAction(rejectModal.id, "reject", rejectNote.trim() || undefined);
     setRejectModal(null);
     setRejectNote("");
+  };
+
+  const handleApproveSubmit = async () => {
+    if (!approveDialog) return;
+    const ok = await doAction(approveDialog.id, "approve", undefined, approveTotpCode);
+    if (ok) {
+      setApproveDialog(null);
+      setApproveTotpCode("");
+      setApproveTotpError("");
+    } else {
+      setApproveTotpError("Invalid or expired authenticator code");
+    }
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -140,6 +157,41 @@ export default function AdminPaymentsClient() {
               </button>
               <button
                 onClick={() => { setRejectModal(null); setRejectNote(""); }}
+                className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve 2FA modal */}
+      {approveDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 w-full max-w-md" style={{ background: "var(--surface)" }}>
+            <h3 className="text-lg font-bold text-white mb-3">Confirm Approval</h3>
+            <p className="text-sm text-gray-400 mb-4">Enter your authenticator code to approve this payment.</p>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={approveTotpCode}
+              onChange={(e) => { setApproveTotpCode(e.target.value.replace(/\D/g, "")); setApproveTotpError(""); }}
+              placeholder="6-digit code"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm text-center tracking-widest focus:outline-none focus:border-green-500 mb-3"
+            />
+            {approveTotpError && <p className="text-red-400 text-xs mb-3">{approveTotpError}</p>}
+            <div className="flex gap-3">
+              <button
+                onClick={handleApproveSubmit}
+                disabled={approveTotpCode.length !== 6 || !!actionLoading}
+                className="flex-1 py-2.5 bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40"
+              >
+                {actionLoading ? "Working..." : "✓ Approve"}
+              </button>
+              <button
+                onClick={() => { setApproveDialog(null); setApproveTotpCode(""); setApproveTotpError(""); }}
                 className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm transition-colors"
               >
                 Cancel
@@ -213,11 +265,11 @@ export default function AdminPaymentsClient() {
                 {p.status === "pending" && (
                   <div className="flex gap-2 shrink-0">
                     <button
-                      onClick={() => doAction(p.id, "approve")}
+                      onClick={() => { setApproveDialog({ id: p.id }); setApproveTotpCode(""); setApproveTotpError(""); }}
                       disabled={!!actionLoading}
                       className="text-xs px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 rounded-lg font-semibold transition-colors disabled:opacity-40 min-w-[90px] text-center"
                     >
-                      {actionLoading === p.id ? "Working..." : "✓ Approve"}
+                      ✓ Approve
                     </button>
                     <button
                       onClick={() => setRejectModal({ id: p.id })}
