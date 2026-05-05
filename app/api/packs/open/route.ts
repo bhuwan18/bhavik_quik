@@ -117,8 +117,8 @@ export async function POST(req: NextRequest) {
         update: { quantity: { increment: 1 } },
       });
     }
-    // Feed: quizlet_earned — merge into 2-hour window (fire-and-forget)
-    (async () => {
+    // Feed: quizlet_earned — merge into 2-hour window (awaited to prevent race conditions)
+    try {
       const windowStart = new Date(Date.now() - 2 * 60 * 60 * 1000);
       const existing = await prisma.feedActivity.findFirst({
         where: { userId: session.user.id, type: "quizlet_earned", createdAt: { gte: windowStart } },
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
           data: { userId: session.user.id, type: "quizlet_earned", data: { quizlets: incoming } },
         });
       }
-    })().catch(() => {});
+    } catch {}
   }
 
   // Credit back refund coins for duplicates (initial debit already applied above)
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
           message: `✨ Mystical Quizlet unlocked: "${mq.name}"! A rare achievement quizlet is now in your collection.`,
         })),
       }).catch(() => {});
-      (async () => {
+      try {
         const windowStart = new Date(Date.now() - 2 * 60 * 60 * 1000);
         const existing = await prisma.feedActivity.findFirst({
           where: { userId: session.user.id, type: "quizlet_earned", createdAt: { gte: windowStart } },
@@ -221,7 +221,7 @@ export async function POST(req: NextRequest) {
             data: { userId: session.user.id, type: "quizlet_earned", data: { quizlets: incoming } },
           });
         }
-      })().catch(() => {});
+      } catch {}
     }
   }
 

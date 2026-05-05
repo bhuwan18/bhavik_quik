@@ -622,6 +622,7 @@ export async function POST(req: NextRequest) {
       prisma.quizAttempt.count({ where: { quizId } }),
       prisma.quizAttempt.groupBy({
         by: ["quizId"],
+        where: { completedAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
         _count: { id: true },
         orderBy: { _count: { id: "desc" } },
         take: 1,

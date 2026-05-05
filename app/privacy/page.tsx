@@ -52,7 +52,7 @@ export default function PrivacyPage() {
             <p>
               We use a session cookie to keep you signed in (managed by NextAuth.js). Your app preferences —
               such as sidebar state, music settings, and the daily splash screen flag — are stored in your
-              browser's localStorage and never sent to our servers.
+              browser&apos;s localStorage and never sent to our servers.
             </p>
           </section>
 
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
             <h2 className="text-white/80 font-semibold mb-2">8. Children</h2>
             <p>
               BittsQuiz is intended for school-age users and above. We do not knowingly collect data from
-              children under 13 without appropriate consent. If you believe a minor's data has been collected
+              children under 13 without appropriate consent. If you believe a minor&apos;s data has been collected
               improperly, contact us via the feedback form.
             </p>
           </section>

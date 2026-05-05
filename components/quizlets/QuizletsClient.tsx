@@ -769,7 +769,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
                       <p className="text-sm font-semibold text-white truncate">{sub.name}</p>
                       <p className="text-xs text-gray-500 capitalize">{sub.rarity} · {sub.pack}</p>
                       {sub.adminNote && (
-                        <p className="text-xs text-gray-400 mt-0.5 italic">"{sub.adminNote}"</p>
+                        <p className="text-xs text-gray-400 mt-0.5 italic">&quot;{sub.adminNote}&quot;</p>
                       )}
                     </div>
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${

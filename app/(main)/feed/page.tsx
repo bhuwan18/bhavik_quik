@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, MessageCircle, ChevronDown, Send, Trophy, Flame, Star, Package, RotateCcw, Users, Play, Hammer } from "lucide-react";
@@ -551,8 +551,7 @@ function CommentsPanel({
                 {displayText && <span className="text-xs text-gray-400 break-words" style={{ fontFamily: "var(--font-nunito), var(--font-jakarta), sans-serif" }}>{displayText}</span>}
               </div>
               {gifUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={gifUrl} alt="gif" className="mt-1 rounded-lg max-w-[200px] max-h-[150px] object-contain block" />
+                <Image src={gifUrl} alt="gif" width={200} height={150} unoptimized className="mt-1 rounded-lg max-w-[200px] max-h-[150px] object-contain block" />
               )}
               {soundUrl && soundSlug && <SoundButton slug={soundSlug} url={soundUrl} />}
               <p className="text-[10px] text-gray-600 mt-0.5">{timeAgo(c.createdAt)}</p>
@@ -861,9 +860,10 @@ export default function FeedPage() {
     setActivities((prev) => prev.map((a) => a.id === id ? { ...a, reactions } : a));
   };
 
-  const filtered = activeFilter === "all"
-    ? activities
-    : activities.filter((a) => a.type === activeFilter);
+  const filtered = useMemo(
+    () => activeFilter === "all" ? activities : activities.filter((a) => a.type === activeFilter),
+    [activeFilter, activities]
+  );
 
   return (
     <div className="p-4 pb-24 md:p-8 md:pb-8 max-w-2xl mx-auto">

@@ -13,13 +13,20 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
   const session = await auth();
   const email = session?.user?.email ?? "";
 
+  // Fetch user flags and quiz category in parallel
+  const [userFlags, quizBasic, schoolHoursEnabled] = await Promise.all([
+    session?.user?.id
+      ? prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { schoolAccessOverride: true, isLocked: true, totalCoinsEarned: true },
+        })
+      : Promise.resolve(null),
+    prisma.quiz.findUnique({ where: { id }, select: { category: true } }),
+    getSchoolHoursEnabled(),
+  ]);
+
   // School hours + locked check for Oberoi students
   if (session?.user?.id) {
-    const userFlags = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { schoolAccessOverride: true, isLocked: true },
-    });
-
     if (userFlags?.isLocked) {
       return (
         <div className="p-8 max-w-2xl mx-auto">
@@ -33,7 +40,6 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
     }
 
     const isOberoi = email.endsWith(SCHOOL_EMAIL_DOMAIN);
-    const schoolHoursEnabled = await getSchoolHoursEnabled();
     if (isOberoi && !userFlags?.schoolAccessOverride && schoolHoursEnabled && isSchoolHours()) {
         return (
           <div className="p-8 max-w-2xl mx-auto">
@@ -51,15 +57,10 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
   }
 
   // Premium category check
-  const quizCategorySlug = (await prisma.quiz.findUnique({ where: { id }, select: { category: true } }))?.category;
-  const quizCat = CATEGORIES.find((c) => c.slug === quizCategorySlug);
+  const quizCat = CATEGORIES.find((c) => c.slug === quizBasic?.category);
   if (quizCat && "premiumTier" in quizCat && session?.user?.id) {
     const premiumTier = quizCat.premiumTier as 1 | 2 | 3;
-    const userData = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { totalCoinsEarned: true },
-    });
-    const totalCoinsEarned = userData?.totalCoinsEarned ?? 0;
+    const totalCoinsEarned = userFlags?.totalCoinsEarned ?? 0;
     if (totalCoinsEarned < PREMIUM_TIER_UNLOCK_COINS[premiumTier]) {
       const tierName = PREMIUM_TIER_NAMES[premiumTier];
       const required = PREMIUM_TIER_UNLOCK_COINS[premiumTier];

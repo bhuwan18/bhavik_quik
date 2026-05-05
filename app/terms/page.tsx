@@ -43,7 +43,7 @@ export default function TermsPage() {
               <li>Exploit bugs, glitches, or unintended mechanics to gain coins or quizlets unfairly</li>
               <li>Use automated scripts, bots, or any tools to manipulate scores or quiz attempts</li>
               <li>Share account credentials or allow others to use your account</li>
-              <li>Attempt to access or modify other users' data</li>
+              <li>Attempt to access or modify other users&apos; data</li>
               <li>Submit false or misleading payment information</li>
               <li>Harass other users through the trading, feed, or feedback systems</li>
             </ul>
@@ -80,7 +80,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-white/80 font-semibold mb-2">7. Service Availability</h2>
             <p>
-              BittsQuiz is provided "as is." We make no guarantees about uptime, data retention, or
+              BittsQuiz is provided &quot;as is.&quot; We make no guarantees about uptime, data retention, or
               uninterrupted access. We are not liable for any loss of progress, coins, or quizlets
               resulting from outages, bugs, or maintenance.
             </p>

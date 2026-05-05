@@ -33,7 +33,7 @@ export default async function DashboardPage() {
     },
   });
 
-  const [totalQuizlets, ownedQuizlets, latestMilestone, recentAttempts, quizzesWithAttempts] = await Promise.all([
+  const [totalQuizlets, ownedQuizlets, latestMilestone, recentAttempts, categoryPlayRows, newQuizzes, userAttemptRows] = await Promise.all([
     prisma.quizlet.count(),
     prisma.userQuizlet.count({ where: { userId: session.user.id } }),
     prisma.userMilestone.findFirst({
@@ -47,14 +47,27 @@ export default async function DashboardPage() {
       orderBy: { completedAt: "desc" },
       take: 5,
     }),
+    prisma.$queryRaw<{ category: string; attempts: number }[]>`
+      SELECT q.category, COALESCE(COUNT(qa.id), 0)::int AS attempts
+      FROM "Quiz" q
+      LEFT JOIN "QuizAttempt" qa ON qa."quizId" = q.id
+      GROUP BY q.category
+    `,
     prisma.quiz.findMany({
-      select: { category: true, _count: { select: { attempts: true } } },
+      where: { isNew: true },
+      select: { id: true, category: true },
+    }),
+    prisma.quizAttempt.findMany({
+      where: { userId: session.user.id },
+      select: { quizId: true },
+      orderBy: { completedAt: "desc" },
+      take: 2000,
     }),
   ]);
 
   const categoryPlayCounts: Record<string, number> = {};
-  for (const q of quizzesWithAttempts) {
-    categoryPlayCounts[q.category] = (categoryPlayCounts[q.category] ?? 0) + q._count.attempts;
+  for (const row of categoryPlayRows) {
+    categoryPlayCounts[row.category] = row.attempts;
   }
 
   const accuracy =
@@ -75,17 +88,7 @@ export default async function DashboardPage() {
     now.getUTCDate() !== resetDate.getUTCDate();
   const dailyEarned = isNewDay ? 0 : (user?.dailyCoinsEarned ?? 0);
 
-  // Find categories that have new quizzes the user hasn't attempted
-  const newQuizzes = await prisma.quiz.findMany({
-    where: { isNew: true },
-    select: { id: true, category: true },
-  });
-  const userAttemptedIds = new Set(
-    (await prisma.quizAttempt.findMany({
-      where: { userId: session.user.id },
-      select: { quizId: true },
-    })).map((a) => a.quizId)
-  );
+  const userAttemptedIds = new Set(userAttemptRows.map((a) => a.quizId));
   const categoriesWithNew = new Set(
     newQuizzes.filter((q) => !userAttemptedIds.has(q.id)).map((q) => q.category)
   );

@@ -67,6 +67,7 @@ model User {
   friendStreaksAsB     FriendStreak[] @relation("FriendStreakB")
 
   @@index([totalCoinsEarned])
+  @@index([coins])
   @@index([lastSeenAt])
   @@index([createdAt])
 }
@@ -87,6 +88,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -122,6 +124,7 @@ model Quiz {
   @@index([category])
   @@index([authorId])
   @@index([isOfficial])
+  @@index([isNew])
 }
 
 model Question {

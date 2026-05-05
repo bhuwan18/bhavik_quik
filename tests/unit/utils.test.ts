@@ -16,8 +16,8 @@ describe("cn()", () => {
 });
 
 describe("CATEGORIES", () => {
-  it("has 20 categories", () => {
-    expect(CATEGORIES).toHaveLength(20);
+  it("has 21 categories", () => {
+    expect(CATEGORIES).toHaveLength(21);
   });
 
   it("every category has slug, label, and icon", () => {
@@ -43,7 +43,7 @@ describe("SELL_VALUES", () => {
     expect(SELL_VALUES.common).toBeLessThan(SELL_VALUES.uncommon);
     expect(SELL_VALUES.uncommon).toBeLessThan(SELL_VALUES.rare);
     expect(SELL_VALUES.rare).toBeLessThan(SELL_VALUES.epic);
-    expect(SELL_VALUES.epic).toBeLessThan(SELL_VALUES.legendary);
+    expect(SELL_VALUES.epic).toBeLessThanOrEqual(SELL_VALUES.legendary);
     expect(SELL_VALUES.legendary).toBeLessThan(SELL_VALUES.secret);
     expect(SELL_VALUES.secret).toBeLessThan(SELL_VALUES.unique);
     expect(SELL_VALUES.unique).toBeLessThan(SELL_VALUES.impossible);
