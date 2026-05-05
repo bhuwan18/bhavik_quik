@@ -275,7 +275,7 @@ export default function QuizletsClient({ ownedQuizlets, userCoins: initialCoins,
             {quizlet.pack !== "mystical" && (
               <Link
                 href="/trading"
-                className="py-1.5 px-2 text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-600 rounded-lg transition-colors"
+                className={`py-1.5 px-2 text-xs rounded-lg transition-colors ${light ? "bg-black/15 hover:bg-black/25 text-gray-900" : "bg-black/30 hover:bg-black/50 text-white/80"}`}
                 title="List for Trade"
               >
                 Trade
