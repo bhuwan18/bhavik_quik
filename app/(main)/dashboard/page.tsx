@@ -57,7 +57,7 @@ export default async function DashboardPage() {
     prisma.quiz.findMany({
       where: {
         isNew: true,
-        quizAttempts: { none: { userId: session.user.id } },
+        attempts: { none: { userId: session.user.id } },
       },
       select: { id: true, category: true },
     }),
