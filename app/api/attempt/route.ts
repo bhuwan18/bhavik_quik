@@ -294,10 +294,12 @@ export async function POST(req: NextRequest) {
       prisma.userFollow.findMany({
         where: { followingId: session.user.id },
         select: { followerId: true },
+        take: 500,
       }),
       prisma.userFollow.findMany({
         where: { followerId: session.user.id },
         select: { followingId: true },
+        take: 500,
       }),
     ]);
 
@@ -510,21 +512,22 @@ export async function POST(req: NextRequest) {
   // ── Non-coin milestone checks (quizzes, answers, categories, streak) ─────────
   // Fire-and-forget: these don't affect the response, so don't block the client
   Promise.resolve().then(async () => {
-    const [totalQuizzes, totalCorrectCount, distinctAttemptRows, earnedNonCoin] = await Promise.all([
+    const [totalQuizzes, totalCorrectCount, categoryCountRows, earnedNonCoin] = await Promise.all([
       prisma.quizAttempt.count({ where: { userId: session.user.id } }),
       prisma.correctAnswer.count({ where: { userId: session.user.id } }),
-      prisma.quizAttempt.findMany({
-        where: { userId: session.user.id },
-        select: { quizId: true, quiz: { select: { category: true } } },
-        distinct: ["quizId"],
-      }),
+      prisma.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(DISTINCT q.category)::bigint AS count
+        FROM "QuizAttempt" qa
+        JOIN "Quiz" q ON qa."quizId" = q.id
+        WHERE qa."userId" = ${session.user.id}
+      `,
       prisma.userMilestone.findMany({
         where: { userId: session.user.id, milestoneType: { not: "coins" } },
         select: { threshold: true, milestoneType: true },
       }),
     ]);
 
-    const distinctCategoryCount = new Set(distinctAttemptRows.map((r) => r.quiz.category)).size;
+    const distinctCategoryCount = Number(categoryCountRows[0]?.count ?? 0);
 
     const earnedByType = new Map<string, Set<number>>();
     for (const m of earnedNonCoin) {

@@ -17,10 +17,10 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     if (!session?.user) return;
-    fetch("/api/notifications")
+    fetch("/api/notifications/unread-count")
       .then((r) => r.json())
-      .then((data: { isRead: boolean }[]) => {
-        if (Array.isArray(data)) setUnreadCount(data.filter((n) => !n.isRead).length);
+      .then((data: { count?: number }) => {
+        if (typeof data.count === "number") setUnreadCount(data.count);
       })
       .catch(() => {});
   }, [session, pathname]);

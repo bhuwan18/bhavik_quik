@@ -6,7 +6,7 @@ export default async function MilestonesPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const [earned, user, totalQuizzes, totalCorrectAnswers, distinctQuizIds] = await Promise.all([
+  const [earned, user, totalQuizzes, totalCorrectAnswers, categoryCountRows] = await Promise.all([
     prisma.userMilestone.findMany({
       where: { userId: session.user.id },
       select: { threshold: true, earnedAt: true, milestoneType: true },
@@ -18,20 +18,15 @@ export default async function MilestonesPage() {
     }),
     prisma.quizAttempt.count({ where: { userId: session.user.id } }),
     prisma.correctAnswer.count({ where: { userId: session.user.id } }),
-    prisma.quizAttempt.findMany({
-      where: { userId: session.user.id },
-      select: { quizId: true },
-      distinct: ["quizId"],
-    }),
+    prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(DISTINCT q.category)::bigint AS count
+      FROM "QuizAttempt" qa
+      JOIN "Quiz" q ON qa."quizId" = q.id
+      WHERE qa."userId" = ${session.user.id}
+    `,
   ]);
 
-  const quizCategories = distinctQuizIds.length > 0
-    ? await prisma.quiz.findMany({
-        where: { id: { in: distinctQuizIds.map((q) => q.quizId) } },
-        select: { category: true },
-      })
-    : [];
-  const distinctCategories = new Set(quizCategories.map((q) => q.category)).size;
+  const distinctCategories = Number(categoryCountRows[0]?.count ?? 0);
 
   return (
     <MilestonesClient

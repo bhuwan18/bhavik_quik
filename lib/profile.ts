@@ -94,7 +94,7 @@ export async function getProfileData(
     followingCount,
     followRecord,
     recentQuizletRows,
-    allAttempts,
+    categoryCounts,
     lastAttempt,
     ownedCount,
     rawStreaks,
@@ -118,10 +118,15 @@ export async function getProfileData(
       take: 6,
       include: { quizlet: { select: { name: true, icon: true, rarity: true } } },
     }),
-    prisma.quizAttempt.findMany({
-      where: { userId: profileUserId },
-      select: { quiz: { select: { category: true } } },
-    }),
+    // Aggregate at DB level — avoids fetching thousands of attempt rows
+    prisma.$queryRaw<{ category: string; count: bigint }[]>`
+      SELECT q.category, COUNT(*)::bigint AS count
+      FROM "QuizAttempt" qa
+      JOIN "Quiz" q ON qa."quizId" = q.id
+      WHERE qa."userId" = ${profileUserId}
+      GROUP BY q.category
+      ORDER BY count DESC
+    `,
     prisma.quizAttempt.findFirst({
       where: { userId: profileUserId },
       orderBy: { completedAt: "desc" },
@@ -139,6 +144,7 @@ export async function getProfileData(
             userB: { select: { id: true, name: true, image: true } },
           },
           orderBy: { count: "desc" },
+          take: 50,
         })
       : Promise.resolve([] as Array<{ id: string; userAId: string; userBId: string; count: number; longestCount: number; lastStreakDate: string | null; userA: { id: string; name: string | null; image: string | null }; userB: { id: string; name: string | null; image: string | null } }>),
     canCheckStreak
@@ -148,13 +154,8 @@ export async function getProfileData(
       : Promise.resolve(null),
   ]);
 
-  // Most-played category
-  const catCounts: Record<string, number> = {};
-  for (const a of allAttempts) {
-    catCounts[a.quiz.category] = (catCounts[a.quiz.category] ?? 0) + 1;
-  }
-  const mostPlayedSlug =
-    Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  // Most-played category — already sorted DESC by count from DB
+  const mostPlayedSlug = categoryCounts[0]?.category ?? null;
   const mostPlayedCategory = mostPlayedSlug
     ? (CATEGORIES.find((c) => c.slug === mostPlayedSlug)?.label ?? mostPlayedSlug)
     : null;

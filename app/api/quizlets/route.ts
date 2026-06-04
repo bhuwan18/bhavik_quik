@@ -8,7 +8,17 @@ export async function GET() {
 
   const owned = await prisma.userQuizlet.findMany({
     where: { userId: session.user.id },
-    include: { quizlet: true },
+    select: {
+      obtainedAt: true,
+      quantity: true,
+      quizlet: {
+        select: {
+          id: true, name: true, icon: true, rarity: true, pack: true,
+          colorFrom: true, colorTo: true, description: true,
+          sellValue: true, isHidden: true,
+        },
+      },
+    },
     orderBy: { obtainedAt: "desc" },
   });
 

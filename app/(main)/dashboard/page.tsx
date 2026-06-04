@@ -33,7 +33,7 @@ export default async function DashboardPage() {
     },
   });
 
-  const [totalQuizlets, ownedQuizlets, latestMilestone, recentAttempts, categoryPlayRows, newQuizzes, userAttemptRows] = await Promise.all([
+  const [totalQuizlets, ownedQuizlets, latestMilestone, recentAttempts, categoryPlayRows, unplayedNewQuizzes] = await Promise.all([
     prisma.quizlet.count(),
     prisma.userQuizlet.count({ where: { userId: session.user.id } }),
     prisma.userMilestone.findFirst({
@@ -53,15 +53,13 @@ export default async function DashboardPage() {
       LEFT JOIN "QuizAttempt" qa ON qa."quizId" = q.id
       GROUP BY q.category
     `,
+    // Only new quizzes the user hasn't played yet — avoids fetching 2000 attempt rows
     prisma.quiz.findMany({
-      where: { isNew: true },
+      where: {
+        isNew: true,
+        quizAttempts: { none: { userId: session.user.id } },
+      },
       select: { id: true, category: true },
-    }),
-    prisma.quizAttempt.findMany({
-      where: { userId: session.user.id },
-      select: { quizId: true },
-      orderBy: { completedAt: "desc" },
-      take: 2000,
     }),
   ]);
 
@@ -88,10 +86,7 @@ export default async function DashboardPage() {
     now.getUTCDate() !== resetDate.getUTCDate();
   const dailyEarned = isNewDay ? 0 : (user?.dailyCoinsEarned ?? 0);
 
-  const userAttemptedIds = new Set(userAttemptRows.map((a) => a.quizId));
-  const categoriesWithNew = new Set(
-    newQuizzes.filter((q) => !userAttemptedIds.has(q.id)).map((q) => q.category)
-  );
+  const categoriesWithNew = new Set(unplayedNewQuizzes.map((q) => q.category));
 
   const firstName = session.user.name?.split(" ")[0] ?? "Player";
 

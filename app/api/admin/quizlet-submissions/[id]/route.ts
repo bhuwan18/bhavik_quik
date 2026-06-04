@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import type { Session } from "next-auth";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SELL_VALUES } from "@/lib/utils";
+import { QUIZLETS_CACHE_TAG } from "@/app/(main)/quizlets/page";
 
 function adminOnly(session: Session | null): boolean {
   return !!(session?.user?.id && (session.user as { isAdmin?: boolean }).isAdmin);
@@ -76,6 +78,8 @@ export async function PATCH(
       data: { status: "approved", adminNote: adminNote ?? null },
     }),
   ]);
+
+  revalidateTag(QUIZLETS_CACHE_TAG);
 
   // Publish creation event to creator's feed (followers will see it)
   prisma.feedActivity.create({

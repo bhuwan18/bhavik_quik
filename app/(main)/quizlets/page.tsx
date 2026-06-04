@@ -1,6 +1,19 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { unstable_cache } from "next/cache";
 import QuizletsClient from "@/components/quizlets/QuizletsClient";
+
+export const QUIZLETS_CACHE_TAG = "quizlets-data";
+
+const getAllQuizlets = unstable_cache(
+  async () => prisma.quizlet.findMany({
+    where: { isHidden: false },
+    orderBy: [{ pack: "asc" }, { rarity: "asc" }],
+    include: { createdBy: { select: { id: true, name: true } } },
+  }),
+  ["all-quizlets"],
+  { revalidate: 3600, tags: [QUIZLETS_CACHE_TAG] }
+);
 
 export default async function QuizletsPage() {
   const session = await auth();
@@ -13,18 +26,25 @@ export default async function QuizletsPage() {
   const [owned, dbUser, allQuizlets, monthlySubmissions] = await Promise.all([
     prisma.userQuizlet.findMany({
       where: { userId: session.user.id },
-      include: { quizlet: { include: { createdBy: { select: { id: true, name: true } } } } },
+      select: {
+        obtainedAt: true,
+        quantity: true,
+        quizlet: {
+          select: {
+            id: true, name: true, icon: true, rarity: true, pack: true,
+            colorFrom: true, colorTo: true, description: true,
+            isHidden: true, sellValue: true,
+            createdBy: { select: { id: true, name: true } },
+          },
+        },
+      },
       orderBy: { obtainedAt: "desc" },
     }),
     prisma.user.findUnique({
       where: { id: session.user.id },
       select: { coins: true, isBlacksmith: true, blacksmithExpiresAt: true },
     }),
-    prisma.quizlet.findMany({
-      where: { isHidden: false },
-      orderBy: [{ pack: "asc" }, { rarity: "asc" }],
-      include: { createdBy: { select: { id: true, name: true } } },
-    }),
+    getAllQuizlets(),
     prisma.quizletSubmission.findMany({
       where: { userId: session.user.id, createdAt: { gte: monthStart, lt: monthEnd } },
       select: { rarity: true, status: true },

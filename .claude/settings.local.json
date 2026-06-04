@@ -8,7 +8,17 @@
       "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue\")",
       "Bash(powershell -Command \"Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object {$_LocalPort -in @\\(3000,3001,3002,3003\\)} | Select-Object LocalPort,OwningProcess\")",
       "Bash(taskkill /F /PID 30284)",
-      "Bash(netstat -ano)"
+      "Bash(netstat -ano)",
+      "Bash(node -e ' *)",
+      "Bash(winget install *)",
+      "Bash(winget search *)",
+      "Bash(pg_dump --version)",
+      "PowerShell(pg_dump --version)",
+      "Read(//c/Program Files/PostgreSQL/**)",
+      "PowerShell(Get-ChildItem \"C:\\\\\", \"D:\\\\\", \"$env:LOCALAPPDATA\", \"$env:ProgramFiles\", \"${env:ProgramFiles\\(x86\\)}\" -Recurse -Filter \"pg_dump.exe\" -ErrorAction SilentlyContinue | Select-Object -First 5 FullName)",
+      "PowerShell($env:PGPASSWORD=\"npg_sIoxnrQHGd63\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\pg_dump.exe\" \"postgresql://neondb_owner@ep-muddy-lake-adb8azl9.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require\" --format=custom --file=\"D:\\\\VS_WS\\\\bhavik_quik\\\\backup.dump\" 2>&1; $env:PGPASSWORD=\"\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\VS_WS\\\\bhavik_quik\" -Directory)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

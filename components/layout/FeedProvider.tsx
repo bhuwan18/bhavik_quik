@@ -26,22 +26,21 @@ export function FeedProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(id);
   }, [pathname]);
 
-  // On every route change, check if there's a newer feed activity than last seen
+  // Check once on session load whether there's a newer feed activity than last seen
   useEffect(() => {
-    if (!session?.user || pathname === "/feed") return;
+    if (!session?.user) return;
 
-    fetch("/api/feed?page=1")
+    fetch("/api/feed/latest")
       .then((r) => r.json())
-      .then((data: { activities?: { createdAt: string }[] }) => {
-        if (!Array.isArray(data.activities) || data.activities.length === 0) return;
+      .then((data: { createdAt?: string }) => {
+        if (!data.createdAt) return;
         const lastSeen = localStorage.getItem(STORAGE_KEY);
-        const newest = data.activities[0].createdAt;
-        if (!lastSeen || new Date(newest) > new Date(lastSeen)) {
+        if (!lastSeen || new Date(data.createdAt) > new Date(lastSeen)) {
           setHasNew(true);
         }
       })
       .catch(() => {});
-  }, [session, pathname]);
+  }, [session]);
 
   return (
     <FeedContext.Provider value={hasNew}>

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { verify } from "otplib";
 import { prisma } from "@/lib/db";
-import { getCurrentWeekStart, getWeeklyOffers, OFFER_KEY_MAP, type WeeklyOfferType } from "@/lib/app-settings";
+import { APP_SETTINGS_CACHE_TAG, getCurrentWeekStart, getWeeklyOffers, OFFER_KEY_MAP, type WeeklyOfferType } from "@/lib/app-settings";
 
 // Public GET — used by the shop page (no auth required)
 export async function GET() {
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
     update: { value: offerValue },
     create: { key: OFFER_KEY_MAP[offerType], value: offerValue },
   });
+  revalidateTag(APP_SETTINGS_CACHE_TAG);
 
   // Broadcast notification to all non-admin users (fire-and-forget)
   const label = TYPE_LABELS[offerType];
@@ -124,6 +126,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   await prisma.appSetting.deleteMany({ where: { key: OFFER_KEY_MAP[type as WeeklyOfferType] } });
+  revalidateTag(APP_SETTINGS_CACHE_TAG);
 
   return NextResponse.json({ ok: true });
 }

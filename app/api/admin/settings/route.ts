@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { APP_SETTINGS_CACHE_TAG } from "@/lib/app-settings";
 
 async function requireAdmin() {
   const session = await auth();
@@ -53,5 +55,6 @@ export async function PATCH(req: NextRequest) {
     )
   );
 
+  revalidateTag(APP_SETTINGS_CACHE_TAG);
   return NextResponse.json(Object.fromEntries(updates.map((k) => [k, body[k]])));
 }
