@@ -33,7 +33,7 @@ export default async function QuizletsPage() {
           select: {
             id: true, name: true, icon: true, rarity: true, pack: true,
             colorFrom: true, colorTo: true, description: true,
-            isHidden: true, sellValue: true,
+            isHidden: true, sellValue: true, createdByUserId: true,
             createdBy: { select: { id: true, name: true } },
           },
         },
