@@ -27,7 +27,7 @@ export function getCurrentWeekStart(): Date {
   return start;
 }
 
-const CACHE_OPTS = { revalidate: 300, tags: [APP_SETTINGS_CACHE_TAG] } as const;
+const CACHE_OPTS = { revalidate: 300, tags: [APP_SETTINGS_CACHE_TAG] as string[] };
 
 /** Returns all active weekly offers (only those whose weekStart matches the current Sun–Sat week). */
 export const getWeeklyOffers = unstable_cache(
