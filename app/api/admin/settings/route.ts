@@ -55,6 +55,6 @@ export async function PATCH(req: NextRequest) {
     )
   );
 
-  revalidateTag(APP_SETTINGS_CACHE_TAG);
+  revalidateTag(APP_SETTINGS_CACHE_TAG, "default");
   return NextResponse.json(Object.fromEntries(updates.map((k) => [k, body[k]])));
 }

@@ -79,7 +79,7 @@ export async function PATCH(
     }),
   ]);
 
-  revalidateTag(QUIZLETS_CACHE_TAG);
+  revalidateTag(QUIZLETS_CACHE_TAG, "default");
 
   // Publish creation event to creator's feed (followers will see it)
   prisma.feedActivity.create({

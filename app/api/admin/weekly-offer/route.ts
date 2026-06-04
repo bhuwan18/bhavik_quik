@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     update: { value: offerValue },
     create: { key: OFFER_KEY_MAP[offerType], value: offerValue },
   });
-  revalidateTag(APP_SETTINGS_CACHE_TAG);
+  revalidateTag(APP_SETTINGS_CACHE_TAG, "default");
 
   // Broadcast notification to all non-admin users (fire-and-forget)
   const label = TYPE_LABELS[offerType];
@@ -126,7 +126,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   await prisma.appSetting.deleteMany({ where: { key: OFFER_KEY_MAP[type as WeeklyOfferType] } });
-  revalidateTag(APP_SETTINGS_CACHE_TAG);
+  revalidateTag(APP_SETTINGS_CACHE_TAG, "default");
 
   return NextResponse.json({ ok: true });
 }
