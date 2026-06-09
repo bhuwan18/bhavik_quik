@@ -31,39 +31,38 @@ export async function GET(req: NextRequest) {
       user: { select: { id: true, name: true, image: true, lastSeenAt: true } },
       _count: { select: { likes: true, comments: true } },
       likes: { where: { userId: session.user.id }, select: { id: true } },
-      // Only fetch current user's own reactions — counts come from grouped query below
-      reactions: { where: { userId: session.user.id }, select: { emoji: true } },
     },
   });
 
   const hasMore = raw.length > PAGE_SIZE;
   const page_activities = raw.slice(0, PAGE_SIZE);
 
-  // Fetch per-emoji counts for this page's activities in one grouped query
+  // Single query: per-emoji counts + whether the current user reacted
   const activityIds = page_activities.map((a) => a.id);
-  const reactionCounts = activityIds.length > 0
-    ? await prisma.$queryRaw<{ activityId: string; emoji: string; count: bigint }[]>`
-        SELECT "activityId", emoji, COUNT(*)::bigint AS count
+  const userId = session.user.id;
+  const reactionRows = activityIds.length > 0
+    ? await prisma.$queryRaw<{ activityId: string; emoji: string; count: bigint; userReacted: boolean }[]>`
+        SELECT "activityId", emoji, COUNT(*)::bigint AS count,
+               BOOL_OR("userId" = ${userId}) AS "userReacted"
         FROM "FeedReaction"
         WHERE "activityId" = ANY(${activityIds}::text[])
         GROUP BY "activityId", emoji
       `
     : [];
 
-  // Build a lookup: activityId → emoji → count
-  const countMap = new Map<string, Map<string, number>>();
-  for (const row of reactionCounts) {
-    if (!countMap.has(row.activityId)) countMap.set(row.activityId, new Map());
-    countMap.get(row.activityId)!.set(row.emoji, Number(row.count));
+  // Build a lookup: activityId → emoji → { count, userReacted }
+  const reactionMap = new Map<string, Map<string, { count: number; userReacted: boolean }>>();
+  for (const row of reactionRows) {
+    if (!reactionMap.has(row.activityId)) reactionMap.set(row.activityId, new Map());
+    reactionMap.get(row.activityId)!.set(row.emoji, { count: Number(row.count), userReacted: row.userReacted });
   }
 
   const activities = page_activities.map((a) => {
-    const myReacted = new Set(a.reactions.map((r) => r.emoji));
-    const emojiCounts = countMap.get(a.id) ?? new Map<string, number>();
-    const reactions = Array.from(emojiCounts.entries()).map(([emoji, count]) => ({
+    const emojiData = reactionMap.get(a.id) ?? new Map<string, { count: number; userReacted: boolean }>();
+    const reactions = Array.from(emojiData.entries()).map(([emoji, { count, userReacted }]) => ({
       emoji,
       count,
-      reacted: myReacted.has(emoji),
+      reacted: userReacted,
     }));
 
     return {

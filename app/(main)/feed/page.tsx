@@ -319,19 +319,36 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
     }
     case "quizlet_earned": {
       type QData = { quizletName: string; rarity: string; icon: string; colorFrom: string; colorTo: string; source: string };
+      type QDeduped = QData & { count: number };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const quizlets: QData[] = Array.isArray((data as any).quizlets)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ? (data as any).quizlets
         : [(data as QData)];
+
+      // Deduplicate by name, preserving first-seen order
+      const deduped: QDeduped[] = [];
+      for (const q of quizlets) {
+        const existing = deduped.find((x) => x.quizletName === q.quizletName);
+        if (existing) existing.count++;
+        else deduped.push({ ...q, count: 1 });
+      }
+
       const allMystical = quizlets.every((q) => q.source === "mystical");
+      const SHOW_MAX = 6;
+      const visible = deduped.slice(0, SHOW_MAX);
+      const overflow = deduped.length - SHOW_MAX;
+      const totalPacks = quizlets.length;
+
       return (
         <div className="space-y-2" style={feedFont}>
           <p className="text-sm text-gray-200 font-semibold">
-            {allMystical ? "Unlocked a mystical quizlet ✨" : "Opened a pack and got:"}
+            {allMystical
+              ? "Unlocked a mystical quizlet ✨"
+              : `Opened a pack and got ${deduped.length} unique quizlet${deduped.length !== 1 ? "s" : ""}${totalPacks > deduped.length ? ` (${totalPacks} total)` : ""}:`}
           </p>
           <div className="flex flex-wrap gap-2">
-            {quizlets.map((q, i) => {
+            {visible.map((q, i) => {
               const animClass = RARITY_ANIM[q.rarity] ?? "";
               return (
                 <span key={i}
@@ -340,10 +357,20 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
                 >
                   <span className="text-lg">{q.icon}</span>
                   <span>{q.quizletName}</span>
+                  {q.count > 1 && (
+                    <span className="bg-black/30 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
+                      ×{q.count}
+                    </span>
+                  )}
                   <span className="opacity-70 capitalize text-xs font-semibold">{q.rarity}</span>
                 </span>
               );
             })}
+            {overflow > 0 && (
+              <span className="inline-flex items-center px-3 py-2 rounded-xl text-sm font-bold text-gray-400 bg-white/8 border border-white/15">
+                +{overflow} more
+              </span>
+            )}
           </div>
         </div>
       );
