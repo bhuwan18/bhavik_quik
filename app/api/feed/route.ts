@@ -15,15 +15,17 @@ export async function GET(req: NextRequest) {
   const following = await prisma.userFollow.findMany({
     where: { followerId: session.user.id },
     select: { followingId: true },
-    take: 1000,
+    take: 200,
   });
   const followingIds = following.map((f) => f.followingId);
 
   // Include own activities + followed users' activities
   const allUserIds = [session.user.id, ...followingIds];
 
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
   const raw = await prisma.feedActivity.findMany({
-    where: { userId: { in: allUserIds } },
+    where: { userId: { in: allUserIds }, createdAt: { gte: thirtyDaysAgo } },
     orderBy: { createdAt: "desc" },
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE + 1,
