@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, MessageCircle, ChevronDown, Send, Trophy, Flame, Star, Package, RotateCcw, Users, Play, Hammer } from "lucide-react";
@@ -138,6 +138,10 @@ function SoundButton({ slug, url }: { slug: string; url: string }) {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { resolve(); }, [slug]);
+
+  useEffect(() => {
+    return () => { audioRef.current?.pause(); audioRef.current = null; };
+  }, []);
 
   const toggle = () => {
     if (isPlaying) { audioRef.current?.pause(); audioRef.current = null; setState("idle"); return; }
@@ -550,14 +554,19 @@ function CommentsPanel({
     inputRef.current?.focus();
   };
 
+  const processedComments = useMemo(
+    () => comments.map((c) => ({ ...c, ...extractRichContent(c.text) })),
+    [comments]
+  );
+
   return (
     <div className="mt-3 pt-3 border-t border-white/8 space-y-3">
       {loading && <p className="text-xs text-gray-500 text-center py-2">Loading comments…</p>}
       {!loading && comments.length === 0 && initialCount === 0 && (
         <p className="text-xs text-gray-600 text-center py-1">No comments yet — be the first! 👀</p>
       )}
-      {comments.map((c) => {
-        const { displayText, gifUrl, soundUrl, soundSlug } = extractRichContent(c.text);
+      {processedComments.map((c) => {
+        const { displayText, gifUrl, soundUrl, soundSlug } = c;
         return (
           <div key={c.id} className="flex gap-2">
             {c.user.image ? (
@@ -615,7 +624,7 @@ function CommentsPanel({
 
 // ─── FeedCard ─────────────────────────────────────────────────────────────────
 
-function FeedCard({ item, index, onLike, onReact }: {
+const FeedCard = memo(function FeedCard({ item, index, onLike, onReact }: {
   item: FeedItem;
   index: number;
   onLike: (id: string, liked: boolean, count: number) => void;
@@ -669,7 +678,10 @@ function FeedCard({ item, index, onLike, onReact }: {
   };
 
   // Merge existing reactions into a full map (show all 4 always)
-  const reactionMap = new Map(item.reactions.map((r) => [r.emoji, r]));
+  const reactionMap = useMemo(
+    () => new Map(item.reactions.map((r) => [r.emoji, r])),
+    [item.reactions]
+  );
 
   return (
     <div
@@ -802,11 +814,11 @@ function FeedCard({ item, index, onLike, onReact }: {
       {showComments && <CommentsPanel activityId={item.id} initialCount={item.commentCount} />}
     </div>
   );
-}
+});
 
 // ─── AchievementSpotlight ─────────────────────────────────────────────────────
 
-function AchievementSpotlight({ activities }: { activities: FeedItem[] }) {
+const AchievementSpotlight = memo(function AchievementSpotlight({ activities }: { activities: FeedItem[] }) {
   const achievements = activities
     .filter((a) => !a.isOwn && (a.type === "milestone_earned" || a.type === "quizlet_earned" || a.type === "quizlet_created"))
     .slice(0, 6);
@@ -851,9 +863,11 @@ function AchievementSpotlight({ activities }: { activities: FeedItem[] }) {
       </div>
     </div>
   );
-}
+});
 
 // ─── FeedPage ─────────────────────────────────────────────────────────────────
+
+const MAX_FEED_ITEMS = 40;
 
 export default function FeedPage() {
   const [activities, setActivities] = useState<FeedItem[]>([]);
@@ -868,7 +882,10 @@ export default function FeedPage() {
     try {
       const res = await fetch(`/api/feed?page=${page}`);
       const data = await res.json();
-      setActivities((prev) => append ? [...prev, ...data.activities] : data.activities);
+      setActivities((prev) => {
+        const merged = append ? [...prev, ...data.activities] : data.activities;
+        return merged.slice(0, MAX_FEED_ITEMS);
+      });
       setHasMore(data.hasMore);
       setNextPage(data.nextPage);
     } finally {
@@ -879,17 +896,22 @@ export default function FeedPage() {
 
   useEffect(() => { fetchPage(1); }, []);
 
-  const handleLike = (id: string, liked: boolean, likeCount: number) => {
+  const handleLike = useCallback((id: string, liked: boolean, likeCount: number) => {
     setActivities((prev) => prev.map((a) => a.id === id ? { ...a, liked, likeCount } : a));
-  };
+  }, []);
 
-  const handleReact = (id: string, _emoji: string, reactions: FeedReaction[]) => {
+  const handleReact = useCallback((id: string, _emoji: string, reactions: FeedReaction[]) => {
     setActivities((prev) => prev.map((a) => a.id === id ? { ...a, reactions } : a));
-  };
+  }, []);
 
   const filtered = useMemo(
     () => activeFilter === "all" ? activities : activities.filter((a) => a.type === activeFilter),
     [activeFilter, activities]
+  );
+
+  const tabCounts = useMemo(
+    () => Object.fromEntries(FILTER_TABS.map((t) => [t.key, t.key === "all" ? activities.length : activities.filter((a) => a.type === t.key).length])),
+    [activities]
   );
 
   return (
@@ -919,7 +941,7 @@ export default function FeedPage() {
       {!loading && activities.length > 0 && (
         <div className="flex gap-1.5 mb-4 overflow-x-auto scrollbar-hide pb-1">
           {FILTER_TABS.map((tab) => {
-            const count = tab.key === "all" ? activities.length : activities.filter((a) => a.type === tab.key).length;
+            const count = tabCounts[tab.key] ?? 0;
             if (tab.key !== "all" && count === 0) return null;
             return (
               <button
@@ -975,7 +997,7 @@ export default function FeedPage() {
             </div>
           )}
 
-          {hasMore && activeFilter === "all" && (
+          {hasMore && activeFilter === "all" && activities.length < MAX_FEED_ITEMS && (
             <div className="mt-4 flex justify-center">
               <button
                 onClick={() => nextPage && fetchPage(nextPage, true)}
@@ -993,7 +1015,7 @@ export default function FeedPage() {
             </div>
           )}
 
-          {!hasMore && activities.length > 0 && activeFilter === "all" && (
+          {(!hasMore || activities.length >= MAX_FEED_ITEMS) && activities.length > 0 && activeFilter === "all" && (
             <p className="text-center text-xs text-gray-600 mt-6" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
               You&apos;re all caught up! 🎉
             </p>

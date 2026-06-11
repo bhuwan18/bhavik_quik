@@ -6210,7 +6210,7 @@ const QUIZZES = [
     category: "brand-logos",
     difficulty: 4,
     questions: [
-      { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/zoom", options: ["Google Meet", "Cisco Webex", "Zoom", "Microsoft Teams"], correctIndex: 2 },
+      { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/telegram", options: ["WhatsApp", "Signal", "Telegram", "Viber"], correctIndex: 2, explanation: "Telegram was founded in 2013 by brothers Pavel and Nikolai Durov, who also co-founded VKontakte (VK), Russia's largest social network. Its distinctive blue circle with a white paper-plane icon has become one of the most recognised messaging app symbols globally. Telegram is known for its emphasis on privacy and its support for large group chats of up to 200,000 members." },
       { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/stripe", options: ["PayPal", "Square", "Stripe", "Braintree"], correctIndex: 2 },
       { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/paypal", options: ["Stripe", "Venmo", "PayPal", "Cash App"], correctIndex: 2 },
       { text: "Which brand does this logo belong to?", imageUrl: "https://cdn.simpleicons.org/figma", options: ["Adobe XD", "Sketch", "InVision", "Figma"], correctIndex: 3 },
@@ -6239,24 +6239,24 @@ const QUIZZES = [
     questions: [
       {
         text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/cocacola",
-        options: ["Pepsi", "Coca-Cola", "Dr Pepper", "Sprite"],
-        correctIndex: 1,
-        explanation: "The Coca-Cola script logo was created in 1887 by company bookkeeper Frank Mason Robinson, who chose Spencerian script to distinguish it from other trademarks. The red-and-white colour scheme became official in 1950. Coca-Cola is sold in more than 200 countries worldwide.",
-      },
-      {
-        text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/kfc",
-        options: ["McDonald's", "Burger King", "KFC", "Popeyes"],
+        imageUrl: "https://cdn.simpleicons.org/deliveroo",
+        options: ["Uber Eats", "DoorDash", "Deliveroo", "Grubhub"],
         correctIndex: 2,
-        explanation: "KFC (Kentucky Fried Chicken) uses a portrait of its founder Colonel Harland Sanders as its logo. Sanders founded the company in 1952 in Kentucky, and his illustrated face has appeared on the logo since 1978. KFC is currently owned by Yum! Brands and operates in over 150 countries.",
+        explanation: "Deliveroo was founded in London in 2013 by Will Shu and Greg Orlowski. Its distinctive teal kangaroo logo — nicknamed 'Roo' — is one of the most recognisable symbols in the food delivery industry. Deliveroo operates in 10+ countries and was the first major food delivery platform to list on the London Stock Exchange, in 2021.",
       },
       {
         text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/burgerking",
-        options: ["Wendy's", "McDonald's", "Five Guys", "Burger King"],
+        imageUrl: "https://cdn.simpleicons.org/doordash",
+        options: ["Grubhub", "Just Eat", "Postmates", "DoorDash"],
         correctIndex: 3,
-        explanation: "Burger King's logo features its wordmark sandwiched between two stylised buns — a design that has anchored the brand since the 1990s. The company was founded in 1953 in Jacksonville, Florida. It is the world's second-largest fast-food hamburger chain.",
+        explanation: "DoorDash was founded in 2013 by Tony Xu, Stanley Tang, Andy Fang, and Evan Moore at Stanford University. Its red arc logo represents a stylised 'D' in motion. DoorDash is the largest food delivery platform in the United States, holding over 65% of the US market share as of 2023, and went public on the NYSE in December 2020.",
+      },
+      {
+        text: "Which brand does this logo belong to?",
+        imageUrl: "https://cdn.simpleicons.org/starbucks",
+        options: ["Costa", "Starbucks", "Dunkin'", "Peet's Coffee"],
+        correctIndex: 1,
+        explanation: "Starbucks' twin-tailed siren logo has its origins in a 16th-century Norse woodcut. The company was founded in Seattle in 1971 and named after the first mate in Moby-Dick. The siren has been progressively zoomed in over the decades — the current version, introduced in 2011, shows only her face and tails, removing the 'Starbucks Coffee' wordmark from the icon.",
       },
       {
         text: "Which brand does this logo belong to?",
@@ -6275,16 +6275,16 @@ const QUIZZES = [
   },
   {
     title: "Indian Digital Brand Logos",
-    description: "Identify these homegrown Indian fintech and food-tech brands.",
+    description: "Identify these homegrown Indian digital brands.",
     category: "brand-logos",
     difficulty: 3,
     questions: [
       {
         text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/paytm",
-        options: ["PhonePe", "Google Pay", "Paytm", "BHIM"],
+        imageUrl: "https://cdn.simpleicons.org/zerodha",
+        options: ["Upstox", "Angel One", "Zerodha", "Groww"],
         correctIndex: 2,
-        explanation: "Paytm (Pay Through Mobile) was founded by Vijay Shekhar Sharma in 2010 in Noida, India. It became one of the country's first major digital wallets and saw a massive surge after India's 2016 demonetisation. Its blue-and-sky-blue wordmark logo is one of India's most recognised fintech identities.",
+        explanation: "Zerodha was founded in 2010 by brothers Nithin and Nikhil Kamath in Bengaluru. Its name combines 'zero' and 'rodha' (Sanskrit for barrier), reflecting its mission to remove barriers in trading. Zerodha disrupted Indian stock broking with its flat-fee model and is now India's largest retail stockbroker by active clients, with over 7 million users.",
       },
       {
         text: "Which brand does this logo belong to?",
@@ -6295,10 +6295,10 @@ const QUIZZES = [
       },
       {
         text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/zomato",
-        options: ["Swiggy", "Dunzo", "Blinkit", "Zomato"],
-        correctIndex: 3,
-        explanation: "Zomato was founded in 2008 by Deepinder Goyal and Pankaj Chaddah in Delhi as 'FoodieBay', before being rebranded Zomato in 2010. Its vivid red logo is one of India's most recognisable. Zomato went public on BSE/NSE in July 2021, making it one of India's first major new-age tech IPOs.",
+        imageUrl: "https://cdn.simpleicons.org/airtel",
+        options: ["Jio", "Vodafone", "Airtel", "BSNL"],
+        correctIndex: 2,
+        explanation: "Airtel (Bharti Airtel) was founded by Sunil Bharti Mittal in 1995 and is India's largest telecommunications company by subscribers. Its distinctive red swoosh logo, introduced in 2010 and redesigned in 2023, represents dynamism and connectivity. Airtel operates in 18 countries across Asia and Africa and was the first Indian telecom to cross 500 million subscribers.",
       },
       {
         text: "Which brand does this logo belong to?",
@@ -6345,10 +6345,10 @@ const QUIZZES = [
       },
       {
         text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/ford",
-        options: ["General Motors", "Ford", "Chrysler", "Lincoln"],
-        correctIndex: 1,
-        explanation: "Ford's blue oval logo was first used in 1927, derived from the script signature of founder Henry Ford. Ford founded the company in 1903 in Detroit, Michigan. He introduced the moving assembly line for mass automobile production in 1913, a revolution that drastically cut the price of cars and changed manufacturing forever.",
+        imageUrl: "https://cdn.simpleicons.org/porsche",
+        options: ["Alfa Romeo", "Audi", "Jaguar", "Porsche"],
+        correctIndex: 3,
+        explanation: "The Porsche coat of arms combines the crest of Stuttgart — a black horse on red and black stripes — with the antlers and stripes of the Baden-Württemberg state coat of arms. Porsche was founded in Stuttgart in 1931 by Ferdinand Porsche. The 911, first introduced in 1963, remains in continuous production today, making it one of the longest-lived sports car designs in history.",
       },
       {
         text: "Which brand does this logo belong to?",
@@ -6367,24 +6367,24 @@ const QUIZZES = [
     questions: [
       {
         text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/zara",
-        options: ["H&M", "Uniqlo", "Zara", "Mango"],
-        correctIndex: 2,
-        explanation: "Zara was founded in 1975 by Amancio Ortega and Rosalía Mera in A Coruña, Spain. It is the defining force behind 'fast fashion', moving new designs from sketch to store in as little as two weeks. In 2019, Zara updated its serif wordmark to a tightly spaced, elegant version designed by Baron & Baron.",
-      },
-      {
-        text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/ikea",
-        options: ["JYSK", "Wayfair", "Habitat", "IKEA"],
+        imageUrl: "https://cdn.simpleicons.org/puma",
+        options: ["Fila", "Reebok", "New Balance", "Puma"],
         correctIndex: 3,
-        explanation: "IKEA's blue-and-yellow logo uses the colours of the Swedish flag. IKEA was founded in 1943 by Ingvar Kamprad at just 17 years old. The name is an acronym: Ingvar Kamprad, Elmtaryd (his family's farm), and Agunnaryd (his home village). IKEA is the world's largest furniture retailer, with over 460 stores globally.",
+        explanation: "Puma's leaping cat logo has been its emblem since Rudolf Dassler founded the company in 1948 in Herzogenaurach, Germany — directly across the river from the Adidas factory founded by his brother Adolf after a famous sibling falling-out. Puma has sponsored athletes including Pelé, Boris Becker, and Usain Bolt, who wore Pumas when he broke the 100 m world record in 2009.",
       },
       {
         text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/dior",
-        options: ["Hermès", "Dior", "Valentino", "Yves Saint Laurent"],
-        correctIndex: 1,
-        explanation: "Christian Dior founded his Paris fashion house in 1946. His very first collection in February 1947 was dubbed the 'New Look' by Harper's Bazaar editor Carmel Snow, and it revolutionised post-war women's fashion. The Dior wordmark uses an elegant serif typeface that has remained largely unchanged for over 75 years.",
+        imageUrl: "https://cdn.simpleicons.org/target",
+        options: ["Walmart", "Costco", "Kohl's", "Target"],
+        correctIndex: 3,
+        explanation: "Target's iconic red bullseye logo debuted when the chain launched in 1962. The concentric circles were designed to evoke precision and value — the name itself was chosen to convey that customers could shop 'on target'. Target's mascot is Bullseye, a white Bull Terrier with the logo painted around one eye, introduced in a TV ad in 1999.",
+      },
+      {
+        text: "Which brand does this logo belong to?",
+        imageUrl: "https://cdn.simpleicons.org/underarmour",
+        options: ["Nike", "Reebok", "New Balance", "Under Armour"],
+        correctIndex: 3,
+        explanation: "The interlocking 'UA' logo was created by founder Kevin Plank, who started Under Armour in 1996 from his grandmother's basement in Washington D.C. after playing college football at the University of Maryland. His goal was a moisture-wicking T-shirt superior to cotton. Under Armour went public in 2005 and grew into one of the world's largest sportswear brands.",
       },
       {
         text: "Which luxury fashion brand features an interlocking double-C monogram as its logo?",
@@ -6394,10 +6394,10 @@ const QUIZZES = [
       },
       {
         text: "Which brand does this logo belong to?",
-        imageUrl: "https://cdn.simpleicons.org/samsung",
-        options: ["LG", "Sony", "Samsung", "Huawei"],
+        imageUrl: "https://cdn.simpleicons.org/reebok",
+        options: ["Vans", "New Balance", "Reebok", "Converse"],
         correctIndex: 2,
-        explanation: "Samsung's blue oval wordmark was introduced in 1993 during founder Lee Kun-hee's 'New Management' transformation of the company. 'Samsung' means 'three stars' in Korean. Founded in 1938 as a trading company, Samsung Electronics is now the world's largest manufacturer of smartphones and memory chips.",
+        explanation: "Reebok's bold vector logo was introduced in 1986 as the brand expanded globally from its English roots. The company traces its history to 1958 in Bolton, England, where J.W. Foster & Sons had made running shoes for athletes at the 1924 Paris Olympics — depicted in the film Chariots of Fire. Reebok became a household name during the 1980s aerobics boom.",
       },
     ],
   },
@@ -10310,15 +10310,21 @@ async function main() {
       questionCount += quiz.questions.length;
       void created;
     } else {
-      // Sync options/correctIndex/explanation for existing questions (matched by text)
-      for (const q of quiz.questions) {
-        const existingQ = existing.questions.find((eq) => eq.text === q.text);
+      // Sync options/correctIndex/imageUrl/explanation for existing questions.
+      // Match by order index first (handles quizzes where all questions share the same text,
+      // e.g. brand-logo quizzes), then fall back to text match.
+      for (let i = 0; i < quiz.questions.length; i++) {
+        const q = quiz.questions[i];
+        const existingQ =
+          existing.questions.find((eq) => eq.order === i) ??
+          existing.questions.find((eq) => eq.text === q.text);
         if (existingQ) {
           await prisma.question.update({
             where: { id: existingQ.id },
             data: {
               options: q.options,
               correctIndex: q.correctIndex,
+              ...("imageUrl" in q && q.imageUrl ? { imageUrl: q.imageUrl } : {}),
               ...("explanation" in q && typeof q.explanation === "string" ? { explanation: q.explanation } : {}),
             },
           });

@@ -17,6 +17,7 @@
     "db:seed": "ts-node --project tsconfig.seed.json prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:explain": "ts-node --project tsconfig.seed.json prisma/seed-explanations.ts",
+    "db:cleanup-feed": "ts-node --project tsconfig.seed.json prisma/cleanup-feed.ts",
     "remotion:studio": "remotion studio remotion/index.ts",
     "remotion:render": "remotion render remotion/index.ts BittsQuizPromo out/promo.mp4"
   },
