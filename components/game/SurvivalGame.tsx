@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { SURVIVAL_TIMER_S, SURVIVAL_TIMER_WARNING_S, SURVIVAL_ANSWER_REVEAL_MS, GAME_COINS_PER_CORRECT } from "@/lib/game-config";
+import { SURVIVAL_TIMER_S, SURVIVAL_TIMER_WARNING_S, SURVIVAL_ANSWER_REVEAL_MS, GAME_COINS_PER_CORRECT, GAME_DAMAGE_PER_CORRECT } from "@/lib/game-config";
+import { useBoss } from "@/components/boss/BossProvider";
 
 type Question = { id: string; text: string; options: string[]; correctIndex: number };
 
 export default function SurvivalGame({ onBack }: { onBack: () => void }) {
+  const boss = useBoss();
   const [phase, setPhase] = useState<"intro" | "playing" | "done">("intro");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [quizId, setQuizId] = useState<string>("");
@@ -74,11 +76,13 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
           });
           const data = await res.json();
           if (data.coinsEarned !== undefined) setCoinsEarned(data.coinsEarned);
+          boss.reconcileAttempt(data.boss ?? null);
         } catch {
           // ignore
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -105,6 +109,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
 
     if (!correct) {
       setSurvived(false);
+      boss.registerMiss();
       setTimeout(() => endGame(newAnswers, streak, quizId), SURVIVAL_ANSWER_REVEAL_MS);
       return;
     }
@@ -112,6 +117,7 @@ export default function SurvivalGame({ onBack }: { onBack: () => void }) {
     const newStreak = streak + 1;
     setStreak(newStreak);
     setSurvived(true);
+    boss.registerHit(GAME_DAMAGE_PER_CORRECT);
 
     setTimeout(() => {
       if (current + 1 < questions.length) {

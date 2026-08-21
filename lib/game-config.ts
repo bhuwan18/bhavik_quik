@@ -95,3 +95,38 @@ export const PREMIUM_TIER_UNLOCK_COINS: Record<1 | 2 | 3, number> = {
 export const ONLINE_PING_INTERVAL_MS = 5 * 60 * 1000;  // Ping every 5 minutes
 export const ONLINE_PING_DEBOUNCE_MS = 3 * 60 * 1000;  // Skip DB write if updated within 3 minutes
 export const ONLINE_THRESHOLD_MS = 6 * 60 * 1000;      // Consider online if seen within 6 minutes
+
+// ─── Boss Battles ───────────────────────────────────────────────────────────
+
+export const BOSS_MIN_HP = 500;
+export const BOSS_MAX_HP = 1500;
+export const BOSS_DURATION_DAYS = 7;   // event window per boss
+
+/** Damage per correct answer in regular quizzes, scaled by difficulty (1–5) — mirrors COINS_BY_DIFFICULTY */
+export const DAMAGE_BY_DIFFICULTY: Record<number, number> = {
+  1: 1,
+  2: 1,
+  3: 2,
+  4: 2,
+  5: 3,
+};
+
+/** Flat damage per correct answer in game modes, which have no difficulty — mirrors GAME_COINS_PER_CORRECT */
+export const GAME_DAMAGE_PER_CORRECT = 2;
+
+export const BOSS_GEM_REWARD_MIN = 50;       // floor for any contributor
+export const BOSS_GEM_REWARD_MAX = 100;      // top damage dealer
+export const BOSS_FINAL_BLOW_BONUS_GEMS = 25;
+
+// Overlay animation timing — must stay under the shortest game-mode reveal delay
+// (HACKDEV_ANSWER_REVEAL_MS = 600) so a hit/taunt never bleeds into the next question.
+export const BOSS_HIT_ANIM_MS = 420;
+export const BOSS_TAUNT_ANIM_MS = 420;
+export const BOSS_POLL_INTERVAL_MS = 30_000; // refresh HP client-side to reflect other players' damage
+
+/** Gem → coin redemption tiers shown in /shop */
+export const GEM_REDEMPTION_TIERS = [
+  { gems: 500, coins: 1500 },
+  { gems: 1000, coins: 3500 },
+  { gems: 5000, coins: 20000 },
+] as const;

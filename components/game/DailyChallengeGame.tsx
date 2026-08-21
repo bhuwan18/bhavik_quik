@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { DAILY_CHALLENGE_TIMER_S, DAILY_CHALLENGE_QUESTION_COUNT, DAILY_ANSWER_REVEAL_MS, DAILY_SCORE_GOOD_THRESHOLD, GAME_COINS_PER_CORRECT, TIMER_WARNING_THRESHOLD_S } from "@/lib/game-config";
+import { DAILY_CHALLENGE_TIMER_S, DAILY_CHALLENGE_QUESTION_COUNT, DAILY_ANSWER_REVEAL_MS, DAILY_SCORE_GOOD_THRESHOLD, GAME_COINS_PER_CORRECT, TIMER_WARNING_THRESHOLD_S, GAME_DAMAGE_PER_CORRECT } from "@/lib/game-config";
+import { useBoss } from "@/components/boss/BossProvider";
 
 type Question = { id: string; text: string; options: string[]; correctIndex: number };
 
 export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
+  const boss = useBoss();
   const [phase, setPhase] = useState<"intro" | "playing" | "done">("intro");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [quizId, setQuizId] = useState<string>("");
@@ -81,10 +83,12 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
         });
         const data = await res.json();
         if (data.coinsEarned !== undefined) setCoinsEarned(data.coinsEarned);
+        boss.reconcileAttempt(data.boss ?? null);
       } catch {
         // ignore
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Timer per question — only phase, timeLeft, selected needed; stable values via refs
@@ -115,6 +119,8 @@ export default function DailyChallengeGame({ onBack }: { onBack: () => void }) {
     const newAnswers = [...answers, { questionId: q.id, selectedIndex: idx }];
     if (correct) setScore(newScore);
     setAnswers(newAnswers);
+    if (correct) boss.registerHit(GAME_DAMAGE_PER_CORRECT);
+    else boss.registerMiss();
 
     setTimeout(() => {
       if (current + 1 < questions.length) {

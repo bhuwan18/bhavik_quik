@@ -41,6 +41,7 @@ const ACTIVITY_THEME: Record<string, { border: string; gradient: string }> = {
   user_returned:    { border: "border-teal-500/25",   gradient: "from-teal-500/8" },
   quizlet_created:        { border: "border-amber-500/30",  gradient: "from-amber-500/8" },
   friend_streak_extended: { border: "border-orange-500/30", gradient: "from-orange-500/10" },
+  boss_defeated:          { border: "border-red-500/35",    gradient: "from-red-500/10" },
 };
 
 const TIER_BADGE: Record<string, { text: string; bg: string; border: string }> = {
@@ -69,6 +70,7 @@ const FILTER_TABS = [
   { key: "friend_streak_extended", label: "Friend Streaks" },
   { key: "quizlet_earned",         label: "Quizlets" },
   { key: "quizlet_created",  label: "Creations" },
+  { key: "boss_defeated",    label: "Boss Battles" },
 ] as const;
 
 const SOUND_COLORS = ["#d32f2f","#212121","#5d4037","#c2185b","#00acc1","#f0f0dc","#43a047","#1a237e","#c6d400"];
@@ -200,6 +202,7 @@ function ActivityIcon({ type }: { type: string }) {
     case "leaderboard_top3": return <div className={cn(base, "bg-yellow-500/25")}><Trophy size={18} className="text-yellow-400" /></div>;
     case "quizlet_created":        return <div className={cn(base, "bg-amber-500/25")}><Hammer size={18} className="text-amber-400" /></div>;
     case "friend_streak_extended": return <div className={cn(base, "bg-orange-500/25")}><Flame size={18} className="text-orange-400" /></div>;
+    case "boss_defeated":          return <div className={cn(base, "bg-red-500/25")}><Trophy size={18} className="text-red-400" /></div>;
     default:                       return <div className={cn(base, "bg-white/10")}><Star size={18} className="text-gray-400" /></div>;
   }
 }
@@ -499,6 +502,29 @@ function ActivityBody({ type, data }: { type: string; data: Record<string, unkno
               <span className="text-xs text-gray-500">in a row</span>
             </div>
           </div>
+        </div>
+      );
+    }
+    case "boss_defeated": {
+      const { bossName, bossIcon, maxHp, contributorCount, topContributors } = data as {
+        bossName: string; bossIcon: string; maxHp: number; contributorCount: number;
+        topContributors?: { name: string; damage: number }[];
+      };
+      return (
+        <div className="space-y-2" style={feedFont}>
+          <p className="text-sm text-gray-200 font-semibold">
+            <span className="text-lg mr-1">{bossIcon}</span>
+            Landed the final blow on <span className="text-red-400 font-extrabold">{bossName}</span>!
+          </p>
+          <div className="flex items-center gap-2 flex-wrap text-xs">
+            <span className="text-gray-500 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full">{maxHp.toLocaleString()} HP</span>
+            <span className="text-gray-500 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full">{contributorCount} contributor{contributorCount === 1 ? "" : "s"}</span>
+          </div>
+          {topContributors && topContributors.length > 0 && (
+            <p className="text-xs text-gray-500">
+              Top damage: {topContributors.slice(0, 3).map((c) => `${c.name} (${c.damage})`).join(", ")}
+            </p>
+          )}
         </div>
       );
     }
@@ -820,7 +846,7 @@ const FeedCard = memo(function FeedCard({ item, index, onLike, onReact }: {
 
 const AchievementSpotlight = memo(function AchievementSpotlight({ activities }: { activities: FeedItem[] }) {
   const achievements = activities
-    .filter((a) => !a.isOwn && (a.type === "milestone_earned" || a.type === "quizlet_earned" || a.type === "quizlet_created"))
+    .filter((a) => !a.isOwn && (a.type === "milestone_earned" || a.type === "quizlet_earned" || a.type === "quizlet_created" || a.type === "boss_defeated"))
     .slice(0, 6);
 
   if (achievements.length === 0) return null;
@@ -836,9 +862,12 @@ const AchievementSpotlight = memo(function AchievementSpotlight({ activities }: 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {achievements.map((a) => {
           const isMilestone = a.type === "milestone_earned";
-          const icon = isMilestone ? "🏅" : ((a.data.icon as string) ?? "🎴");
+          const isBossKill = a.type === "boss_defeated";
+          const icon = isMilestone ? "🏅" : isBossKill ? ((a.data.bossIcon as string) ?? "⚔️") : ((a.data.icon as string) ?? "🎴");
           const badgeName = isMilestone
             ? (a.data.milestoneName as string)
+            : isBossKill
+            ? (a.data.bossName as string)
             : (a.data.quizletName as string);
           const firstName = (a.user.name ?? "?").split(" ")[0];
           const tier = isMilestone ? (a.data.tier as string | undefined) : undefined;

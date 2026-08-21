@@ -33,7 +33,28 @@
       "Bash(curl -s -A Mozilla/5.0 https://cdn.simpleicons.org/__TRACKED_VAR__)",
       "Bash(curl -s -A \"Mozilla/5.0\" \"https://cdn.simpleicons.org/googlepay\")",
       "Bash(curl -s -A \"Mozilla/5.0\" \"https://cdn.simpleicons.org/bigbasket\")",
-      "Bash(curl -s -A \"Mozilla/5.0\" \"https://cdn.simpleicons.org/slack\")"
+      "Bash(curl -s -A \"Mozilla/5.0\" \"https://cdn.simpleicons.org/slack\")",
+      "Bash(find \"d:\\\\VS_WS\\\\bhavik_quik\\\\app\" -type d -name \"\\\\\\(main\\\\\\)\" -prune -o -type d -path \"*/\\\\\\(main\\\\\\)/*\" -print | head -30)",
+      "Read(//d/VS_WS/bhavik_quik/*/\\(main/\\)/**)",
+      "Read(//d/VS_WS/bitts_quiz_CG/app/login/**)",
+      "Bash(cd \"d:\\\\VS_WS\\\\bitts_quiz_CG\" && ls app/\\\\\\(main\\\\\\)/shop/ && ls app/\\\\\\(main\\\\\\)/buy-coins/ && ls app/\\\\\\(main\\\\\\)/admin/)",
+      "Read(//d/VS_WS/bitts_quiz_CG/**)",
+      "Read(//d/VS_WS/bitts_quiz_CG/app/\\(main\\)/buy-coins/**)",
+      "Bash(npx prisma *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "WebFetch(domain:docs.crazygames.com)",
+      "Bash(curl -s https://sdk.crazygames.com/crazygames-sdk-v3.js)",
+      "Read(//d/VS_WS/bitts_quiz_CG/app/\\(main\\)/**)"
+    ],
+    "additionalDirectories": [
+      "d:\\VS_WS\\bitts_quiz_CG\\lib",
+      "d:\\VS_WS\\bitts_quiz_CG\\app\\(main)\\shop",
+      "d:\\VS_WS\\bitts_quiz_CG\\app",
+      "d:\\VS_WS\\bitts_quiz_CG\\components\\quiz",
+      "d:\\VS_WS\\bitts_quiz_CG",
+      "d:\\VS_WS\\bitts_quiz_CG\\components\\layout",
+      "d:\\VS_WS\\bitts_quiz_CG\\components"
     ]
   }
 }

@@ -66,6 +66,10 @@ model User {
   friendStreaksAsA     FriendStreak[] @relation("FriendStreakA")
   friendStreaksAsB     FriendStreak[] @relation("FriendStreakB")
   packMaxOpens         PackMaxOpen[]
+  gems                 Int      @default(0)
+  totalGemsEarned      Int      @default(0)
+  bossContributions    BossContribution[]
+  gemRedemptions       GemRedemption[]
 
   @@index([totalCoinsEarned])
   @@index([coins])
@@ -484,5 +488,54 @@ model PackMaxOpen {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, packSlug])
+  @@index([userId])
+}
+
+model Boss {
+  id              String   @id @default(cuid())
+  slug            String                      // roster key from lib/bosses-data.ts
+  name            String
+  icon            String                      // emoji
+  description     String
+  taunt           String                      // shown on a wrong answer
+  colorFrom       String
+  colorTo         String
+  maxHp           Int
+  currentHp       Int                         // may go negative on the killing blow; clamp on display
+  status          String   @default("active") // "active" | "defeated" | "expired"
+  startsAt        DateTime @default(now())
+  expiresAt       DateTime
+  defeatedAt      DateTime?
+  finalBlowUserId String?
+  createdAt       DateTime @default(now())
+  contributions   BossContribution[]
+
+  @@index([status, expiresAt])
+}
+
+model BossContribution {
+  id          String   @id @default(cuid())
+  bossId      String
+  boss        Boss     @relation(fields: [bossId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  damage      Int      @default(0)
+  hits        Int      @default(0)
+  gemsAwarded Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@unique([bossId, userId])
+  @@index([bossId, damage])
+  @@index([userId])
+}
+
+model GemRedemption {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gemsSpent   Int
+  coinsGained Int
+  createdAt   DateTime @default(now())
+
   @@index([userId])
 }

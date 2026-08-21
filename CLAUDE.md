@@ -20,7 +20,7 @@
 | UI Components | Custom components + Radix UI primitives (react-dialog, react-progress, react-slot, react-tabs); shadcn not used |
 | Auth | NextAuth.js v5 beta (Google OAuth + admin username/password) |
 | ORM | Prisma v7 |
-| Database | PostgreSQL (Neon — see `.env`) |
+| Database | PostgreSQL (Supabase — see `.env`) |
 | Real-time | Pusher Channels (DinoRex multiplayer; socket.io installed but unused for game logic) |
 | Animations | Framer Motion |
 | Icons | Lucide React + Emoji |
@@ -76,6 +76,7 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY="..."         # generate: npx web-push generate-vap
 VAPID_PRIVATE_KEY="..."
 TEST_USERNAME="..."                        # test login button on /login
 TEST_PASSWORD="..."
+CRON_SECRET="..."                          # Bearer auth for Vercel Cron routes (cleanup-feed, boss-cycle)
 ```
 
 ---
@@ -89,21 +90,23 @@ app/
     ├── layout.tsx  loading.tsx
     ├── dashboard/  discover/  quiz/[id]/  marketplace/  quizlets/
     ├── quiz-maker/  leaderboard/  profile/[userId]/  feedback/
-    ├── game/  notifications/  feed/  trading/  shop/  milestones/
+    ├── game/  boss/  notifications/  feed/  trading/  shop/  milestones/
     ├── buy-coins/  info/  (legacy routes — kept but /shop is canonical)
     └── admin/  (quizzes/  quizzes/[id]/edit/  users/  payments/  feedback/  settings/  quizlet-submissions/)
 
 components/
 ├── layout/  (Sidebar, MobileNav, OnlinePing, PushSubscriptionManager, NotificationsProvider, FeedProvider)
 ├── quiz/  marketplace/  discover/  quizlets/  milestones/  profile/  trading/  game/  icons/  admin/  dashboard/
+├── boss/  (BossProvider, BossOverlay, BossDetailSheet, BossConfetti, BossPageClient, BossDashboardWidget)
 └── ThemeProvider  SplashScreen  SplashScreenClient  IntroOverlay  AudioPlayer
 
 lib/
     auth  db  email  push  pusher  audio-context  profile
     quizlets-data  packs-data  trading  trading-resolve
     festivals  roll  time  game-config  app-settings  utils  milestones-data
+    bosses-data  boss  boss-gems
 
-prisma/  schema.prisma (28 models)  seed.ts  seed-explanations.ts
+prisma/  schema.prisma (33 models)  seed.ts  seed-explanations.ts
 remotion/  (BittsQuizReel.tsx, BittsQuizVideo.tsx — standalone video generation, not served)
 ```
 
@@ -141,6 +144,17 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - Retake behavior: controlled by `retakeCoinsEnabled` AppSetting (default `true`). When `true`, all correct answers in the submission earn coins (base = total correct). When `false`, only answers NOT already in `CorrectAnswer` earn coins (base = new correct only). Both paths still respect daily cap.
 - Weekly tracking: `User.weeklyCoins` + `User.weeklyCoinsWeek` (ISO week string) updated atomically in `/api/attempt`; resets automatically when the ISO week changes
 
+### Boss Battles
+- A single global `Boss` (500–1500 HP) is alive at once, spawned weekly (7-day window) by the `/api/cron/boss-cycle` daily cron (Vercel Hobby only allows daily schedules; a daily check against `expiresAt` yields the intended weekly cadence). `lib/boss.ts → getActiveBoss()` lazily spawns one if none exists, so the feature also works in local dev without the cron
+- Roster lives in `lib/bosses-data.ts → BOSSES_DATA` (source of truth, same convention as `quizlets-data.ts`/`packs-data.ts`); `pickNextBoss()` rotates avoiding an immediate repeat
+- Damage: every correct answer in `/api/attempt` deals `score × DAMAGE_BY_DIFFICULTY[quiz.difficulty]` via `applyBossDamage()` — **all** correct answers count (no `CorrectAnswer` dedup, no daily cap), applied via a guarded atomic `updateMany` so concurrent hits from many players are race-safe and the killing blow is claimed by exactly one request
+- Game modes deal `GAME_DAMAGE_PER_CORRECT` flat damage (no per-quiz difficulty available client-side); **SpeedBlitz deals no real damage** — it mixes questions from multiple quizzes with no coherent single `quizId`, so (like its coins) it never calls `/api/attempt`; its overlay reactions are cosmetic only
+- On defeat: `resolveBossDefeat()` pays every `BossContribution` gems via `calculateBossGemPayout()` in `lib/boss-gems.ts` (a floor of `BOSS_GEM_REWARD_MIN`, scaling to `BOSS_GEM_REWARD_MAX` by damage share, plus `BOSS_FINAL_BLOW_BONUS_GEMS` for the killer) — kept in its own import-free file (mirrors `lib/trading.ts`) so it's unit-testable without pulling in `lib/db.ts`'s live connection pool
+- Gems (`User.gems` / `totalGemsEarned`) are a secondary currency, redeemed for coins via `POST /api/gems/redeem` at `GEM_REDEMPTION_TIERS` rates (`/shop` → Gems tab); redeemed coins increment `totalCoinsEarned` (matches the precedent for admin-approved coin purchases) but never `dailyCoinsEarned` — converting isn't earning, so it bypasses the daily cap
+- Client-side: `BossProvider` (mounted once in `(main)/layout.tsx`, alongside `NotificationsProvider`/`FeedProvider`) owns an **optimistic** HP bar — `registerHit()`/`registerMiss()` fire on every answer with zero network calls, and `reconcileAttempt()` snaps to server truth once `/api/attempt` responds. `BossOverlay` is route-scoped (`/quiz/[id]`, `/game`; not DinoRex) via `usePathname()`, following `AudioPlayer`'s precedent
+- Toggle: `bossBattlesEnabled` AppSetting (default `true`) — read via `getBossBattlesEnabled()`; when off, `/api/boss` returns `{ boss: null }` and the overlay renders nothing
+- Admin: `/admin/settings` has a Boss Battles panel (view active boss, edit HP, force-spawn, force-end) backed by `/api/admin/boss`
+
 ### Membership Tiers
 - Regular: default, 1×, 500/day | Pro: ₹250/mo, 1.5×, 1000/day (`isPro + proExpiresAt`) | Max: ₹500/mo, 2×, 1500/day (`isMax + maxExpiresAt`)
 - **Blacksmith**: ₹100/mo entry-level tier (`isBlacksmith + blacksmithExpiresAt`); multiplier/daily limit not yet defined in `lib/game-config.ts` — check there before implementing any Blacksmith coin logic
@@ -151,12 +165,14 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 ### Pack Opening (`lib/roll.ts`)
 - Guaranteed slots: 2 common, 2 uncommon, 1 rare; 1 bonus roll can hit epic/legendary/secret/unique
 - Rainbow pack: 0.001% chance for impossible; already-owned quizlet → refund sell value in coins
+- **Max Open daily limit**: toggled by `maxOpenLimitEnabled` AppSetting; when enabled, daily Max Open pack usage is tracked via `PackMaxOpen` model (per-user, resets each UTC day); enforced in `app/api/packs/open/route.ts`
 
 ### Festival System
 - 6 festivals by `MM-DD` in `lib/festivals.ts`; `/api/packs` includes festival pack slug on matching dates — pure date comparison, no DB change
 
 ### Quiz Content
 - ~193 official quizzes across 21 categories seeded via `prisma/seed.ts`
+- **Answer option guessability rule**: when writing quiz questions, all four options must be roughly equal in length — the correct answer must never be noticeably the longest. If the correct answer is naturally long (a definition, a law, a formula), expand the distractors to match. Also distribute `correctIndex` across 0–3 with no bias toward index 1 or 2.
 - **21 categories** (5 premium). Full list in `lib/utils.ts → CATEGORIES`. The most recently added: `logical-reasoning`.
 - **Premium category unlock**: gated by `totalCoinsEarned` thresholds, NOT by membership tier
   - Tier 1 "🎓 Scholar" (grade-6, geography): 3,000 coins
@@ -184,12 +200,12 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 
 ### Game Modes
 - HackDev: tech, 60s | DinoRex: elimination, Pusher multiplayer + AI bots | SpeedBlitz: 20q in 30s | Survival: 10s/q, first wrong = over | Daily Challenge: 5 deterministic (date-seeded), 30s each | Classic: links to /discover
-- All modes submit to `/api/attempt` for coin awards (multiplier + daily limit apply)
+- HackDev, Survival, and Daily Challenge submit once to `/api/attempt` at game end (multiplier + daily limit + boss damage all apply). **SpeedBlitz never calls `/api/attempt`** — it mixes questions from several quizzes into one session with no single coherent `quizId`, so it awards no real coins and deals no real boss damage; its result screen shows a client-only estimate
 
 ### UPI Payment Flow (`/shop`)
 1. User selects purchase → QR + UPI deep link shown
 2. User pays, enters UTR → `POST /api/user/submit-payment` → `PaymentRequest` (pending)
-3. Admin approves at `/admin/payments` → credits coins / grants Pro+expiry / grants Max+expiry / resets daily limit
+3. Admin approves at `/admin/payments` → credits coins / grants Pro+expiry / grants Max+expiry / grants Blacksmith+expiry / resets daily limit
 - Renewal extends from current expiry; `/buy-coins` and `/upgrade` both redirect to `/shop`
 
 ### Feedback
@@ -197,11 +213,11 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - Admin reply creates `Notification` + push (not email)
 
 ### Notifications
-- Types: `overtaken | top3_join | feedback_reply | admin_message | milestone | streak_milestone | follow_milestone | follow_streak_milestone`
+- Types: `overtaken | top3_join | feedback_reply | admin_message | milestone | streak_milestone | follow_milestone | follow_streak_milestone | feed_like | feed_comment | feed_reaction | user_nudge | quizlet_created | trade_completed | trade_sold | outbid | friend_streak_freeze_used | friend_streak_broken | friend_streak_extended | friend_streak_reminder | boss_defeated`
 - **Separate from Feed** — `Notification` = private system messages; `FeedActivity` = public social events; never create `Notification` from feed logic
 
 ### Social Feed
-- Activity types in `FeedActivity.type`: `quiz_completed | milestone_earned | quizlet_earned | streak_milestone | leaderboard_top3 | user_returned`
+- Activity types in `FeedActivity.type`: `quiz_completed | milestone_earned | quizlet_earned | streak_milestone | leaderboard_top3 | user_returned | quizlet_created | friend_streak_extended | boss_defeated`
 - `quizlet_earned.source`: `"pack" | "mystical"`; `user_returned` fires in `POST /api/user/ping` only when `lastSeenAt > 48h ago`
 - `quiz_completed` activities are **merged within a 2-hour window**: if the user already has a `quiz_completed` activity in the last 2 hours, the new quiz is appended to its `data.quizzes` array instead of creating a new record
 - All feed writes are **fire-and-forget** (`.catch(() => {})`); never `await` in the hot path
@@ -230,6 +246,13 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - `User.isLocked` — quiz page shows locked UI; `/api/attempt` returns 403
 - Admin: PATCH `/api/admin/users/[id]` with `action: "lock" | "unlock"`
 
+### Friend Streak System
+- `FriendStreak` model tracks mutual quiz-completion streaks between pairs of followers
+- Fields: `userAId`, `userBId`, `count`, `longestCount`, `lastStreakDate`, `userALastQuizDate`, `userBLastQuizDate`; `@@unique([userAId, userBId])`
+- Incremented in `/api/attempt` when both users in a mutual-follow pair complete a quiz on the same IST day
+- Notifications (private): `friend_streak_extended`, `friend_streak_broken`, `friend_streak_freeze_used`, `friend_streak_reminder`
+- Feed activity: `friend_streak_extended` (public)
+
 ### No-Duplicate Coins
 - `CorrectAnswer` model: `@@unique([userId, questionId])` — never skip this check; it prevents infinite coin farming
 - Insert via `prisma.correctAnswer.createMany({ skipDuplicates: true })`
@@ -237,8 +260,11 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 ### Global Settings
 - `AppSetting` model: `key` (unique), `value` (string); read via `lib/app-settings.ts`; write via PATCH `/api/admin/settings` or `POST /api/admin/weekly-offer`
 - Never hardcode setting keys outside `lib/app-settings.ts`
-- Known keys: `schoolHoursEnabled`, `retakeCoinsEnabled`, `weeklyOffer_pro`, `weeklyOffer_max`, `weeklyOffer_daily_reset`, `weeklyOffer_coins`
+- Known keys: `schoolHoursEnabled`, `retakeCoinsEnabled`, `weeklyOffer_pro`, `weeklyOffer_max`, `weeklyOffer_daily_reset`, `weeklyOffer_coins`, `maxOpenLimitEnabled`, `adminTotpSecret`, `bossBattlesEnabled`
 - `retakeCoinsEnabled` (default `true`): when `false`, coin awards in `/api/attempt` only count new correct answers — read via `getRetakeCoinsEnabled()` from `lib/app-settings.ts`
+- `maxOpenLimitEnabled`: when `true`, daily Max Open pack usage is tracked via `PackMaxOpen` model; read via `getMaxOpenLimitEnabled()` from `lib/app-settings.ts`
+- `adminTotpSecret`: stores the TOTP 2FA secret for the admin account (set during 2FA setup)
+- `bossBattlesEnabled` (default `true`): when `false`, `/api/attempt` deals no boss damage and `/api/boss` returns `{ boss: null }`; read via `getBossBattlesEnabled()`
 
 ### QuizletSubmission System
 - Users propose custom quizlets via `POST /api/quizlets/submit/` → creates `QuizletSubmission` (status: `pending`)
@@ -302,15 +328,19 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 | `lib/utils.ts` | `RARITY_COLORS`, `SELL_VALUES`, `CATEGORIES` (21 total, 5 premium), `CategorySlug` |
 | `lib/time.ts` | `isSchoolHours()`, `getISTDateString()`, IST offset helpers |
 | `lib/game-config.ts` | Coin earn amounts, daily limits, membership pricing, `STREAK_MILESTONES`, `PREMIUM_TIER_UNLOCK_COINS`, `PREMIUM_TIER_NAMES`, `EXPLANATION_READ_COINS`, online ping constants |
-| `lib/app-settings.ts` | `getSchoolHoursEnabled()`, `getRetakeCoinsEnabled()`, `getWeeklyOffers()` |
+| `lib/app-settings.ts` | `getSchoolHoursEnabled()`, `getRetakeCoinsEnabled()`, `getWeeklyOffers()`, `getMaxOpenLimitEnabled()`, `getBossBattlesEnabled()` |
 | `lib/trading.ts` | `TRADING_CONFIG` + `calculateSellerProceeds()` |
 | `lib/trading-resolve.ts` | `maybeResolveExpired()` — call at start of every trading read endpoint |
+| `lib/bosses-data.ts` | Boss roster (source of truth) + `pickNextBoss()` |
+| `lib/boss.ts` | `getActiveBoss()`, `applyBossDamage()` (race-safe atomic HP decrement), `resolveBossDefeat()` (gem payout fan-out) |
+| `lib/boss-gems.ts` | `calculateBossGemPayout()` — pure, no DB import, unit-testable in isolation (mirrors `lib/trading.ts`) |
 | `lib/email.ts` | `sendEmail()` — new-user alerts only; NOT used by feedback |
 | `lib/push.ts` | `sendPushToUser()` — VAPID web push; fire-and-forget; auto-cleans expired |
 | `lib/pusher.ts` | `pusherServer` + DinoRex shared types (DinoRexPlayer, DinoRexQuestion, PusherEvent) |
 | `app/globals.css` | Dark-only CSS variables + animation keyframes |
-| `prisma/schema.prisma` | DB schema (28 models) — run `db:push` + `prisma generate` after changes |
-| `app/(main)/shop/page.tsx` | Pro/Max membership + coin purchase + daily limit reset |
+| `prisma/schema.prisma` | DB schema (33 models) — run `db:push` + `prisma generate` after changes |
+| `app/(main)/shop/page.tsx` | Pro/Max membership + coin purchase + daily limit reset + gem redemption |
+| `components/boss/BossProvider.tsx` | Mounted once in `(main)/layout.tsx`; owns optimistic HP + `registerHit()`/`registerMiss()`/`reconcileAttempt()` |
 | `app/(main)/feed/page.tsx` | Social feed — `ActivityBody` renderer (add new activity types here) |
 | `app/(main)/admin/settings/page.tsx` | Global toggles + weekly discount offers |
 | `components/SplashScreen.tsx` | Daily splash — festival pack + weekly offers (once per IST day) |
@@ -356,8 +386,8 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - **School hours**: IST = UTC+5:30; use `lib/time.ts → isSchoolHours()` rather than inline time math; check `getSchoolHoursEnabled()` from `lib/app-settings.ts` before enforcing
 - **Categories**: CATEGORIES has 21 entries — all are seeded; premium categories (5 total) are unlocked by `totalCoinsEarned` thresholds from `PREMIUM_TIER_UNLOCK_COINS` in `lib/game-config.ts` (NOT by membership tier); tier 1: grade-6/geography (3K coins), tier 2: world-travel/gaming (6K coins), tier 3: memes (11K coins); never hardcode these thresholds
 - **Notifications**: use `Notification` model for in-app messages; use `lib/push.ts → sendPushToUser()` for browser push — these are separate channels
-- **Admin users**: actions go through PATCH `/api/admin/users/[id]` with `action` field (`lock`, `unlock`, `reset_daily`, `grant_pro`, `revoke_pro`, `grant_max`, `revoke_max`)
-- **AppSetting**: read via `lib/app-settings.ts`; write via PATCH `/api/admin/settings` or `POST /api/admin/weekly-offer`; never hardcode setting keys outside `lib/app-settings.ts`; known keys: `schoolHoursEnabled`, `retakeCoinsEnabled`, `weeklyOffer_*`
+- **Admin users**: actions go through PATCH `/api/admin/users/[id]` with `action` field (`lock`, `unlock`, `reset_daily`, `grant_pro`, `revoke_pro`, `grant_max`, `revoke_max`, `grant_blacksmith`, `revoke_blacksmith`)
+- **AppSetting**: read via `lib/app-settings.ts`; write via PATCH `/api/admin/settings` or `POST /api/admin/weekly-offer`; never hardcode setting keys outside `lib/app-settings.ts`; known keys: `schoolHoursEnabled`, `retakeCoinsEnabled`, `weeklyOffer_*`, `maxOpenLimitEnabled`, `adminTotpSecret`, `bossBattlesEnabled`
 - **retakeCoinsEnabled**: when `false`, `/api/attempt` only awards coins for answers NOT already in `CorrectAnswer`; when `true` (default) all correct answers in the submission earn coins; read via `getRetakeCoinsEnabled()` — never inline this logic
 - **Trading**: mystical quizlets cannot be listed (`BLOCKED_PACKS`); always use `calculateSellerProceeds()` for seller payout (5% fee); call `maybeResolveExpired()` at the start of any trading read endpoint
 - **Milestones**: 5 types (coins/quizzes/answers/categories/streak); `UserMilestone` unique key is `[userId, milestoneType, threshold]`; always pass `milestoneType` when inserting; use `skipDuplicates: true`; push is fire-and-forget
@@ -365,6 +395,7 @@ Defined in `lib/utils.ts → RARITY_COLORS`:
 - **SVG icons**: custom category icons live in `components/icons/` — import from there, not inline SVG
 - **Follow system**: `UserFollow` model with cascade deletes; `lib/profile.ts → getProfileData()` returns `null` for admins (→ `notFound()`); leaderboard sort is URL-param-driven (`sort`/`dir`/`page`); accuracy is computed and NOT sortable (no raw query needed)
 - **Leaderboard sort**: sort state lives in URL params — always preserve `sort`/`dir` when generating pagination links; podium renders only on default sort (coins desc, page 1)
-- **Feed vs Notifications**: these are completely separate systems — `FeedActivity` records public social events (quiz completions, milestones, quizlets, streaks, returns, top-3); `Notification` records private system messages (overtakes, admin replies, follow events). Never merge them or create `Notification` entries from feed logic.
+- **Feed vs Notifications**: these are completely separate systems — `FeedActivity` records public social events (quiz completions, milestones, quizlets, streaks, returns, top-3, quizlet approvals, friend streaks); `Notification` records private system messages (overtakes, admin replies, follow events, feed interactions, friend streak events). Never merge them or create `Notification` entries from feed logic.
 - **Feed activity creation**: always fire-and-forget (`.catch(() => {})`); never `await` feed writes in the hot path; new activity types need a matching card renderer in `app/(main)/feed/page.tsx → ActivityBody`
 - **user_returned trigger**: fires in `app/api/user/ping/route.ts` only when `lastSeenAt` was >48 hours ago — the first ping after return sets `lastSeenAt` to now, so subsequent pings won't re-trigger it
+- **Boss Battles**: damage is dealt via `applyBossDamage()` in `lib/boss.ts`, called from `app/api/attempt/route.ts` right after the existing `QuizAttempt.create` + `user.update` write — always **awaited** (never fire-and-forget) since it's shared cross-user state, but wrapped in try/catch so a boss failure never fails the attempt itself; the HP decrement + defeat flip both use guarded atomic `updateMany` calls so concurrent hits from many players are race-safe. Never compute gem payouts inline — always go through `calculateBossGemPayout()` in `lib/boss-gems.ts` (kept import-free/DB-free on purpose, mirrors `lib/trading.ts`). `BossProvider`'s HP is optimistic client-side (`registerHit`/`registerMiss`, zero network calls) and only reconciles to server truth via `reconcileAttempt()` once `/api/attempt` responds — do not add per-question network calls for damage. SpeedBlitz cannot deal real damage (see Game Modes) — its overlay reactions are cosmetic-only, and this must not be "fixed" without discussing the coin-award gap that's also present there.

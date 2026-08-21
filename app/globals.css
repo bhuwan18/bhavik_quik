@@ -143,6 +143,217 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 .read-unlock { animation: read-unlock 1.6s ease-in-out infinite; }
 
+/* ─── Boss Battles overlay ───────────────────────────────────────── */
+
+/* Idle: a much more pronounced bob + breathing scale than the generic .float-anim */
+@keyframes boss-idle-float {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  50%       { transform: translateY(-12px) scale(1.06) rotate(-2deg); }
+}
+.boss-idle-anim { animation: boss-idle-float 2.4s ease-in-out infinite; }
+
+/* Pulsing colored aura behind the avatar — color supplied per-boss via --boss-glow */
+@keyframes boss-aura-pulse {
+  0%, 100% { box-shadow: 0 0 20px 6px var(--boss-glow, rgba(245,158,11,0.55)), 0 0 44px 14px var(--boss-glow-soft, rgba(245,158,11,0.22)); }
+  50%       { box-shadow: 0 0 38px 12px var(--boss-glow, rgba(245,158,11,0.85)), 0 0 72px 26px var(--boss-glow-soft, rgba(245,158,11,0.4)); }
+}
+.boss-aura-pulse { animation: boss-aura-pulse 2.4s ease-in-out infinite; }
+
+/* Slowly spinning conic-gradient ring around the avatar for extra "boss encounter" flair */
+@keyframes boss-ring-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.boss-ring-spin { animation: boss-ring-spin 6s linear infinite; }
+
+@keyframes boss-hit {
+  0%   { transform: translate(0, 0) scale(1); filter: brightness(1); }
+  15%  { transform: translate(-6px, -2px) scale(0.88) rotate(-6deg); filter: brightness(2.6); }
+  35%  { transform: translate(6px, 2px) scale(1.12) rotate(5deg); filter: brightness(1.9); }
+  55%  { transform: translate(-4px, 0) scale(0.95) rotate(-3deg); filter: brightness(1.4); }
+  75%  { transform: translate(2px, 0) scale(1.02) rotate(1deg); filter: brightness(1.1); }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); filter: brightness(1); }
+}
+.boss-hit { animation: boss-hit 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+@keyframes boss-taunt {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25%       { transform: rotate(-9deg) scale(1.05); }
+  75%       { transform: rotate(9deg) scale(1.05); }
+}
+.boss-taunt { animation: boss-taunt 0.42s ease-in-out both; }
+
+/* Urgent pulse on the HP bar once the boss is critically low */
+@keyframes boss-lowhp-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+  50%       { box-shadow: 0 0 10px 2px rgba(239,68,68,0.85); }
+}
+.boss-lowhp-pulse { animation: boss-lowhp-pulse 1s ease-in-out infinite; }
+
+/* Shimmering highlight sweeping across the HP bar fill */
+@keyframes boss-hp-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+.boss-hp-shimmer { animation: boss-hp-shimmer 1.8s linear infinite; }
+
+@keyframes damage-float {
+  0%   { opacity: 0; transform: translateY(0) scale(0.5) rotate(-8deg); }
+  15%  { opacity: 1; transform: translateY(-10px) scale(1.6) rotate(4deg); }
+  35%  { transform: translateY(-16px) scale(1.3) rotate(-2deg); }
+  100% { opacity: 0; transform: translateY(-52px) scale(1.15) rotate(0deg); }
+}
+.damage-float { animation: damage-float 1s ease-out both; }
+
+/* ─── Boss Creature rig (BossCreature.tsx) ──────────────────────────
+   A hand-built SVG character: face parts (eyes/mouth) cross-fade between
+   normal/hit/taunt/dead states, while the whole body plays a matching
+   macro transform. Both are keyed off the same `phase-*` class on the
+   svg root, set from BossProvider's phase. No external art assets. */
+
+.boss-creature .creature-eye-normal,
+.boss-creature .creature-mouth-normal {
+  opacity: 1;
+  transition: opacity 0.15s ease;
+}
+.boss-creature .creature-eye-happy,
+.boss-creature .creature-eye-hurt,
+.boss-creature .creature-eye-dead,
+.boss-creature .creature-mouth-hurt,
+.boss-creature .creature-mouth-laugh,
+.boss-creature .creature-mouth-dead {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.boss-creature.phase-hit .creature-eye-normal,
+.boss-creature.phase-hit .creature-mouth-normal {
+  opacity: 0;
+}
+.boss-creature.phase-hit .creature-eye-hurt,
+.boss-creature.phase-hit .creature-mouth-hurt {
+  opacity: 1;
+}
+
+.boss-creature.phase-taunt .creature-eye-normal,
+.boss-creature.phase-taunt .creature-mouth-normal {
+  opacity: 0;
+}
+.boss-creature.phase-taunt .creature-eye-happy,
+.boss-creature.phase-taunt .creature-mouth-laugh {
+  opacity: 1;
+}
+
+.boss-creature.phase-dead .creature-eye-normal,
+.boss-creature.phase-dead .creature-mouth-normal {
+  opacity: 0;
+}
+.boss-creature.phase-dead .creature-eye-dead,
+.boss-creature.phase-dead .creature-mouth-dead {
+  opacity: 1;
+}
+
+.boss-creature-body {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Idle: bob + nod + a breathing scale, asymmetric timing so it doesn't read as a metronome */
+@keyframes creature-idle {
+  0%    { transform: translateY(0) rotate(0deg) scale(1, 1); }
+  30%   { transform: translateY(-10px) rotate(-3deg) scale(1.04, 0.96); }
+  55%   { transform: translateY(-26px) rotate(-7deg) scale(1.08, 0.92); }
+  80%   { transform: translateY(-8px) rotate(3deg) scale(1.03, 0.97); }
+  100%  { transform: translateY(0) rotate(0deg) scale(1, 1); }
+}
+.creature-idle-anim { animation: creature-idle 2.6s ease-in-out infinite; }
+
+/* Low-HP idle: faster, rougher — the boss is struggling */
+@keyframes creature-idle-lowhp {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1, 1); }
+  25%       { transform: translateY(-9px) rotate(6deg) scale(0.93, 1.07); }
+  50%       { transform: translateY(-28px) rotate(-8deg) scale(1.09, 0.91); }
+  75%       { transform: translateY(-6px) rotate(5deg) scale(0.95, 1.05); }
+}
+.creature-idle-lowhp-anim { animation: creature-idle-lowhp 0.8s ease-in-out infinite; }
+
+/* Eyes blink on a loop while idle — both eyes squash near-flat then reopen, second eye slightly offset via animation-delay */
+@keyframes creature-blink {
+  0%, 88%, 100% { transform: scaleY(1); }
+  94%            { transform: scaleY(0.05); }
+}
+.creature-eye-blink { animation: creature-blink 3.2s ease-in-out infinite; }
+
+/* Secondary limb motion — runs independently of (and composes with) the body's macro transform */
+@keyframes creature-claw-wiggle {
+  0%, 100% { transform: rotate(6deg); }
+  50%       { transform: rotate(-30deg); }
+}
+.creature-claw { animation: creature-claw-wiggle 1.3s ease-in-out infinite; }
+.creature-claw-r { animation-name: creature-claw-wiggle; animation-delay: 0.3s; }
+
+@keyframes creature-wing-flap {
+  0%, 100% { transform: rotate(8deg) scaleY(1); }
+  50%       { transform: rotate(-24deg) scaleY(0.65); }
+}
+.creature-wing { animation: creature-wing-flap 0.9s ease-in-out infinite; }
+.creature-wing-r { animation-name: creature-wing-flap; animation-delay: 0.15s; }
+
+@keyframes creature-antenna-sway {
+  0%, 100% { transform: rotate(-8deg); }
+  50%       { transform: rotate(20deg); }
+}
+.creature-antenna { animation: creature-antenna-sway 1.6s ease-in-out infinite; }
+.creature-antenna-r { animation-name: creature-antenna-sway; animation-delay: 0.4s; }
+
+/* Spawn: pops in with a bounce when a boss first appears on screen */
+@keyframes creature-spawn-pop {
+  0%   { transform: scale(0.1) rotate(-35deg); opacity: 0; }
+  55%   { transform: scale(1.3) rotate(10deg); opacity: 1; }
+  75%   { transform: scale(0.92) rotate(-4deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.creature-spawn-anim { animation: creature-spawn-pop 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Poke: a quick squish when the player taps the boss to open its details */
+@keyframes creature-poke {
+  0%   { transform: scale(1, 1); }
+  40%  { transform: scale(0.68, 1.28); }
+  70%  { transform: scale(1.1, 0.9); }
+  100% { transform: scale(1, 1); }
+}
+.creature-poke-anim { animation: creature-poke 0.35s ease-out; }
+
+/* Hit: a sharp recoil + squash/stretch + a hot brightness flash */
+@keyframes creature-hit {
+  0%   { transform: translate(0, 0) scale(1, 1) rotate(0deg); filter: brightness(1) saturate(1); }
+  15%  { transform: translate(-20px, -10px) scale(0.78, 1.24) rotate(-16deg); filter: brightness(2.4) saturate(0.4); }
+  35%  { transform: translate(18px, 6px) scale(1.18, 0.85) rotate(12deg); filter: brightness(1.7); }
+  55%  { transform: translate(-10px, 0) scale(0.92, 1.08) rotate(-7deg); filter: brightness(1.3); }
+  75%  { transform: translate(5px, 0) scale(1.04, 0.97) rotate(3deg); filter: brightness(1.1); }
+  100% { transform: translate(0, 0) scale(1, 1) rotate(0deg); filter: brightness(1); }
+}
+.creature-hit-anim { animation: creature-hit 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Taunt: bouncy laugh-shake */
+@keyframes creature-laugh {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  15%       { transform: translateY(-22px) rotate(9deg) scale(1.08); }
+  35%       { transform: translateY(4px) rotate(-8deg) scale(0.95); }
+  55%       { transform: translateY(-16px) rotate(7deg) scale(1.05); }
+  75%       { transform: translateY(2px) rotate(-5deg) scale(0.98); }
+  90%       { transform: translateY(-6px) rotate(2deg) scale(1.02); }
+}
+.creature-laugh-anim { animation: creature-laugh 0.75s ease-in-out both; }
+
+/* Dead: staggers, tips over hard, sinks, desaturates */
+@keyframes creature-dead {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; filter: grayscale(0) brightness(1); }
+  25%  { transform: translateY(-10px) rotate(-12deg) scale(1.05); opacity: 1; filter: grayscale(0.3) brightness(0.9); }
+  100% { transform: translateY(48px) rotate(100deg) scale(0.72); opacity: 0.5; filter: grayscale(1) brightness(0.6); }
+}
+.creature-dead-anim { animation: creature-dead 1.1s cubic-bezier(0.55, 0, 0.85, 0.35) forwards; }
+
 /* ─── Reduced motion ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

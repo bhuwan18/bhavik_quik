@@ -7,6 +7,7 @@ import IntroOverlay from "@/components/IntroOverlay";
 import { MILESTONES, TIER_COLORS, getMilestoneByThreshold } from "@/lib/milestones-data";
 import { STREAK_MILESTONES } from "@/lib/game-config";
 import CategoryGrid from "@/components/dashboard/CategoryGrid";
+import BossDashboardWidget from "@/components/boss/BossDashboardWidget";
 import { Lock } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -138,6 +139,9 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Boss Battle ── */}
+      <BossDashboardWidget />
 
       {/* ── Pick a Category ── */}
       <CategoryGrid categoriesWithNew={[...categoriesWithNew]} totalCoinsEarned={user?.totalCoinsEarned ?? 0} categoryPlayCounts={categoryPlayCounts} />

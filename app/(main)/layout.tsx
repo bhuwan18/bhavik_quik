@@ -11,6 +11,8 @@ import PushSubscriptionManager from "@/components/layout/PushSubscriptionManager
 import { NotificationsProvider } from "@/components/layout/NotificationsProvider";
 import { FeedProvider } from "@/components/layout/FeedProvider";
 import SplashScreen from "@/components/SplashScreen";
+import { BossProvider } from "@/components/boss/BossProvider";
+import BossOverlay from "@/components/boss/BossOverlay";
 
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito", display: "swap" });
 
@@ -22,6 +24,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     <AudioProvider>
       <NotificationsProvider>
       <FeedProvider>
+      <BossProvider>
       <div className={`flex min-h-screen ${nunito.variable}`}>
         {/* Sidebar hidden on mobile */}
         <div className="hidden md:flex sticky top-0 h-screen">
@@ -45,6 +48,8 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       <AudioPlayer />
       <PushSubscriptionManager />
       <SplashScreen />
+      <BossOverlay />
+      </BossProvider>
       </FeedProvider>
       </NotificationsProvider>
     </AudioProvider>

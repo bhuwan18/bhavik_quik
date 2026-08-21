@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { HACKDEV_DURATION_S, HACKDEV_CATEGORY, HACKDEV_TIMER_WARNING_S, HACKDEV_ANSWER_REVEAL_MS, GAME_COINS_PER_CORRECT } from "@/lib/game-config";
+import { HACKDEV_DURATION_S, HACKDEV_CATEGORY, HACKDEV_TIMER_WARNING_S, HACKDEV_ANSWER_REVEAL_MS, GAME_COINS_PER_CORRECT, GAME_DAMAGE_PER_CORRECT } from "@/lib/game-config";
+import { useBoss } from "@/components/boss/BossProvider";
 
 type Question = {
   id: string;
@@ -11,6 +12,7 @@ type Question = {
 };
 
 export default function HackDevGame({ onBack }: { onBack: () => void }) {
+  const boss = useBoss();
   const [phase, setPhase] = useState<"intro" | "playing" | "done">("intro");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
@@ -67,14 +69,17 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
         const quizRes = await fetch(`/api/quizzes?category=${HACKDEV_CATEGORY}&official=true`);
         const { quizzes } = await quizRes.json();
         if (quizzes?.length > 0) {
-          await fetch("/api/attempt", {
+          const res = await fetch("/api/attempt", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ quizId: quizzes[0].id, answers: finalAnswers }),
           });
+          const data = await res.json();
+          boss.reconcileAttempt(data.boss ?? null);
         }
       } catch { /* ignore */ }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -96,6 +101,8 @@ export default function HackDevGame({ onBack }: { onBack: () => void }) {
     const newAnswers = [...answers, { questionId: q.id, selectedIndex: idx }];
     if (correct) setScore(newScore);
     setAnswers(newAnswers);
+    if (correct) boss.registerHit(GAME_DAMAGE_PER_CORRECT);
+    else boss.registerMiss();
 
     setTimeout(() => {
       if (current + 1 < questions.length) {

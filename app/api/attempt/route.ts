@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SCHOOL_EMAIL_DOMAIN, isSchoolHours, getISTDateString, getYesterdayISTDateString, getISOWeek } from "@/lib/time";
-import { getSchoolHoursEnabled, getRetakeCoinsEnabled } from "@/lib/app-settings";
+import { getSchoolHoursEnabled, getRetakeCoinsEnabled, getBossBattlesEnabled } from "@/lib/app-settings";
 import {
   COINS_BY_DIFFICULTY,
   DAILY_LIMIT_REGULAR,
@@ -12,7 +12,9 @@ import {
   MULTIPLIER_PRO,
   MULTIPLIER_MAX,
   STREAK_MILESTONES,
+  DAMAGE_BY_DIFFICULTY,
 } from "@/lib/game-config";
+import { applyBossDamage } from "@/lib/boss";
 import {
   MILESTONE_THRESHOLDS,
   getMilestoneByThreshold,
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
   }
 
   // FIX 1: Parallelize user fetch, quiz fetch, and both settings reads
-  const [dbUser, quiz, schoolHoursEnabled, retakeCoinsEnabled] = await Promise.all([
+  const [dbUser, quiz, schoolHoursEnabled, retakeCoinsEnabled, bossBattlesEnabled] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -88,6 +90,7 @@ export async function POST(req: NextRequest) {
     }),
     getSchoolHoursEnabled(),
     getRetakeCoinsEnabled(),
+    getBossBattlesEnabled(),
   ]);
 
   if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -217,6 +220,20 @@ export async function POST(req: NextRequest) {
       },
     }),
   ]);
+
+  // ── Boss Battles: deal damage to the active community boss ──────────────────
+  // Awaited (not fire-and-forget) — this is shared, correctness-critical state that
+  // other players' clients read, unlike the notification/feed writes below. Wrapped
+  // in try/catch so a boss failure can never fail the attempt itself.
+  let bossResult: Awaited<ReturnType<typeof applyBossDamage>> = null;
+  if (bossBattlesEnabled && score > 0) {
+    const bossDamage = score * (DAMAGE_BY_DIFFICULTY[quiz.difficulty] ?? 1);
+    try {
+      bossResult = await applyBossDamage(session.user.id, bossDamage);
+    } catch (err) {
+      console.error("[attempt] boss damage failed:", err);
+    }
+  }
 
   // Feed: quiz_completed — merge into 2-hour window or create new (fire-and-forget)
   (async () => {
@@ -774,5 +791,14 @@ export async function POST(req: NextRequest) {
     currentStreak: newStreak,
     streakFreezeUsed,
     mysticalQuizletsGranted: mysticalGranted,
+    boss: bossResult
+      ? {
+          damageDealt: score * (DAMAGE_BY_DIFFICULTY[quiz.difficulty] ?? 1),
+          currentHp: bossResult.currentHp,
+          maxHp: bossResult.maxHp,
+          defeated: bossResult.defeated,
+          gemsEarned: bossResult.gemsEarned,
+        }
+      : null,
   });
 }

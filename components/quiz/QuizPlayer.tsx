@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useBoss } from "@/components/boss/BossProvider";
+import { DAMAGE_BY_DIFFICULTY } from "@/lib/game-config";
 
 type Question = {
   id: string;
@@ -44,6 +46,7 @@ function shuffleOrder(length: number, seed: number): number[] {
 
 export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
   const router = useRouter();
+  const boss = useBoss();
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null); // visual index
   const [answers, setAnswers] = useState<{ questionId: string; selectedIndex: number }[]>([]);
@@ -97,7 +100,19 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
   const handleSelect = (visualIdx: number) => {
     if (selected !== null) return;
     setSelected(visualIdx);
+    if (visualIdx === correctVisualIdx) {
+      boss.registerHit(DAMAGE_BY_DIFFICULTY[quiz.difficulty] ?? 1);
+    } else {
+      boss.registerMiss();
+    }
   };
+
+  // Clear any "boss defeated" banner from a previous quiz when this player unmounts,
+  // so it doesn't leak onto the next quiz's results screen.
+  useEffect(() => {
+    return () => boss.clearLastKill();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleMarkRead = async () => {
     if (!canMarkRead || explanationMarked || markingRead) return;
@@ -145,6 +160,7 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
           setMysticalQueue(data.mysticalQuizletsGranted);
           setShowingMystical(true);
         }
+        boss.reconcileAttempt(data.boss ?? null);
         setResult(data);
       } catch {
         setResult({ score: 0, total, coinsEarned: 0 });
@@ -243,6 +259,27 @@ export default function QuizPlayer({ quiz }: { quiz: Quiz }) {
         <div className="inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-5 py-2.5 rounded-xl mb-4 text-lg font-bold">
           🪙 +{result.coinsEarned} coins earned
         </div>
+
+        {boss.lastKill && (
+          <div
+            className="mb-6 rounded-2xl p-4 text-left"
+            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.35)" }}
+          >
+            <p className="font-bold text-red-300 text-sm mb-1">
+              {boss.lastKill.youLandedFinalBlow
+                ? `${boss.lastKill.bossIcon} You finished off ${boss.lastKill.bossName}!`
+                : `${boss.lastKill.bossIcon} The community defeated ${boss.lastKill.bossName}!`}
+            </p>
+            {boss.lastKill.gemsEarned > 0 ? (
+              <p className="text-sm text-gray-300">
+                You earned <span className="text-white font-semibold">💎 {boss.lastKill.gemsEarned} gems</span>
+                {boss.lastKill.youLandedFinalBlow ? " for landing the final blow." : "."}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400">Your share of gems is on its way — check Notifications shortly.</p>
+            )}
+          </div>
+        )}
 
         {result.coinsEarned === 0 && result.score > 0 && (
           <div className="mb-6 bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 text-left">

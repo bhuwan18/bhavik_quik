@@ -1,9 +1,157 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import type { WeeklyOffers, WeeklyOfferType } from "@/lib/app-settings";
 import { PRO_AMOUNT_INR, MAX_AMOUNT_INR, DAILY_RESET_AMOUNT_INR } from "@/lib/game-config";
+
+// ─── Boss control panel ─────────────────────────────────────────────────────
+
+type AdminBoss = {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+  currentHp: number;
+  maxHp: number;
+  status: string;
+  expiresAt: string;
+};
+
+function BossControlPanel() {
+  const [boss, setBoss] = useState<AdminBoss | null | undefined>(undefined); // undefined = loading
+  const [contributorCount, setContributorCount] = useState(0);
+  const [hpInput, setHpInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const refresh = useCallback(async () => {
+    const res = await fetch("/api/admin/boss");
+    if (!res.ok) return;
+    const data = await res.json();
+    setBoss(data.boss);
+    setContributorCount(data.contributorCount ?? 0);
+    if (data.boss) setHpInput(String(Math.max(0, data.boss.currentHp)));
+  }, []);
+
+  useEffect(() => {
+    // refresh() is an async fetch; its setState calls run after the network response,
+    // not synchronously in this effect body.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    refresh();
+  }, [refresh]);
+
+  async function handleSetHp() {
+    const hp = parseInt(hpInput, 10);
+    if (Number.isNaN(hp) || hp < 0) return;
+    setSaving(true);
+    setMsg("");
+    const res = await fetch("/api/admin/boss", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentHp: hp }),
+    });
+    setSaving(false);
+    if (res.ok) {
+      setMsg("HP updated.");
+      refresh();
+    } else {
+      setMsg("Failed to update HP.");
+    }
+    setTimeout(() => setMsg(""), 3000);
+  }
+
+  async function handleAction(action: "force-spawn" | "force-end") {
+    if (action === "force-spawn" && !confirm("Spawn a new boss now? This will end the current active boss without a payout.")) return;
+    if (action === "force-end" && !confirm("End the current boss now? Contributors will NOT receive gems — only a natural defeat (0 HP) triggers payout.")) return;
+    setSaving(true);
+    const res = await fetch("/api/admin/boss", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    setSaving(false);
+    if (res.ok) refresh();
+  }
+
+  return (
+    <div className="rounded-2xl border border-white/10 p-6" style={{ background: "var(--surface)" }}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-lg">⚔️</span>
+        <h2 className="font-semibold text-base">Boss Battles</h2>
+      </div>
+      <p className="text-sm text-gray-400 mb-4">
+        View and control the current community boss. Only a natural defeat (HP reaching 0 via player
+        damage) pays out gems to contributors — force-ending a boss does not.
+      </p>
+
+      {boss === undefined && <p className="text-sm text-gray-500">Loading…</p>}
+
+      {boss === null && (
+        <p className="text-sm text-gray-400">No active boss right now. The daily cron will spawn one automatically, or force-spawn one below.</p>
+      )}
+
+      {boss && (
+        <div className="mb-4 p-4 rounded-xl border border-white/8 bg-white/3">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-2xl">{boss.icon}</span>
+            <div>
+              <div className="font-medium text-sm">{boss.name}</div>
+              <div className="text-xs text-gray-400">
+                {Math.max(0, boss.currentHp)} / {boss.maxHp} HP · {contributorCount} contributor{contributorCount === 1 ? "" : "s"} · expires {new Date(boss.expiresAt).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
+          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className="h-full bg-red-500 rounded-full transition-all"
+              style={{ width: `${Math.max(0, Math.min(100, (boss.currentHp / boss.maxHp) * 100))}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        {boss && (
+          <>
+            <input
+              type="number"
+              min={0}
+              max={boss.maxHp}
+              value={hpInput}
+              onChange={(e) => setHpInput(e.target.value)}
+              className="w-28 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-purple-500"
+            />
+            <button
+              onClick={handleSetHp}
+              disabled={saving}
+              className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-xs font-medium disabled:opacity-50 transition-colors"
+            >
+              Set HP
+            </button>
+          </>
+        )}
+        <button
+          onClick={() => handleAction("force-spawn")}
+          disabled={saving}
+          className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-medium disabled:opacity-50 transition-colors"
+        >
+          Force Spawn New
+        </button>
+        {boss && (
+          <button
+            onClick={() => handleAction("force-end")}
+            disabled={saving}
+            className="px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-300 text-xs font-medium disabled:opacity-50 transition-colors"
+          >
+            Force End (no payout)
+          </button>
+        )}
+        {msg && <span className="text-xs text-purple-300">{msg}</span>}
+      </div>
+    </div>
+  );
+}
 
 // ─── Toggle ───────────────────────────────────────────────────────────────────
 
@@ -51,16 +199,19 @@ export default function AdminSettingsClient({
   weeklyOffers: initialOffers,
   totpConfigured: initialTotpConfigured,
   maxOpenLimitEnabled: initialMaxOpenLimit,
+  bossBattlesEnabled: initialBossBattles,
 }: {
   schoolHoursEnabled: boolean;
   retakeCoinsEnabled: boolean;
   weeklyOffers: WeeklyOffers;
   totpConfigured: boolean;
   maxOpenLimitEnabled: boolean;
+  bossBattlesEnabled: boolean;
 }) {
   const [schoolHoursEnabled, setSchoolHoursEnabled] = useState(initialSchool);
   const [retakeCoinsEnabled, setRetakeCoinsEnabled] = useState(initialRetake);
   const [maxOpenLimitEnabled, setMaxOpenLimitEnabled] = useState(initialMaxOpenLimit);
+  const [bossBattlesEnabled, setBossBattlesEnabled] = useState(initialBossBattles);
   const [saving, setSaving] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState("");
 
@@ -330,6 +481,52 @@ export default function AdminSettingsClient({
             )}
           </div>
         </div>
+
+        {/* Boss Battles toggle */}
+        <div className="rounded-2xl border border-white/10 p-6" style={{ background: "var(--surface)" }}>
+          <div className="flex items-start justify-between gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">⚔️</span>
+                <h2 className="font-semibold text-base">Boss Battles</h2>
+              </div>
+              <p className="text-sm text-gray-400">
+                When enabled, correct quiz answers deal damage to the current community boss and
+                defeating it pays gems out to every contributor. Disabling this hides the boss overlay
+                and stops damage from being recorded — quizzes still work normally.
+              </p>
+            </div>
+            <SettingToggle
+              enabled={bossBattlesEnabled}
+              disabled={saving !== null}
+              onToggle={() =>
+                patchSetting(
+                  "bossBattlesEnabled",
+                  !bossBattlesEnabled,
+                  () => setBossBattlesEnabled((v) => !v),
+                  !bossBattlesEnabled ? "Boss Battles enabled." : "Boss Battles disabled."
+                )
+              }
+            />
+          </div>
+          <div className="mt-4 flex items-center gap-2">
+            <span
+              className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                bossBattlesEnabled
+                  ? "bg-green-500/15 text-green-300 border-green-500/30"
+                  : "bg-gray-500/15 text-gray-400 border-gray-600/30"
+              }`}
+            >
+              {bossBattlesEnabled ? "Enabled" : "Disabled"}
+            </span>
+            {saving === "bossBattlesEnabled" && savedMsg && (
+              <span className="text-xs text-purple-300">{savedMsg}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Boss control panel */}
+        <BossControlPanel />
 
         {/* ── 2FA Setup ─────────────────────────────────────────────────────── */}
         <div className="rounded-2xl border border-white/10 p-6" style={{ background: "var(--surface)" }}>

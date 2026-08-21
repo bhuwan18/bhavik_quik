@@ -90,3 +90,13 @@ export const getMaxOpenLimitEnabled = unstable_cache(
   ["app-settings-max-open-limit"],
   CACHE_OPTS
 );
+
+/** Returns true if Boss Battles (community boss damage + gem rewards) is globally enabled. Defaults to true. */
+export const getBossBattlesEnabled = unstable_cache(
+  async (): Promise<boolean> => {
+    const setting = await prisma.appSetting.findUnique({ where: { key: "bossBattlesEnabled" } });
+    return setting ? setting.value === "true" : true;
+  },
+  ["app-settings-boss-battles-enabled"],
+  CACHE_OPTS
+);

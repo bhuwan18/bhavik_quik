@@ -1,18 +1,19 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import AdminSettingsClient from "./AdminSettingsClient";
-import { getSchoolHoursEnabled, getRetakeCoinsEnabled, getWeeklyOffers, getMaxOpenLimitEnabled } from "@/lib/app-settings";
+import { getSchoolHoursEnabled, getRetakeCoinsEnabled, getWeeklyOffers, getMaxOpenLimitEnabled, getBossBattlesEnabled } from "@/lib/app-settings";
 import { prisma } from "@/lib/db";
 
 export default async function AdminSettingsPage() {
   const session = await auth();
   if (!(session?.user as { isAdmin?: boolean } | undefined)?.isAdmin) redirect("/dashboard");
 
-  const [schoolHoursEnabled, retakeCoinsEnabled, weeklyOffers, maxOpenLimitEnabled] = await Promise.all([
+  const [schoolHoursEnabled, retakeCoinsEnabled, weeklyOffers, maxOpenLimitEnabled, bossBattlesEnabled] = await Promise.all([
     getSchoolHoursEnabled(),
     getRetakeCoinsEnabled(),
     getWeeklyOffers(),
     getMaxOpenLimitEnabled(),
+    getBossBattlesEnabled(),
   ]);
 
   const totpSetting = await prisma.appSetting.findUnique({ where: { key: "adminTotpSecret" } });
@@ -25,6 +26,7 @@ export default async function AdminSettingsPage() {
       weeklyOffers={weeklyOffers}
       totpConfigured={totpConfigured}
       maxOpenLimitEnabled={maxOpenLimitEnabled}
+      bossBattlesEnabled={bossBattlesEnabled}
     />
   );
 }

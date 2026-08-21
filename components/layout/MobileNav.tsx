@@ -27,6 +27,7 @@ import {
   Menu,
   X,
   ArrowLeftRight,
+  Swords,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,6 +43,7 @@ const MORE_NAV: { href: string; icon: LucideIcon; label: string; color: string }
   { href: "/trading",      icon: ArrowLeftRight,  label: "Trading",     color: "text-rose-400"   },
   { href: "/milestones",   icon: Medal,           label: "Milestones",  color: "text-yellow-400" },
   { href: "/game",         icon: Gamepad2,        label: "Game Modes",  color: "text-orange-400" },
+  { href: "/boss",         icon: Swords,          label: "Boss Battle", color: "text-red-400"    },
   { href: "/feedback",     icon: MessageSquare, label: "Feedback",    color: "text-pink-400"   },
   { href: "/shop",         icon: Store,         label: "Upgrade",     color: "text-emerald-400"},
   { href: "/feed",          icon: Rss,           label: "Feed",         color: "text-teal-400"  },

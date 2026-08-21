@@ -18,6 +18,7 @@ import {
   STREAK_FREEZE_COST_1,
   STREAK_FREEZE_COST_2,
   STREAK_FREEZE_MAX,
+  GEM_REDEMPTION_TIERS,
 } from "@/lib/game-config";
 
 const UPI_ID = process.env.NEXT_PUBLIC_UPI_ID ?? "";
@@ -840,9 +841,102 @@ function StreakFreezeTab() {
   );
 }
 
+// ─── Redeem Gems ───────────────────────────────────────────────────────────────
+
+function GemsTab() {
+  const [gems, setGems] = useState<number | null>(null);
+  const [redeeming, setRedeeming] = useState<number | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const fetchBalance = async () => {
+    try {
+      const res = await fetch("/api/gems/redeem");
+      if (res.ok) {
+        const data = await res.json();
+        setGems(data.gems ?? 0);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => { fetchBalance(); }, []);
+
+  const handleRedeem = async (tierIndex: number) => {
+    setRedeeming(tierIndex);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/gems/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: tierIndex }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage({ type: "error", text: data.error ?? "Redemption failed" });
+      } else {
+        setGems(data.gems);
+        setMessage({ type: "success", text: `Redeemed ${data.gemsSpent} gems for ${data.coinsGained.toLocaleString()} coins!` });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Something went wrong" });
+    } finally {
+      setRedeeming(null);
+    }
+  };
+
+  return (
+    <div className="max-w-xl mx-auto">
+      <div className="text-center mb-8">
+        <div className="text-6xl mb-4">💎</div>
+        <h2 className="text-2xl font-bold text-white mb-2">Redeem Gems</h2>
+        <p className="text-gray-400">
+          Gems come from Boss Battles — defeat the community boss to earn them, then trade them in for coins.
+        </p>
+      </div>
+
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6 text-center">
+        <p className="text-sm text-gray-400 mb-1">Your gem balance</p>
+        <p className="text-3xl font-bold text-white">💎 {gems === null ? "—" : gems.toLocaleString()}</p>
+      </div>
+
+      {message && (
+        <div className={`rounded-xl p-4 mb-4 text-sm text-center ${message.type === "success" ? "bg-green-500/10 border border-green-500/30 text-green-400" : "bg-red-500/10 border border-red-500/30 text-red-400"}`}>
+          {message.text}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {GEM_REDEMPTION_TIERS.map((tier, i) => {
+          const canAfford = gems !== null && gems >= tier.gems;
+          return (
+            <div key={tier.gems} className="border border-white/10 bg-white/5 rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-white font-semibold">💎 {tier.gems.toLocaleString()} gems</p>
+                <p className="text-sm text-gray-400">→ 🪙 {tier.coins.toLocaleString()} coins</p>
+              </div>
+              <button
+                onClick={() => handleRedeem(i)}
+                disabled={!canAfford || redeeming !== null}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shrink-0"
+              >
+                {redeeming === i ? "Redeeming..." : "Redeem"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="text-xs text-gray-600 text-center mt-6">
+        Redeemed coins count toward your all-time total and the leaderboard, just like a coin purchase.
+      </p>
+    </div>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-type ShopTab = "membership" | "coins" | "reset" | "streak";
+type ShopTab = "membership" | "coins" | "reset" | "streak" | "gems";
 
 export default function ShopPage() {
   const { data: session } = useSession();
@@ -910,12 +1004,23 @@ export default function ShopPage() {
         >
           🧊 Streak Freeze
         </button>
+        <button
+          onClick={() => setTab("gems")}
+          className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            tab === "gems"
+              ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          💎 Gems
+        </button>
       </div>
 
       {tab === "membership" && <MembershipTab isPro={isPro} isMax={isMax} isBlacksmith={isBlacksmith} proDiscountPct={weeklyOffers.pro?.discountPercent} maxDiscountPct={weeklyOffers.max?.discountPercent} />}
       {tab === "coins" && <BuyCoinsTab coinsDiscountPct={weeklyOffers.coins?.discountPercent} />}
       {tab === "reset" && <DailyResetTab dailyResetDiscountPct={weeklyOffers.daily_reset?.discountPercent} />}
       {tab === "streak" && <StreakFreezeTab />}
+      {tab === "gems" && <GemsTab />}
     </div>
   );
 }

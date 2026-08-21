@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { SPEEDBLITZ_DURATION_S, SPEEDBLITZ_QUESTION_COUNT, SPEEDBLITZ_TIMER_WARNING_S, GAME_COINS_PER_CORRECT } from "@/lib/game-config";
+import { SPEEDBLITZ_DURATION_S, SPEEDBLITZ_QUESTION_COUNT, SPEEDBLITZ_TIMER_WARNING_S, GAME_COINS_PER_CORRECT, GAME_DAMAGE_PER_CORRECT } from "@/lib/game-config";
+import { useBoss } from "@/components/boss/BossProvider";
 
 type Question = { id: string; text: string; options: string[]; correctIndex: number };
 
 export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
+  const boss = useBoss();
   const [phase, setPhase] = useState<"intro" | "playing" | "done">("intro");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
@@ -68,6 +70,11 @@ export default function SpeedBlitzGame({ onBack }: { onBack: () => void }) {
     const correct = idx === q.correctIndex;
     const newScore = correct ? score + 1 : score;
     if (correct) setScore(newScore);
+    // Cosmetic only — SpeedBlitz mixes questions from several quizzes into one session with
+    // no single coherent quizId, so (like its coins) it never calls /api/attempt and can't
+    // deal real, persisted boss damage. The overlay still reacts so the mode doesn't feel dead.
+    if (correct) boss.registerHit(GAME_DAMAGE_PER_CORRECT);
+    else boss.registerMiss();
 
     if (current + 1 >= questions.length) {
       end(newScore);

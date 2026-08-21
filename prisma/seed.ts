@@ -7416,6 +7416,146 @@ const QUIZZES = [
     ],
   },
 
+  {
+    title: "Forces & Simple Machines",
+    description: "Discover how pushes, pulls, and clever machines make work easier.",
+    category: "grade-6",
+    difficulty: 2,
+    isNew: true,
+    questions: [
+      {
+        text: "What is a force?",
+        options: ["A form of energy that builds up inside an object as it speeds up", "A measure of how much matter an object contains, in kilograms", "The rate at which an object changes its position over time", "A push or pull that can change an object's motion, shape, or direction"],
+        correctIndex: 3,
+        explanation: "A force is a push or pull acting on an object. Forces can start motion, stop it, speed it up, slow it down, or change direction. You apply a force when you kick a ball, open a door, or stretch a rubber band. Forces are invisible but their effects can always be observed.",
+      },
+      {
+        text: "What is the unit used to measure force?",
+        options: ["Kilogram (kg)", "Joule (J)", "Newton (N)", "Metre per second (m/s)"],
+        correctIndex: 2,
+        explanation: "Force is measured in Newtons (N), named after Sir Isaac Newton. A Newton is defined as the force needed to accelerate a 1 kg object at 1 m/s². On Earth, a medium apple weighs about 1 Newton. Your weight (the gravitational force on you) is roughly your mass in kg × 10 N.",
+      },
+      {
+        text: "What is gravity?",
+        options: ["A force that pulls all objects with mass towards each other", "A push that repels objects away from the Earth's surface", "The resistance that occurs when two rough surfaces slide together", "Energy stored inside an object when it is stretched or compressed"],
+        correctIndex: 0,
+        explanation: "Gravity is an attractive force between all objects that have mass. The more massive the object, the stronger its gravitational pull. Earth's gravity pulls everything towards its centre — that's why objects fall when dropped. On the Moon (less massive), gravity is about 1/6th of Earth's, so you would weigh less but your mass stays the same.",
+      },
+      {
+        text: "What does friction do?",
+        options: ["Pulls all objects downward toward the Earth's surface", "Transfers energy from a stationary object into forward motion", "Propels objects forward when two surfaces press hard together", "Resists and opposes motion between two surfaces in contact"],
+        correctIndex: 3,
+        explanation: "Friction is a force that acts opposite to the direction of motion when two surfaces are in contact. It slows moving objects down and makes it harder to slide things. Rough surfaces create more friction; smooth/oily surfaces reduce it. Friction is useful (it lets you walk without slipping) but also wastes energy as heat in machines.",
+      },
+      {
+        text: "When the forces acting on a stationary object are balanced, what happens?",
+        options: ["It moves in the direction of the largest force", "It remains stationary", "It accelerates slowly", "It vibrates back and forth"],
+        correctIndex: 1,
+        explanation: "Balanced forces are equal in size and opposite in direction, so they cancel each other out. A stationary object with balanced forces stays at rest. A book sitting on a table is an example — gravity pulls it down and the table's normal force pushes it up equally, so the book doesn't move. This is Newton's First Law in action.",
+      },
+      {
+        text: "What is the pivot point of a lever called?",
+        options: ["Load", "Effort", "Axle", "Fulcrum"],
+        correctIndex: 3,
+        explanation: "A lever is a rigid bar that rotates around a fixed point called the fulcrum. By positioning the fulcrum closer to the load, a small effort force can lift a heavy load — this is called mechanical advantage. Examples: a seesaw (fulcrum in the middle), a wheelbarrow (fulcrum at the wheel), a stapler (fulcrum at the hinge).",
+      },
+      {
+        text: "Which of these is a simple machine?",
+        options: ["Bicycle", "Inclined plane (ramp)", "Electric motor", "Computer"],
+        correctIndex: 1,
+        explanation: "The six classic simple machines are: lever, wheel and axle, pulley, inclined plane, wedge, and screw. An inclined plane (ramp) is one of them — it lets you move a heavy load to a higher level using less force over a longer distance. Bicycles, motors, and computers are complex machines made of many parts.",
+      },
+      {
+        text: "What is the main advantage of using a pulley?",
+        options: ["It changes the direction of a force or reduces the effort needed to lift a load", "It converts electrical energy into mechanical motion to lift heavy objects", "It multiplies friction between the rope and wheel to grip loads firmly", "It stores gravitational potential energy and releases it on demand"],
+        correctIndex: 0,
+        explanation: "A pulley is a wheel with a groove through which a rope or chain runs. A fixed pulley changes the direction of force (you pull down to lift up). A movable pulley halves the effort needed to lift a load. Combined systems (block and tackle) can multiply your force many times — used on cranes and flagpoles.",
+      },
+      {
+        text: "Which statement best describes Newton's First Law of Motion?",
+        options: ["A heavier object always falls faster than a lighter one due to its greater weight", "Every action force produces an equal and opposite reaction force in the other object", "An object at rest stays at rest, and a moving object keeps moving, unless an unbalanced force acts on it", "The net force on an object equals its mass multiplied by the acceleration it produces"],
+        correctIndex: 2,
+        explanation: "Newton's First Law (the Law of Inertia) states that objects resist changes to their state of motion. A ball stays still until kicked; a moving puck on ice keeps sliding until friction stops it. This is why you lurch forward when a car brakes suddenly — your body was in motion and wants to stay that way.",
+      },
+      {
+        text: "A door handle is an example of which simple machine?",
+        options: ["Lever", "Inclined plane", "Wheel and axle", "Wedge"],
+        correctIndex: 2,
+        explanation: "A wheel and axle consists of a larger wheel attached to a smaller axle — turning the wheel produces more force at the axle. A door handle/knob is a wheel and axle: the wide handle (wheel) requires little turning force, but the narrow axle (latch mechanism) exerts greater force to retract the bolt. Screwdrivers and steering wheels work the same way.",
+      },
+    ],
+  },
+
+  {
+    title: "Number Theory: Primes, Factors & Multiples",
+    description: "Master prime numbers, HCF, LCM, and the building blocks of mathematics.",
+    category: "grade-6",
+    difficulty: 2,
+    isNew: true,
+    questions: [
+      {
+        text: "What is a prime number?",
+        options: ["Any number that ends in 1, 3, 7, or 9 and cannot be divided evenly by 2", "A number that is divisible by 2 and always produces a whole number result", "A number with three or more factors, such as 4, 6, 9, or any other composite", "A whole number greater than 1 that has exactly two factors: 1 and itself"],
+        correctIndex: 3,
+        explanation: "A prime number has exactly two distinct factors — 1 and itself. Examples: 2, 3, 5, 7, 11, 13. Note that 1 is NOT prime (it has only one factor). 2 is the only even prime. Numbers with more than two factors (like 4, 6, 9) are called composite numbers.",
+      },
+      {
+        text: "Which of the following is a prime number?",
+        options: ["9", "15", "17", "21"],
+        correctIndex: 2,
+        explanation: "17 is prime — its only factors are 1 and 17. Check the others: 9 = 3 × 3, 15 = 3 × 5, 21 = 3 × 7. A quick check: if a number isn't divisible by any prime up to its square root, it's prime. √17 ≈ 4.1, so we only need to test 2 and 3 — neither divides 17, confirming it's prime.",
+      },
+      {
+        text: "What are ALL the factors of 12?",
+        options: ["2, 3, 4, 6", "1, 3, 4, 12", "1, 2, 4, 8, 12", "1, 2, 3, 4, 6, 12"],
+        correctIndex: 3,
+        explanation: "Factors of 12 are all whole numbers that divide 12 exactly: 1×12, 2×6, 3×4. So the complete list is 1, 2, 3, 4, 6, 12 — six factors in total. A useful trick: work in pairs from 1 upward. Stop when the two numbers in a pair meet or cross (here, when you reach 4×3).",
+      },
+      {
+        text: "What is the Highest Common Factor (HCF) of 18 and 24?",
+        options: ["3", "4", "6", "12"],
+        correctIndex: 2,
+        explanation: "Factors of 18: 1, 2, 3, 6, 9, 18. Factors of 24: 1, 2, 3, 4, 6, 8, 12, 24. The common factors are 1, 2, 3, 6 — the highest is 6. HCF (also called GCF or GCD) is useful for simplifying fractions: 18/24 simplifies to 3/4 by dividing both by 6.",
+      },
+      {
+        text: "What is the Lowest Common Multiple (LCM) of 4 and 6?",
+        options: ["2", "12", "24", "48"],
+        correctIndex: 1,
+        explanation: "Multiples of 4: 4, 8, 12, 16… Multiples of 6: 6, 12, 18… The first multiple they share is 12. LCM is used when adding fractions with different denominators — e.g. ⅓ + ¼ needs the LCM of 3 and 4 (= 12) as the common denominator. Formula shortcut: LCM(a, b) = (a × b) ÷ HCF(a, b) = (4 × 6) ÷ 2 = 12.",
+      },
+      {
+        text: "Which of the following is a composite number?",
+        options: ["11", "13", "19", "25"],
+        correctIndex: 3,
+        explanation: "A composite number has more than two factors. 25 = 5 × 5, so its factors are 1, 5, and 25 — three factors, making it composite. 11, 13, and 19 are all prime (each has exactly two factors). Every whole number greater than 1 is either prime or composite — never both, never neither.",
+      },
+      {
+        text: "What is the prime factorisation of 36?",
+        options: ["4 × 9", "2 × 18", "2² × 3²", "6²"],
+        correctIndex: 2,
+        explanation: "Prime factorisation breaks a number into prime factors only. 36 = 2 × 18 = 2 × 2 × 9 = 2 × 2 × 3 × 3 = 2² × 3². Although 4 × 9 and 6² equal 36, they contain composite factors (4, 9, 6), so they are NOT prime factorisations. Use a factor tree: split 36 into 6 × 6, then 6 into 2 × 3.",
+      },
+      {
+        text: "Which number is both a factor of 30 AND a multiple of 6?",
+        options: ["4", "6", "9", "20"],
+        correctIndex: 1,
+        explanation: "Factors of 30: 1, 2, 3, 5, 6, 10, 15, 30. Multiples of 6: 6, 12, 18, 24, 30… The number that appears in both lists is 6 (and also 30, but it's not in the options). This type of question tests both concepts at once — a factor divides into the number; a multiple is produced by multiplying.",
+      },
+      {
+        text: "What is the LCM of 5 and 8?",
+        options: ["13", "20", "40", "80"],
+        correctIndex: 2,
+        explanation: "Since 5 and 8 share no common factors (HCF = 1, they are co-prime), LCM = 5 × 8 = 40. Multiples of 5: 5, 10, 15, 20, 25, 30, 35, 40… Multiples of 8: 8, 16, 24, 32, 40… The first match is 40. When two numbers are co-prime, their LCM is always their product.",
+      },
+      {
+        text: "Find the HCF of 48 and 36.",
+        options: ["6", "8", "12", "24"],
+        correctIndex: 2,
+        explanation: "Prime factorisation method: 48 = 2⁴ × 3; 36 = 2² × 3². HCF = take the lowest power of each shared prime factor = 2² × 3¹ = 4 × 3 = 12. Check: 48 ÷ 12 = 4 ✓, 36 ÷ 12 = 3 ✓. The prime factorisation method is the most reliable approach for larger numbers.",
+      },
+    ],
+  },
+
   // ── GEOGRAPHY ─────────────────────────────────────────────────
   {
     title: "Geography Basics",
