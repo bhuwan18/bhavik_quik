@@ -6,8 +6,11 @@ import DinoRexLobby from "./DinoRexLobby";
 import SpeedBlitzGame from "./SpeedBlitzGame";
 import SurvivalGame from "./SurvivalGame";
 import DailyChallengeGame from "./DailyChallengeGame";
+import MonsterHunterGame from "./MonsterHunterGame";
+import TowerDefenseGame from "./TowerDefenseGame";
+import GoldQuestGame from "./GoldQuestGame";
 
-type Mode = "select" | "hackdev" | "dinorex" | "speedblitz" | "survival" | "daily";
+type Mode = "select" | "hackdev" | "dinorex" | "speedblitz" | "survival" | "daily" | "monsterhunter" | "towerdefense" | "goldquest";
 
 const MODES = [
   {
@@ -56,6 +59,33 @@ const MODES = [
     tagColor: "bg-teal-500/20 text-teal-400",
   },
   {
+    id: "monsterhunter",
+    name: "Monster Hunter",
+    description: "A dark maze, chasing monsters, auto-firing lasers. Level up and earn rarity-tiered perks.",
+    icon: "🐛",
+    tag: "Single Player",
+    color: "from-emerald-900/50 to-green-900/30 border-emerald-500/30",
+    tagColor: "bg-emerald-500/20 text-emerald-400",
+  },
+  {
+    id: "towerdefense",
+    name: "Tower Defense",
+    description: "Answer questions for gold, build towers, and hold off 10 waves of enemies.",
+    icon: "🏰",
+    tag: "Single Player",
+    color: "from-blue-900/50 to-indigo-900/30 border-blue-500/30",
+    tagColor: "bg-blue-500/20 text-blue-400",
+  },
+  {
+    id: "goldquest",
+    name: "Gold Quest",
+    description: "Answer, then pick a chest — gold, a multiplier, a steal, or a trap. Race 3 rival bots.",
+    icon: "💰",
+    tag: "Single Player",
+    color: "from-amber-900/50 to-yellow-900/30 border-amber-500/30",
+    tagColor: "bg-amber-500/20 text-amber-400",
+  },
+  {
     id: "classic",
     name: "Classic Mode",
     description: "Standard quiz — no pressure, just enjoy the quiz from Discover.",
@@ -76,6 +106,9 @@ export default function GameModesClient() {
   if (mode === "speedblitz") return <SpeedBlitzGame onBack={() => setMode("select")} />;
   if (mode === "survival") return <SurvivalGame onBack={() => setMode("select")} />;
   if (mode === "daily") return <DailyChallengeGame onBack={() => setMode("select")} />;
+  if (mode === "monsterhunter") return <MonsterHunterGame onBack={() => setMode("select")} />;
+  if (mode === "towerdefense") return <TowerDefenseGame onBack={() => setMode("select")} />;
+  if (mode === "goldquest") return <GoldQuestGame onBack={() => setMode("select")} />;
 
   return (
     <div className="p-4 pb-20 md:p-8 md:pb-0 max-w-4xl mx-auto">

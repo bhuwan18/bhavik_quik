@@ -130,3 +130,59 @@ export const GEM_REDEMPTION_TIERS = [
   { gems: 1000, coins: 3500 },
   { gems: 5000, coins: 20000 },
 ] as const;
+
+// ─── Monster Hunter ───────────────────────────────────────────────────────────
+
+export const MH_TILE_PX = 40;              // maze cell size in canvas pixels
+export const MH_MAZE_COLS = 31;            // must be odd (recursive backtracker carves odd cells)
+export const MH_MAZE_ROWS = 31;            // must be odd
+export const MH_VISION_TILES = 7;          // radius of the raycast fog-of-war, in tiles
+
+export const MH_PLAYER_SPEED = 150;        // px/s
+export const MH_PLAYER_MAX_HP = 100;
+export const MH_PLAYER_IFRAME_MS = 700;    // invincibility window after taking a hit
+
+export const MH_LASER_SPEED = 420;         // px/s
+export const MH_LASER_COOLDOWN_MS = 400;   // base time between shots, before fireRateMult perks
+export const MH_LASER_DAMAGE = 10;         // base damage, before damageMult perks
+export const MH_LASER_RANGE_TILES = 8;     // laser despawns after traveling this far
+export const MH_TRISHOT_SPREAD_RAD = 0.22; // radians between extra projectiles from the Trishot perk
+
+export const MH_MONSTER_SPEED = 75;        // px/s
+export const MH_MONSTER_HP = 20;
+export const MH_MONSTER_DAMAGE = 12;       // per contact hit
+export const MH_MONSTER_HIT_COOLDOWN_MS = 900; // min time between contact hits from the same monster
+
+export const MH_SPAWN_INTERVAL_MS = 2_500;      // base time between monster spawns
+export const MH_SPAWN_INTERVAL_MIN_MS = 700;    // floor as the run ramps up
+export const MH_SPAWN_RAMP_PER_LEVEL = 0.88;    // spawn interval multiplier applied per level
+export const MH_MAX_MONSTERS = 24;              // cap so a long run doesn't tank framerate
+export const MH_MONSTER_REPATH_MS = 600;        // how often each monster recomputes its BFS path to the player
+
+export const MH_GEM_XP = 10;               // XP per gem, before xpMult perks
+export const MH_XP_BASE = 40;              // XP required to reach level 2
+export const MH_XP_GROWTH = 1.35;          // XP-to-next multiplier per level
+export const MH_PERK_CHOICE_COUNT = 3;     // perk cards offered on a correct level-up answer
+
+export const MH_FIXED_STEP_MS = 1000 / 60; // simulation tick — 60Hz fixed timestep
+export const MH_MAX_FRAME_MS = 100;        // clamp a single rAF delta so a backgrounded tab can't catch-up-spiral
+export const MH_HUD_SYNC_MS = 100;         // throttle for pushing world state into React HUD state
+export const MH_STICK_RADIUS_PX = 55;      // max drag distance for the virtual joysticks
+export const MH_MAX_DPR = 2;               // cap devicePixelRatio so high-density phones don't over-render
+
+// ─── Tower Defense ────────────────────────────────────────────────────────────
+
+export const TD_STARTING_LIVES = 10;
+export const TD_TOTAL_WAVES = 10;
+export const TD_GOLD_PER_CORRECT = 50;     // gold earned per correct answer
+export const TD_TOWER_BASE_COST = 100;
+export const TD_TOWER_UPGRADE_COST = 75;
+export const TD_ENEMY_BASE_HP = 30;        // scales up per wave
+export const TD_ENEMY_SPEED = 40;          // px/s along the path
+
+// ─── Gold Quest ───────────────────────────────────────────────────────────────
+
+export const GQ_ROUNDS = 10;
+export const GQ_AI_COUNT = 3;              // number of rival bots
+export const GQ_CHEST_COUNT = 3;           // chest choices offered per correct answer
+export const GQ_STEAL_PCT = 0.25;          // fraction stolen from the leader on a "steal" outcome
