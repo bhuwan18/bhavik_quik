@@ -2,9 +2,10 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useGameLoop } from "./use-game-loop";
-import { useQuizRun } from "./use-quiz-run";
+import { useQuizRun, type RunQuestion } from "./use-quiz-run";
 import CategoryPicker from "./CategoryPicker";
 import { useBoss } from "@/components/boss/BossProvider";
+import { pickNextQuestion } from "@/lib/question-picker";
 import {
   TD_PATH,
   enemyHpForWave,
@@ -69,7 +70,7 @@ export default function TowerDefenseGame({ onBack }: { onBack: () => void }) {
   const [wave, setWave] = useState(1);
   const [lives, setLives] = useState(TD_STARTING_LIVES);
   const [outcome, setOutcome] = useState<"playing" | "victory" | "defeat">("playing");
-  const [qIndex, setQIndex] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<RunQuestion | null>(null);
   const [finalCoins, setFinalCoins] = useState<number | null>(null);
   const [selectedTower, setSelectedTower] = useState<{ gx: number; gy: number } | null>(null);
 
@@ -77,6 +78,7 @@ export default function TowerDefenseGame({ onBack }: { onBack: () => void }) {
   const worldRef = useRef<TdWorld | null>(null);
   const goldRef = useRef(0);
   const submittedRef = useRef(false);
+  const askedIdsRef = useRef<Set<string>>(new Set());
 
   const blocked = useMemo(() => blockedTileKeys(), []);
   const pathLenTiles = useMemo(() => pathLengthInTiles(), []);
@@ -249,15 +251,16 @@ export default function TowerDefenseGame({ onBack }: { onBack: () => void }) {
   useGameLoop(step, draw, running && phase === "playing");
 
   const startRun = async () => {
-    const ok = await run.load(category);
-    if (!ok) return;
+    const questions = await run.load(category);
+    if (!questions) return;
     submittedRef.current = false;
     goldRef.current = 0;
     setGold(0);
     setWave(1);
     setLives(TD_STARTING_LIVES);
     setOutcome("playing");
-    setQIndex(0);
+    askedIdsRef.current = new Set();
+    setCurrentQuestion(pickNextQuestion(questions, askedIdsRef.current, 1));
     setFinalCoins(null);
     setSelectedTower(null);
     worldRef.current = {
@@ -309,9 +312,10 @@ export default function TowerDefenseGame({ onBack }: { onBack: () => void }) {
   };
 
   const answerQuestion = (idx: number) => {
-    const q = run.questions[qIndex % run.questions.length];
+    const q = currentQuestion;
     if (!q) return;
     run.recordAnswer(q.id, idx);
+    askedIdsRef.current.add(q.id);
     const correct = idx === q.correctIndex;
     if (correct) {
       syncGold(TD_GOLD_PER_CORRECT);
@@ -319,7 +323,9 @@ export default function TowerDefenseGame({ onBack }: { onBack: () => void }) {
     } else {
       boss.registerMiss();
     }
-    setQIndex((i) => i + 1);
+    // Always a fresh question, right or wrong — TD has no single reward moment to gate,
+    // every question is an equally good next chance at gold, so there's nothing to retry.
+    setCurrentQuestion(pickNextQuestion(run.questions, askedIdsRef.current, worldRef.current?.wave ?? 1));
   };
 
   if (phase === "intro") {
@@ -413,7 +419,7 @@ export default function TowerDefenseGame({ onBack }: { onBack: () => void }) {
     );
   }
 
-  const q = run.questions[qIndex % Math.max(1, run.questions.length)];
+  const q = currentQuestion;
 
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
@@ -443,6 +449,14 @@ export default function TowerDefenseGame({ onBack }: { onBack: () => void }) {
       {q && (
         <div>
           <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-3">
+            {q.imageUrl && (
+              <div className="mb-3 flex justify-center">
+                <div className="bg-white rounded-xl p-3 shadow-lg flex items-center justify-center w-[200px] h-[120px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={q.imageUrl} alt={q.text} className="object-contain w-full h-full" />
+                </div>
+              </div>
+            )}
             <p className="text-base font-semibold text-white">{q.text}</p>
           </div>
           <div className="grid grid-cols-2 gap-2">

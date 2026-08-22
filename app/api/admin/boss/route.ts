@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { spawnNextBoss } from "@/lib/boss";
+import { spawnNextBoss, resolveBossDefeat } from "@/lib/boss";
 
 async function requireAdmin() {
   const session = await auth();
@@ -36,6 +36,19 @@ export async function PATCH(req: NextRequest) {
 
   if (typeof body.currentHp !== "number" || !Number.isInteger(body.currentHp) || body.currentHp < 0 || body.currentHp > boss.maxHp) {
     return NextResponse.json({ error: "currentHp must be an integer between 0 and the boss's maxHp" }, { status: 400 });
+  }
+
+  if (body.currentHp === 0) {
+    // Dropping HP to 0 is a kill, not just a stat edit — flip status and run the
+    // same defeat resolution (gem payout to contributors, notifications) that a
+    // player's killing blow gets, otherwise the boss is stuck "active" at 0 HP
+    // forever: immune to further damage, no death animation, no gems paid out.
+    const updated = await prisma.boss.update({
+      where: { id: boss.id },
+      data: { currentHp: 0, status: "defeated", defeatedAt: new Date() },
+    });
+    resolveBossDefeat(boss.id).catch((err) => console.error("[admin boss] resolveBossDefeat failed:", err));
+    return NextResponse.json({ boss: updated });
   }
 
   const updated = await prisma.boss.update({

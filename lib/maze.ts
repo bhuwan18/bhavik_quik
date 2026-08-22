@@ -63,6 +63,34 @@ export function generateMaze(cols: number, rows: number): MazeGrid {
   return grid;
 }
 
+/**
+ * Blows up every logical cell of `grid` into a `factor`×`factor` block of the same
+ * wall/floor value, turning the recursive-backtracker's inherently 1-cell-wide rooms
+ * and walls into wide, easy-to-maneuver-in corridors (and correspondingly thick walls)
+ * without changing the generation algorithm itself — connectivity guarantees (fully
+ * connected, no unreachable pockets) carry over unchanged since expansion is a uniform
+ * scale-up, not a structural edit.
+ */
+export function expandMaze(grid: MazeGrid, factor: number): MazeGrid {
+  const f = Math.max(1, Math.floor(factor));
+  const height = grid.length;
+  const width = grid[0]?.length ?? 0;
+  const expanded: MazeGrid = Array.from({ length: height * f }, () => Array(width * f).fill(true));
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const wall = grid[y][x];
+      for (let dy = 0; dy < f; dy++) {
+        for (let dx = 0; dx < f; dx++) {
+          expanded[y * f + dy][x * f + dx] = wall;
+        }
+      }
+    }
+  }
+
+  return expanded;
+}
+
 export function isWall(grid: MazeGrid, cx: number, cy: number): boolean {
   const row = grid[cy];
   if (!row) return true;

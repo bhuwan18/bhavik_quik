@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateMaze, isWall, hasLineOfSight, computeVisible, type MazeGrid } from "@/lib/maze";
+import { generateMaze, expandMaze, isWall, hasLineOfSight, computeVisible, type MazeGrid } from "@/lib/maze";
 
 describe("generateMaze", () => {
   it("clamps even dimensions down to the nearest odd size", () => {
@@ -45,6 +45,77 @@ describe("generateMaze", () => {
     }
 
     expect(visited.size).toBe(floorCount);
+  });
+});
+
+describe("expandMaze", () => {
+  it("scales dimensions by the given factor", () => {
+    const grid = generateMaze(11, 11);
+    const expanded = expandMaze(grid, 3);
+    expect(expanded.length).toBe(grid.length * 3);
+    expect(expanded[0].length).toBe(grid[0].length * 3);
+  });
+
+  it("replaces every source cell with a uniform factor×factor block of the same value", () => {
+    const grid: MazeGrid = [
+      [true, false],
+      [false, true],
+    ];
+    const expanded = expandMaze(grid, 2);
+    // Source (0,0) = wall → expanded (0..1, 0..1) all wall.
+    expect(expanded[0][0]).toBe(true);
+    expect(expanded[0][1]).toBe(true);
+    expect(expanded[1][0]).toBe(true);
+    expect(expanded[1][1]).toBe(true);
+    // Source (1,0) = floor → expanded (2..3, 0..1) all floor.
+    expect(expanded[0][2]).toBe(false);
+    expect(expanded[0][3]).toBe(false);
+    expect(expanded[1][2]).toBe(false);
+    expect(expanded[1][3]).toBe(false);
+  });
+
+  it("preserves full connectivity — the maze stays a single connected region", () => {
+    const grid = generateMaze(9, 9);
+    const expanded = expandMaze(grid, 3);
+    const h = expanded.length;
+    const w = expanded[0].length;
+    let floorCount = 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (!expanded[y][x]) floorCount++;
+
+    // Start BFS from the first floor tile found.
+    let start: [number, number] | null = null;
+    outer: for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (!expanded[y][x]) {
+          start = [x, y];
+          break outer;
+        }
+      }
+    }
+    expect(start).not.toBeNull();
+
+    const visited = new Set<number>([start![1] * w + start![0]]);
+    const queue: [number, number][] = [start!];
+    while (queue.length) {
+      const [cx, cy] = queue.shift()!;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = cx + dx;
+        const ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h || expanded[ny][nx]) continue;
+        const key = ny * w + nx;
+        if (visited.has(key)) continue;
+        visited.add(key);
+        queue.push([nx, ny]);
+      }
+    }
+    expect(visited.size).toBe(floorCount);
+  });
+
+  it("clamps factor to at least 1", () => {
+    const grid: MazeGrid = [[false]];
+    const expanded = expandMaze(grid, 0);
+    expect(expanded.length).toBe(1);
+    expect(expanded[0].length).toBe(1);
   });
 });
 

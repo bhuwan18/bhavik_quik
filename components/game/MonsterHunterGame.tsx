@@ -2,18 +2,30 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameLoop } from "./use-game-loop";
-import { useQuizRun } from "./use-quiz-run";
+import { useQuizRun, type RunQuestion } from "./use-quiz-run";
 import CategoryPicker from "./CategoryPicker";
 import { useBoss } from "@/components/boss/BossProvider";
 import { createWorld, stepWorld, drawWorld, type World, type InputState } from "./monster-hunter-engine";
-import { aggregatePerks, rollPerkChoices, BASE_RUN_STATS, type RunStats } from "@/lib/perk-roll";
+import { aggregatePerks, aggregateAbilities, getAbilityBadges, rollPerkChoices, BASE_RUN_STATS, BASE_ABILITY_STATE, type RunStats, type AbilityState } from "@/lib/perk-roll";
 import type { PerkDef } from "@/lib/perks-data";
+import { pickNextQuestion } from "@/lib/question-picker";
 import { RARITY_COLORS } from "@/lib/utils";
 import { GAME_DAMAGE_PER_CORRECT, MH_HUD_SYNC_MS, MH_STICK_RADIUS_PX, MH_MAX_DPR, MH_PERK_CHOICE_COUNT } from "@/lib/game-config";
 
 type Phase = "intro" | "playing" | "question" | "perk" | "done";
+type Outcome = "victory" | "defeat" | null;
 
-type Hud = { hp: number; maxHp: number; level: number; xp: number; xpToNext: number; kills: number; gems: number };
+type Hud = {
+  hp: number;
+  maxHp: number;
+  level: number;
+  stage: number;
+  xp: number;
+  xpToNext: number;
+  kills: number;
+  gems: number;
+  exitAngle: number | null; // world-space heading from player to the exit — compass
+};
 
 export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
   const boss = useBoss();
@@ -22,10 +34,12 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [category, setCategory] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
-  const [hud, setHud] = useState<Hud>({ hp: 0, maxHp: 0, level: 1, xp: 0, xpToNext: 1, kills: 0, gems: 0 });
+  const [hud, setHud] = useState<Hud>({ hp: 0, maxHp: 0, level: 1, stage: 1, xp: 0, xpToNext: 1, kills: 0, gems: 0, exitAngle: null });
+  const [outcome, setOutcome] = useState<Outcome>(null);
   const [perkChoices, setPerkChoices] = useState<PerkDef[]>([]);
   const [ownedPerks, setOwnedPerks] = useState<string[]>([]);
-  const [askedCount, setAskedCount] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<RunQuestion | null>(null);
+  const askedIdsRef = useRef<Set<string>>(new Set());
   const [reducedMotion, setReducedMotion] = useState(false);
   const [finalCoins, setFinalCoins] = useState<number | null>(null);
 
@@ -33,16 +47,21 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const worldRef = useRef<World | null>(null);
   const statsRef = useRef<RunStats>(BASE_RUN_STATS);
+  const abilitiesRef = useRef<AbilityState>(BASE_ABILITY_STATE);
   const inputRef = useRef<InputState>({ moveX: 0, moveY: 0, aimAngle: null });
   const heldKeysRef = useRef<Set<string>>(new Set());
   const mouseAngleRef = useRef<number | null>(null);
   const moveTouchRef = useRef<{ id: number; ox: number; oy: number } | null>(null);
-  const aimTouchRef = useRef<{ id: number } | null>(null);
+  const aimTouchRef = useRef<{ id: number; ox: number; oy: number } | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [moveStickUI, setMoveStickUI] = useState<{ cx: number; cy: number; dx: number; dy: number } | null>(null);
+  const [aimStickUI, setAimStickUI] = useState<{ cx: number; cy: number; dx: number; dy: number } | null>(null);
   const submittedRef = useRef(false);
   const haltedRef = useRef(false);
 
   useEffect(() => {
     setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
   }, []);
 
   // ── Desktop input: keyboard ────────────────────────────────────────────────
@@ -85,11 +104,14 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
       const rect = el.getBoundingClientRect();
       for (const t of Array.from(e.changedTouches)) {
         const localX = t.clientX - rect.left;
+        const localY = t.clientY - rect.top;
         const isLeft = localX < rect.width / 2;
         if (isLeft && !moveTouchRef.current) {
           moveTouchRef.current = { id: t.identifier, ox: t.clientX, oy: t.clientY };
+          setMoveStickUI({ cx: localX, cy: localY, dx: 0, dy: 0 });
         } else if (!isLeft && !aimTouchRef.current) {
-          aimTouchRef.current = { id: t.identifier };
+          aimTouchRef.current = { id: t.identifier, ox: t.clientX, oy: t.clientY };
+          setAimStickUI({ cx: localX, cy: localY, dx: 0, dy: 0 });
         }
       }
     };
@@ -106,11 +128,14 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
           const ny = dist > 4 ? (Math.sin(angle) * dist) / MH_STICK_RADIUS_PX : 0;
           inputRef.current.moveX = nx;
           inputRef.current.moveY = ny;
+          setMoveStickUI((prev) => (prev ? { ...prev, dx: Math.cos(angle) * dist, dy: Math.sin(angle) * dist } : prev));
         } else if (aimTouchRef.current && t.identifier === aimTouchRef.current.id) {
-          const rect = el.getBoundingClientRect();
-          const originX = rect.left + rect.width * 0.75;
-          const originY = rect.top + rect.height / 2;
-          mouseAngleRef.current = Math.atan2(t.clientY - originY, t.clientX - originX);
+          const dx = t.clientX - aimTouchRef.current.ox;
+          const dy = t.clientY - aimTouchRef.current.oy;
+          const dist = Math.min(MH_STICK_RADIUS_PX, Math.hypot(dx, dy));
+          const angle = Math.atan2(dy, dx);
+          if (dist > 4) mouseAngleRef.current = angle;
+          setAimStickUI((prev) => (prev ? { ...prev, dx: Math.cos(angle) * dist, dy: Math.sin(angle) * dist } : prev));
         }
       }
     };
@@ -121,9 +146,11 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
           moveTouchRef.current = null;
           inputRef.current.moveX = 0;
           inputRef.current.moveY = 0;
+          setMoveStickUI(null);
         }
         if (aimTouchRef.current && t.identifier === aimTouchRef.current.id) {
           aimTouchRef.current = null;
+          setAimStickUI(null);
         }
       }
     };
@@ -139,6 +166,8 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
       el.removeEventListener("touchcancel", onTouchEnd);
       moveTouchRef.current = null;
       aimTouchRef.current = null;
+      setMoveStickUI(null);
+      setAimStickUI(null);
     };
   }, [phase]);
 
@@ -173,10 +202,12 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
         hp: Math.max(0, Math.round(w.player.hp)),
         maxHp: statsRef.current.maxHp,
         level: w.level,
+        stage: w.stage,
         xp: Math.round(w.xp),
         xpToNext: w.xpToNext,
         kills: w.kills,
         gems: w.gemsCollected,
+        exitAngle: Math.atan2(w.exitPos.y - w.player.pos.y, w.exitPos.x - w.player.pos.x),
       });
     }, MH_HUD_SYNC_MS);
     return () => clearInterval(interval);
@@ -188,6 +219,7 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
       const prevMaxHp = statsRef.current.maxHp;
       const newStats = aggregatePerks(next);
       statsRef.current = newStats;
+      abilitiesRef.current = aggregateAbilities(next);
       if (worldRef.current) {
         const hpDelta = Math.max(0, newStats.maxHp - prevMaxHp);
         worldRef.current.player.hp = Math.min(newStats.maxHp, worldRef.current.player.hp + hpDelta);
@@ -196,14 +228,18 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
     });
   }, []);
 
-  const endRun = useCallback(async () => {
-    if (submittedRef.current) return;
-    submittedRef.current = true;
-    setRunning(false);
-    setPhase("done");
-    const result = await run.submit();
-    setFinalCoins(result?.coinsEarned ?? 0);
-  }, [run]);
+  const endRun = useCallback(
+    async (result: Outcome) => {
+      if (submittedRef.current) return;
+      submittedRef.current = true;
+      setOutcome(result);
+      setRunning(false);
+      setPhase("done");
+      const submitResult = await run.submit();
+      setFinalCoins(submitResult?.coinsEarned ?? 0);
+    },
+    [run]
+  );
 
   const step = useCallback(
     (dt: number) => {
@@ -223,26 +259,36 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
       }
       inputRef.current.aimAngle = mouseAngleRef.current;
 
-      const events = stepWorld(w, dt, inputRef.current, statsRef.current);
+      const events = stepWorld(w, dt, inputRef.current, statsRef.current, abilitiesRef.current);
 
       if (events.died) {
         haltedRef.current = true;
-        endRun();
+        endRun("defeat");
+        return;
+      }
+
+      if (events.wonMaze) {
+        haltedRef.current = true;
+        endRun("victory");
         return;
       }
 
       if (events.leveledUp) {
         haltedRef.current = true;
-        if (askedCount < run.questions.length) {
+        const next = pickNextQuestion(run.questions, askedIdsRef.current, w.level);
+        if (next) {
+          setCurrentQuestion(next);
           setPhase("question");
         } else {
+          // Defensive only — useQuizRun.load() already rejects quizzes with zero
+          // questions, so pickNextQuestion should never return null here in practice.
           const grant = rollPerkChoices(ownedPerks, 1)[0];
           if (grant) applyPerk(grant.id);
           haltedRef.current = false;
         }
       }
     },
-    [askedCount, run.questions, ownedPerks, applyPerk, endRun]
+    [run.questions, ownedPerks, applyPerk, endRun]
   );
 
   const draw = useCallback(() => {
@@ -251,41 +297,47 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
     const w = worldRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !container || !w || !ctx) return;
-    drawWorld(ctx, w, container.clientWidth, container.clientHeight);
+    drawWorld(ctx, w, container.clientWidth, container.clientHeight, abilitiesRef.current);
   }, []);
 
   useGameLoop(step, draw, running && phase === "playing");
 
   const startRun = async () => {
-    const ok = await run.load(category);
-    if (!ok) return;
+    const questions = await run.load(category);
+    if (!questions) return;
     submittedRef.current = false;
     haltedRef.current = false;
     setOwnedPerks([]);
-    setAskedCount(0);
+    askedIdsRef.current = new Set();
+    setCurrentQuestion(null);
     setFinalCoins(null);
+    setOutcome(null);
     statsRef.current = BASE_RUN_STATS;
+    abilitiesRef.current = BASE_ABILITY_STATE;
     worldRef.current = createWorld(BASE_RUN_STATS);
     setPhase("playing");
     setRunning(true);
   };
 
   const answerQuestion = (idx: number) => {
-    const q = run.questions[askedCount];
+    const q = currentQuestion;
     if (!q) return;
     run.recordAnswer(q.id, idx);
+    askedIdsRef.current.add(q.id);
     const correct = idx === q.correctIndex;
-    setAskedCount((c) => c + 1);
 
     if (correct) {
       boss.registerHit(GAME_DAMAGE_PER_CORRECT);
       setPerkChoices(rollPerkChoices(ownedPerks, MH_PERK_CHOICE_COUNT));
+      setCurrentQuestion(null);
       setPhase("perk");
     } else {
+      // Wrong answer doesn't end the level-up gate — keep offering fresh questions
+      // (never repeating one already asked this run, while it can be avoided) until
+      // the player actually earns the perk.
       boss.registerMiss();
-      haltedRef.current = false;
-      setPhase("playing");
-      setRunning(true);
+      const next = pickNextQuestion(run.questions, askedIdsRef.current, worldRef.current?.level ?? 1);
+      setCurrentQuestion(next);
     }
   };
 
@@ -302,8 +354,10 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
     const instructions = [
       { icon: "🕹️", text: "Desktop: WASD/arrows to move, mouse to aim — lasers auto-fire" },
       { icon: "📱", text: "Mobile: left thumb moves, right thumb aims" },
-      { icon: "💎", text: "Kill monsters for gems, level up for a quiz question" },
-      { icon: "🎁", text: "Correct answer → pick a perk. Wrong → no perk, keep going" },
+      { icon: "🧭", text: "Follow the compass to the exit on the far side of the maze — that's the win" },
+      { icon: "💎", text: "Kill monsters for gems, level up for a quiz question — answer until you get one right for a perk" },
+      { icon: "📈", text: "Every 10 levels starts a new stage — tougher, faster monsters, and new threats join the hunt" },
+      { icon: "🛰️", text: "Some perks unlock whole new abilities — an auto-firing turret, a shield, an AoE pulse — with their own upgrade perks" },
     ];
     return (
       <div className="p-4 md:p-8 max-w-xl mx-auto">
@@ -324,8 +378,8 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
             Monster <span className="text-emerald-400">Hunter</span>
           </h1>
           <p className="text-gray-400 mb-6">
-            Fight through a dark maze. Monsters chase you — you can&apos;t see past a wall. Collect gems to
-            level up, answer correctly for a chance at a rarity-tiered perk.
+            Fight your way through a dark maze to the exit on the far side. Monsters chase you —
+            you can&apos;t see past a wall. Collect gems to level up and earn rarity-tiered perks along the way.
           </p>
           <div className="rounded-2xl p-5 mb-6 text-left space-y-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             {instructions.map((item) => (
@@ -362,7 +416,7 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
 
   // ── Done ────────────────────────────────────────────────────────────────────
   if (phase === "done") {
-    const victory = hud.kills >= 10;
+    const victory = outcome === "victory";
     return (
       <div className="p-4 md:p-8 max-w-xl mx-auto text-center">
         <div
@@ -376,10 +430,15 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
         >
           {victory ? "🏆" : "💀"}
         </div>
-        <h2 className="text-3xl font-black text-white mb-4 tracking-tight">Run Over!</h2>
+        <h2 className="text-3xl font-black text-white mb-4 tracking-tight">
+          {victory ? "You Escaped the Maze!" : "Run Over!"}
+        </h2>
         <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
           <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300">
             Lv.<span className="text-white font-bold">{hud.level}</span>
+          </span>
+          <span className="px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-sm text-gray-300">
+            Stage <span className="text-purple-300 font-bold">{hud.stage}</span>
           </span>
           <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300">
             💀 <span className="text-white font-bold">{hud.kills}</span> kills
@@ -413,6 +472,7 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
   // ── Playing / Question / Perk ────────────────────────────────────────────────
   const xpPct = hud.xpToNext > 0 ? Math.min(100, (hud.xp / hud.xpToNext) * 100) : 0;
   const hpPct = hud.maxHp > 0 ? Math.max(0, Math.min(100, (hud.hp / hud.maxHp) * 100)) : 0;
+  const abilityBadges = getAbilityBadges(ownedPerks);
 
   return (
     <div
@@ -430,7 +490,12 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
         >
           <div className="flex items-center justify-between text-xs text-white font-bold">
             <span className="flex items-center gap-1">❤️ {hud.hp}/{hud.maxHp}</span>
-            <span className="text-cyan-300">Lv.{hud.level}</span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-cyan-300">Lv.{hud.level}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300">
+                Stage {hud.stage}
+              </span>
+            </span>
           </div>
           <div className="w-full h-2 rounded-full overflow-hidden relative" style={{ background: "rgba(255,255,255,0.08)" }}>
             <div
@@ -452,9 +517,48 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
             <span>💀 {hud.kills}</span>
             <span>💎 {hud.gems}</span>
           </div>
+          {hud.exitAngle !== null && (
+            <div className="flex items-center gap-2 pt-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 transition-transform duration-300" style={{ transform: `rotate(${hud.exitAngle}rad)` }}>
+                <div
+                  style={{
+                    width: 0,
+                    height: 0,
+                    borderTop: "5px solid transparent",
+                    borderBottom: "5px solid transparent",
+                    borderLeft: "9px solid #4ade80",
+                    filter: "drop-shadow(0 0 3px rgba(74,222,128,0.8))",
+                  }}
+                />
+              </div>
+              <span className="text-[10px] text-green-400 font-bold uppercase tracking-wide">Exit this way</span>
+            </div>
+          )}
+          {abilityBadges.length > 0 && (
+            <div className="flex items-center gap-1.5 pt-1.5 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              {abilityBadges.map((badge) => (
+                <div
+                  key={badge.id}
+                  title={`${badge.name} — Tier ${badge.tier}`}
+                  className="relative flex items-center justify-center w-7 h-7 rounded-full text-sm"
+                  style={{ background: "rgba(168,85,247,0.18)", border: "1px solid rgba(168,85,247,0.45)", boxShadow: "0 0 8px rgba(168,85,247,0.35)" }}
+                >
+                  {badge.icon}
+                  {badge.tier > 1 && (
+                    <span
+                      className="absolute -bottom-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                      style={{ background: "#a855f7", border: "1px solid rgba(0,0,0,0.4)" }}
+                    >
+                      {badge.tier}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <button
-          onClick={endRun}
+          onClick={() => endRun("defeat")}
           className="pointer-events-auto text-gray-300 hover:text-white text-xs font-semibold px-3.5 py-2.5 rounded-xl backdrop-blur-md transition-colors"
           style={{ background: "rgba(8,9,28,0.72)", border: "1px solid rgba(255,255,255,0.08)" }}
         >
@@ -462,23 +566,78 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
         </button>
       </div>
 
-      {/* Touch zone hints (mobile only) */}
-      <div
-        className="md:hidden absolute bottom-6 left-6 w-24 h-24 rounded-full flex items-center justify-center pointer-events-none"
-        style={{ border: "2px solid rgba(255,255,255,0.12)", background: "radial-gradient(circle, rgba(255,255,255,0.04), transparent 70%)" }}
-      >
-        <span className="text-[10px] text-white/40 font-semibold tracking-wide">MOVE</span>
-      </div>
-      <div
-        className="md:hidden absolute bottom-6 right-6 w-24 h-24 rounded-full flex items-center justify-center pointer-events-none"
-        style={{ border: "2px solid rgba(255,255,255,0.12)", background: "radial-gradient(circle, rgba(255,255,255,0.04), transparent 70%)" }}
-      >
-        <span className="text-[10px] text-white/40 font-semibold tracking-wide">AIM</span>
-      </div>
+      {/* Idle joystick affordance — shown on any touch-capable device (not gated by viewport
+          width, so iPad-sized touchscreens still see it) whenever that stick isn't in use. */}
+      {isTouchDevice && !moveStickUI && (
+        <div
+          className="absolute bottom-8 left-8 w-28 h-28 rounded-full flex items-center justify-center pointer-events-none"
+          style={{ border: "2px solid rgba(255,255,255,0.15)", background: "radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%)" }}
+        >
+          <div className="w-11 h-11 rounded-full" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.18)" }} />
+          <span className="absolute -bottom-5 text-[10px] text-white/40 font-semibold tracking-wide">MOVE</span>
+        </div>
+      )}
+      {isTouchDevice && !aimStickUI && (
+        <div
+          className="absolute bottom-8 right-8 w-28 h-28 rounded-full flex items-center justify-center pointer-events-none"
+          style={{ border: "2px solid rgba(255,255,255,0.15)", background: "radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%)" }}
+        >
+          <div className="w-11 h-11 rounded-full" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.18)" }} />
+          <span className="absolute -bottom-5 text-[10px] text-white/40 font-semibold tracking-wide">AIM</span>
+        </div>
+      )}
 
-      {phase === "question" && run.questions[askedCount] && (
+      {/* Live joystick — base appears at the finger's touchdown point, knob tracks the drag. */}
+      {moveStickUI && (
+        <div
+          className="absolute rounded-full pointer-events-none w-28 h-28"
+          style={{
+            left: moveStickUI.cx,
+            top: moveStickUI.cy,
+            transform: "translate(-50%, -50%)",
+            border: "2px solid rgba(52,211,153,0.4)",
+            background: "radial-gradient(circle, rgba(52,211,153,0.08), transparent 70%)",
+          }}
+        >
+          <div
+            className="absolute w-12 h-12 rounded-full"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: `translate(calc(-50% + ${moveStickUI.dx}px), calc(-50% + ${moveStickUI.dy}px))`,
+              background: "radial-gradient(circle at 35% 30%, #6ee7b7, #059669)",
+              boxShadow: "0 0 14px 2px rgba(16,185,129,0.5)",
+            }}
+          />
+        </div>
+      )}
+      {aimStickUI && (
+        <div
+          className="absolute rounded-full pointer-events-none w-28 h-28"
+          style={{
+            left: aimStickUI.cx,
+            top: aimStickUI.cy,
+            transform: "translate(-50%, -50%)",
+            border: "2px solid rgba(96,165,250,0.4)",
+            background: "radial-gradient(circle, rgba(96,165,250,0.08), transparent 70%)",
+          }}
+        >
+          <div
+            className="absolute w-12 h-12 rounded-full"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: `translate(calc(-50% + ${aimStickUI.dx}px), calc(-50% + ${aimStickUI.dy}px))`,
+              background: "radial-gradient(circle at 35% 30%, #bfdbfe, #2563eb)",
+              boxShadow: "0 0 14px 2px rgba(59,130,246,0.5)",
+            }}
+          />
+        </div>
+      )}
+
+      {phase === "question" && currentQuestion && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="max-w-md w-full">
+          <div key={currentQuestion.id} className="max-w-md w-full max-h-full overflow-y-auto">
             <div className="text-center mb-4">
               <span
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide"
@@ -488,10 +647,18 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
               </span>
             </div>
             <div className="rounded-2xl p-6 mb-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-              <p className="text-lg font-semibold text-white">{run.questions[askedCount].text}</p>
+              {currentQuestion.imageUrl && (
+                <div className="mb-5 flex justify-center">
+                  <div className="bg-white rounded-2xl p-4 shadow-lg flex items-center justify-center w-[240px] h-[160px]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={currentQuestion.imageUrl} alt={currentQuestion.text} className="object-contain w-full h-full" />
+                  </div>
+                </div>
+              )}
+              <p className="text-lg font-semibold text-white">{currentQuestion.text}</p>
             </div>
             <div className="space-y-2">
-              {run.questions[askedCount].options.map((opt, idx) => (
+              {currentQuestion.options.map((opt, idx) => (
                 <button
                   key={idx}
                   onClick={() => answerQuestion(idx)}

@@ -134,9 +134,10 @@ export const GEM_REDEMPTION_TIERS = [
 // ─── Monster Hunter ───────────────────────────────────────────────────────────
 
 export const MH_TILE_PX = 40;              // maze cell size in canvas pixels
-export const MH_MAZE_COLS = 31;            // must be odd (recursive backtracker carves odd cells)
-export const MH_MAZE_ROWS = 31;            // must be odd
-export const MH_VISION_TILES = 7;          // radius of the raycast fog-of-war, in tiles
+export const MH_MAZE_LOGICAL_COLS = 25;    // must be odd (recursive backtracker carves odd cells) — pre-expansion
+export const MH_MAZE_LOGICAL_ROWS = 25;    // must be odd — pre-expansion
+export const MH_CORRIDOR_WIDTH_TILES = 3;  // each logical cell expands to this many tiles wide — wide corridors, room to fight and dodge
+export const MH_VISION_TILES = 5;          // radius of the raycast fog-of-war, in tiles — tight on purpose: a much bigger maze (above) plus a short sightline is what makes the maze genuinely hard, without resorting to narrow corridors or unfair layouts
 
 export const MH_PLAYER_SPEED = 150;        // px/s
 export const MH_PLAYER_MAX_HP = 100;
@@ -153,16 +154,77 @@ export const MH_MONSTER_HP = 20;
 export const MH_MONSTER_DAMAGE = 12;       // per contact hit
 export const MH_MONSTER_HIT_COOLDOWN_MS = 900; // min time between contact hits from the same monster
 
-export const MH_SPAWN_INTERVAL_MS = 2_500;      // base time between monster spawns
-export const MH_SPAWN_INTERVAL_MIN_MS = 700;    // floor as the run ramps up
-export const MH_SPAWN_RAMP_PER_LEVEL = 0.88;    // spawn interval multiplier applied per level
-export const MH_MAX_MONSTERS = 24;              // cap so a long run doesn't tank framerate
 export const MH_MONSTER_REPATH_MS = 600;        // how often each monster recomputes its BFS path to the player
+export const MH_EXIT_REACH_RADIUS_TILES = 1.5;  // how close (in tiles) the player must get to the exit marker to win
+
+// Spawn pacing — stage-aware, not a runaway per-level exponential (see lib/monster-stage.ts
+// getSpawnIntervalMs/getMaxMonsters). Interval shrinks a step at each new stage plus a gentle
+// ramp within the stage as the player nears its end, always clamped to a floor that leaves
+// enough time to react, fight, and navigate even at the highest stages. Tuned brisk on purpose:
+// the maze (see MH_MAZE_LOGICAL_COLS/ROWS above) is large, so a slow/sparse spawn cadence reads
+// as an empty, easy maze even though the layout itself is hard — a bigger maze needs more
+// monsters in play, not just a longer walk.
+export const MH_SPAWN_INTERVAL_STAGE1_MS = 2_400; // spawn interval at stage 1, level 1
+export const MH_SPAWN_INTERVAL_MIN_MS = 1_000;    // floor at any stage — never faster than this
+export const MH_SPAWN_RAMP_PER_STAGE = 0.85;      // interval multiplier compounding once per stage
+export const MH_SPAWN_RAMP_PER_LEVEL_IN_STAGE = 0.985; // small extra ramp per level within a stage
+export const MH_MAX_MONSTERS_BASE = 9;            // concurrent monster cap at stage 1
+export const MH_MAX_MONSTERS_PER_STAGE = 3;       // extra concurrent monsters allowed per additional stage
+export const MH_MAX_MONSTERS_CAP = 26;            // absolute ceiling regardless of stage
+export const MH_SPAWN_MIN_DIST_TILES = 7;         // minimum spawn distance from the player, in tiles — no ambush spawns
+// Upper bound on spawn distance. Without one, a uniformly random floor tile "at least
+// MH_SPAWN_MIN_DIST_TILES away" in a maze this large (MH_MAZE_LOGICAL_COLS/ROWS above) almost
+// always lands far across the map, so monsters spend most of their time walking a long BFS
+// route instead of ever threatening the player — the maze reads as empty no matter how fast
+// they spawn. Capping how far a spawn can land keeps every spawn within a band around the
+// player's current position: never adjacent (still fair), but always somewhere it can actually
+// close the distance and become a real threat.
+export const MH_SPAWN_MAX_DIST_TILES = 16;
+
+// ─── Monster Hunter — stage-based monster progression ────────────────────────
+// The run is divided into stages of MH_STAGE_LEVELS player levels each. Every stage has its
+// own roster of monster types (lib/monsters-data.ts); beyond the last defined roster, spawns
+// keep drawing from that final roster while the scale multipliers below keep compounding, so
+// late-game runs stay meaningfully harder without needing an unbounded monster roster.
+export const MH_STAGE_LEVELS = 10;              // player levels per monster stage
+export const MH_STAGE_HP_GROWTH = 1.18;         // monster max-HP multiplier, compounds per stage
+export const MH_STAGE_DAMAGE_GROWTH = 1.12;     // monster damage multiplier, compounds per stage
+export const MH_STAGE_SPEED_GROWTH = 0.05;      // +5% monster speed per stage
+export const MH_STAGE_SPEED_CAP = 1.6;          // ceiling on the stage speed multiplier
+export const MH_STALKER_REPATH_MS = 300;        // Stalker: repaths faster than the base monster — reacts quicker to dodges
+export const MH_RANGED_ATTACK_RANGE_TILES = 5;  // Spitter: preferred standoff distance from the player
+export const MH_RANGED_PROJECTILE_SPEED = 260;  // px/s
+export const MH_RANGED_PROJECTILE_DAMAGE = 8;   // base damage per spit, before stage/type scaling
+export const MH_RANGED_COOLDOWN_MS = 1_800;     // time between spits
 
 export const MH_GEM_XP = 10;               // XP per gem, before xpMult perks
 export const MH_XP_BASE = 40;              // XP required to reach level 2
 export const MH_XP_GROWTH = 1.35;          // XP-to-next multiplier per level
 export const MH_PERK_CHOICE_COUNT = 3;     // perk cards offered on a correct level-up answer
+
+// ─── Monster Hunter — ability perks (Turret Drone, Kinetic Barrier, Nova Burst, Second Wind) ──
+// Unlike the flat stat perks above, these are simulated as real extra gameplay by
+// monster-hunter-engine.ts (see World.turret*/barrier*/nova*/secondWind* fields), aggregated
+// from owned perk ids via lib/perk-roll.ts's aggregateAbilities().
+
+export const MH_TURRET_ORBIT_RADIUS_TILES = 1.1; // how far the drone orbits from the player
+export const MH_TURRET_ORBIT_SPEED = 1.6;        // rad/s — purely cosmetic orbit rotation, reads as "alive"
+export const MH_TURRET_BASE_RANGE_TILES = 5;
+export const MH_TURRET_BASE_COOLDOWN_MS = 700;
+export const MH_TURRET_BASE_DAMAGE = 6;
+export const MH_TURRET_LASER_SPEED = 380;        // px/s
+
+export const MH_BARRIER_BASE_RECHARGE_MS = 8_000;
+export const MH_BARRIER_FLASH_MS = 350;          // "shield just broke" flash duration
+
+export const MH_NOVA_BASE_INTERVAL_MS = 3_500;
+export const MH_NOVA_BASE_RADIUS_TILES = 2.5;
+export const MH_NOVA_BASE_DAMAGE = 14;
+export const MH_NOVA_VISUAL_MS = 500;            // expanding-ring pulse animation duration
+
+export const MH_SECOND_WIND_SPEED_MULT = 1.6;
+export const MH_SECOND_WIND_DURATION_MS = 1_100;
+export const MH_SECOND_WIND_BONUS_IFRAME_MS = 500; // stacks on top of the normal post-hit iframe window
 
 export const MH_FIXED_STEP_MS = 1000 / 60; // simulation tick — 60Hz fixed timestep
 export const MH_MAX_FRAME_MS = 100;        // clamp a single rAF delta so a backgrounded tab can't catch-up-spiral
@@ -186,3 +248,11 @@ export const GQ_ROUNDS = 10;
 export const GQ_AI_COUNT = 3;              // number of rival bots
 export const GQ_CHEST_COUNT = 3;           // chest choices offered per correct answer
 export const GQ_STEAL_PCT = 0.25;          // fraction stolen from the leader on a "steal" outcome
+
+// ─── Progressive question difficulty (Monster Hunter, Tower Defense, Gold Quest) ──
+// Quiz questions have no per-question difficulty rating in the schema — only the whole
+// quiz does — so the quiz's own authored `order` (already how /api/quizzes/[id] sorts
+// questions) is the difficulty proxy: earlier-ordered questions are treated as easier.
+
+export const QP_LEVELS_TO_FULL_POOL = 8;   // by level/stage 9, the full question pool is in play
+export const QP_MIN_BAND_FRACTION = 0.3;   // level/stage 1 draws only from the easiest 30% of the pool

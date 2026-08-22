@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { useQuizRun } from "./use-quiz-run";
+import { useQuizRun, type RunQuestion } from "./use-quiz-run";
 import CategoryPicker from "./CategoryPicker";
 import { useBoss } from "@/components/boss/BossProvider";
 import { rollChestOutcome, applyChestOutcome, CHEST_GOLD_BASE, type ChestOutcome, type GoldQuestState } from "@/lib/gold-quest";
+import { pickNextQuestion } from "@/lib/question-picker";
 import { GQ_ROUNDS, GQ_AI_COUNT, GQ_CHEST_COUNT, GAME_DAMAGE_PER_CORRECT } from "@/lib/game-config";
 
 type Phase = "intro" | "question" | "chest" | "result" | "done";
@@ -32,7 +33,7 @@ export default function GoldQuestGame({ onBack }: { onBack: () => void }) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [category, setCategory] = useState<string | null>(null);
   const [round, setRound] = useState(1);
-  const [qIndex, setQIndex] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<RunQuestion | null>(null);
   const [state, setState] = useState<GoldQuestState>({ playerGold: 0, rivalGold: Array(GQ_AI_COUNT).fill(0) });
   const [resultText, setResultText] = useState("");
   const [resultKind, setResultKind] = useState<ChestOutcome["kind"] | null>(null);
@@ -41,6 +42,7 @@ export default function GoldQuestGame({ onBack }: { onBack: () => void }) {
   const submittedRef = useRef(false);
   const stateRef = useRef(state);
   stateRef.current = state;
+  const askedIdsRef = useRef<Set<string>>(new Set());
 
   const endRun = useCallback(async () => {
     if (submittedRef.current) return;
@@ -51,13 +53,14 @@ export default function GoldQuestGame({ onBack }: { onBack: () => void }) {
   }, [run]);
 
   const startRun = async () => {
-    const ok = await run.load(category);
-    if (!ok) return;
+    const questions = await run.load(category);
+    if (!questions) return;
     submittedRef.current = false;
     setRound(1);
-    setQIndex(0);
     setFinalCoins(null);
     setState({ playerGold: 0, rivalGold: Array(GQ_AI_COUNT).fill(0) });
+    askedIdsRef.current = new Set();
+    setCurrentQuestion(pickNextQuestion(questions, askedIdsRef.current, 1));
     setPhase("question");
   };
 
@@ -71,24 +74,27 @@ export default function GoldQuestGame({ onBack }: { onBack: () => void }) {
       ...prev,
       rivalGold: prev.rivalGold.map((g) => g + 20 + Math.floor(Math.random() * 40)),
     }));
-    setRound((r) => r + 1);
-    setQIndex((i) => i + 1);
+    const nextRound = round + 1;
+    setRound(nextRound);
+    setCurrentQuestion(pickNextQuestion(run.questions, askedIdsRef.current, nextRound));
     setPhase("question");
   };
 
   const answerQuestion = (idx: number) => {
-    const q = run.questions[qIndex % Math.max(1, run.questions.length)];
+    const q = currentQuestion;
     if (!q) return;
     run.recordAnswer(q.id, idx);
+    askedIdsRef.current.add(q.id);
     const correct = idx === q.correctIndex;
     if (correct) {
       boss.registerHit(GAME_DAMAGE_PER_CORRECT);
       setPhase("chest");
     } else {
+      // Wrong answer doesn't skip the round's chest — keep offering fresh questions
+      // (never repeating one already asked this run, while it can be avoided) until
+      // the player actually earns it.
       boss.registerMiss();
-      setResultText("No chest this round — answer correctly to earn one.");
-      setResultKind(null);
-      setPhase("result");
+      setCurrentQuestion(pickNextQuestion(run.questions, askedIdsRef.current, round));
     }
   };
 
@@ -210,7 +216,7 @@ export default function GoldQuestGame({ onBack }: { onBack: () => void }) {
     );
   }
 
-  const q = run.questions[qIndex % Math.max(1, run.questions.length)];
+  const q = currentQuestion;
 
   const resultStyle = resultKind ? OUTCOME_STYLE[resultKind] : { icon: "❌", bg: "rgba(255,255,255,0.05)", border: "var(--border)", color: "#9ca3af" };
 
@@ -228,6 +234,14 @@ export default function GoldQuestGame({ onBack }: { onBack: () => void }) {
       {phase === "question" && q && (
         <div>
           <div className="rounded-2xl p-6 mb-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            {q.imageUrl && (
+              <div className="mb-5 flex justify-center">
+                <div className="bg-white rounded-2xl p-4 shadow-lg flex items-center justify-center w-[240px] h-[160px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={q.imageUrl} alt={q.text} className="object-contain w-full h-full" />
+                </div>
+              </div>
+            )}
             <p className="text-lg font-semibold text-white">{q.text}</p>
           </div>
           <div className="space-y-2">

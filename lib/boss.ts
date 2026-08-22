@@ -15,8 +15,24 @@ export async function getActiveBoss() {
     where: { status: "active" },
     orderBy: { createdAt: "desc" },
   });
-  if (existing) return existing;
-  return spawnNextBoss();
+  if (!existing) return spawnNextBoss();
+
+  // Self-heal: an "active" boss already at 0 HP means something (a manual DB edit,
+  // a stale/aborted write, an admin action) set its HP without flipping status —
+  // it would otherwise sit here forever, immune to further damage and never
+  // triggering the death/gem-payout flow. Finish it off and spawn its replacement.
+  if (existing.currentHp <= 0) {
+    const flipped = await prisma.boss.updateMany({
+      where: { id: existing.id, status: "active" },
+      data: { status: "defeated", defeatedAt: new Date() },
+    });
+    if (flipped.count === 1) {
+      resolveBossDefeat(existing.id).catch((err) => console.error("[boss] self-heal resolveBossDefeat failed:", err));
+    }
+    return spawnNextBoss();
+  }
+
+  return existing;
 }
 
 /** Spawns the next boss from the roster, avoiding an immediate repeat of the last one. */
@@ -67,30 +83,40 @@ export async function applyBossDamage(userId: string, damage: number): Promise<B
   const boss = await getActiveBoss();
   if (!boss || boss.status !== "active") return null;
 
-  // 1. Atomic decrement, guarded so a dead/expired boss can't be hit further.
-  const hit = await prisma.boss.updateMany({
-    where: { id: boss.id, status: "active", currentHp: { gt: 0 } },
-    data: { currentHp: { decrement: damage } },
-  });
-  if (hit.count === 0) return null; // someone else already finished it, or it's not active
+  // Steps 1-3 run in one transaction: if the contribution upsert (or anything else
+  // in here) throws partway through, the HP decrement is rolled back too. Without
+  // this, a mid-sequence failure could commit the decrement but never reach the
+  // defeat flip below, leaving the boss stuck at HP <= 0 with status "active" —
+  // un-killable forever and no gems ever paid out.
+  const { hitCount, killedCount } = await prisma.$transaction(async (tx) => {
+    // 1. Atomic decrement, guarded so a dead/expired boss can't be hit further.
+    const hit = await tx.boss.updateMany({
+      where: { id: boss.id, status: "active", currentHp: { gt: 0 } },
+      data: { currentHp: { decrement: damage } },
+    });
+    if (hit.count === 0) return { hitCount: 0, killedCount: 0 }; // someone else already finished it, or it's not active
 
-  // 2. Record this user's contribution.
-  await prisma.bossContribution.upsert({
-    where: { bossId_userId: { bossId: boss.id, userId } },
-    update: { damage: { increment: damage }, hits: { increment: 1 } },
-    create: { bossId: boss.id, userId, damage, hits: 1 },
-  });
+    // 2. Record this user's contribution.
+    await tx.bossContribution.upsert({
+      where: { bossId_userId: { bossId: boss.id, userId } },
+      update: { damage: { increment: damage }, hits: { increment: 1 } },
+      create: { bossId: boss.id, userId, damage, hits: 1 },
+    });
 
-  // 3. Exactly-once defeat flip. Row-level locking on the guarded update means
-  //    only one concurrent request can see count === 1 here.
-  const killed = await prisma.boss.updateMany({
-    where: { id: boss.id, status: "active", currentHp: { lte: 0 } },
-    data: { status: "defeated", defeatedAt: new Date(), finalBlowUserId: userId },
+    // 3. Exactly-once defeat flip. Row-level locking on the guarded update means
+    //    only one concurrent request can see count === 1 here.
+    const killed = await tx.boss.updateMany({
+      where: { id: boss.id, status: "active", currentHp: { lte: 0 } },
+      data: { status: "defeated", defeatedAt: new Date(), finalBlowUserId: userId },
+    });
+
+    return { hitCount: hit.count, killedCount: killed.count };
   });
+  if (hitCount === 0) return null;
 
   let gemsEarned = 0;
   let defeated = false;
-  if (killed.count === 1) {
+  if (killedCount === 1) {
     defeated = true;
     resolveBossDefeat(boss.id).catch((err) => console.error("[boss] resolveBossDefeat failed:", err));
     // gemsEarned for THIS response is computed after the fact inside resolveBossDefeat,

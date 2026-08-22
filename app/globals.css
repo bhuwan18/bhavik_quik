@@ -306,6 +306,14 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .creature-antenna { animation: creature-antenna-sway 1.6s ease-in-out infinite; }
 .creature-antenna-r { animation-name: creature-antenna-sway; animation-delay: 0.4s; }
 
+/* Dead: limbs stop their independent secondary motion once the boss is defeated,
+   instead of wiggling/flapping/swaying forever underneath the collapsed body. */
+.boss-creature.phase-dead .creature-claw,
+.boss-creature.phase-dead .creature-wing,
+.boss-creature.phase-dead .creature-antenna {
+  animation: none;
+}
+
 /* Spawn: pops in with a bounce when a boss first appears on screen */
 @keyframes creature-spawn-pop {
   0%   { transform: scale(0.1) rotate(-35deg); opacity: 0; }

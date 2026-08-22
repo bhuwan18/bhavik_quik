@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useBoss } from "@/components/boss/BossProvider";
 
-export type RunQuestion = { id: string; text: string; options: string[]; correctIndex: number };
+export type RunQuestion = { id: string; text: string; options: string[]; correctIndex: number; imageUrl?: string | null };
 
 /**
  * Loads a single coherent quiz and accumulates answers against it, so every mode built on
@@ -21,7 +21,11 @@ export function useQuizRun() {
   const answersRef = useRef<{ questionId: string; selectedIndex: number }[]>([]);
   const quizIdRef = useRef("");
 
-  const load = useCallback(async (categorySlug: string | null): Promise<boolean> => {
+  // Resolves with the freshly loaded questions directly (not just a success flag) so a
+  // caller that needs them immediately after awaiting load() — e.g. to pick the first
+  // question of a run — never reads back the pre-load empty array from a stale render
+  // closure while waiting for the setQuestions() state update to actually commit.
+  const load = useCallback(async (categorySlug: string | null): Promise<RunQuestion[] | null> => {
     setLoading(true);
     setLoadError(null);
     try {
@@ -31,7 +35,7 @@ export function useQuizRun() {
       const quizzes = data?.quizzes ?? data;
       if (!Array.isArray(quizzes) || quizzes.length === 0) {
         setLoadError("No quizzes found for that category.");
-        return false;
+        return null;
       }
       const quiz = quizzes[Math.floor(Math.random() * quizzes.length)];
       const qRes = await fetch(`/api/quizzes/${quiz.id}`);
@@ -39,16 +43,16 @@ export function useQuizRun() {
       const qList: RunQuestion[] = full?.questions ?? [];
       if (!qList.length) {
         setLoadError("That quiz has no questions. Please try again.");
-        return false;
+        return null;
       }
       quizIdRef.current = quiz.id;
       answersRef.current = [];
       setQuizId(quiz.id);
       setQuestions(qList);
-      return true;
+      return qList;
     } catch (e) {
       setLoadError(`Failed to load questions: ${e instanceof Error ? e.message : "unknown error"}`);
-      return false;
+      return null;
     } finally {
       setLoading(false);
     }
