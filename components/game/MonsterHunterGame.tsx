@@ -42,6 +42,8 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
   const askedIdsRef = useRef<Set<string>>(new Set());
   const [reducedMotion, setReducedMotion] = useState(false);
   const [finalCoins, setFinalCoins] = useState<number | null>(null);
+  const [stageBanner, setStageBanner] = useState<number | null>(null);
+  const stageBannerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -62,6 +64,9 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
+    return () => {
+      if (stageBannerTimeoutRef.current) clearTimeout(stageBannerTimeoutRef.current);
+    };
   }, []);
 
   // ── Desktop input: keyboard ────────────────────────────────────────────────
@@ -273,6 +278,12 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
         return;
       }
 
+      if (events.stagedUp) {
+        setStageBanner(w.stage);
+        if (stageBannerTimeoutRef.current) clearTimeout(stageBannerTimeoutRef.current);
+        stageBannerTimeoutRef.current = setTimeout(() => setStageBanner(null), 2600);
+      }
+
       if (events.leveledUp) {
         haltedRef.current = true;
         const next = pickNextQuestion(run.questions, askedIdsRef.current, w.level);
@@ -312,6 +323,8 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
     setCurrentQuestion(null);
     setFinalCoins(null);
     setOutcome(null);
+    if (stageBannerTimeoutRef.current) clearTimeout(stageBannerTimeoutRef.current);
+    setStageBanner(null);
     statsRef.current = BASE_RUN_STATS;
     abilitiesRef.current = BASE_ABILITY_STATE;
     worldRef.current = createWorld(BASE_RUN_STATS);
@@ -481,6 +494,23 @@ export default function MonsterHunterGame({ onBack }: { onBack: () => void }) {
       style={{ touchAction: "none" }}
     >
       <canvas ref={canvasRef} className="block w-full h-full" />
+
+      {/* Stage-up callout — the explicit "things just got harder" signal, since the HUD's
+          Stage badge alone updates too quietly to register as progression in the moment. */}
+      {stageBanner !== null && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+          <div
+            className="px-5 py-2.5 rounded-2xl backdrop-blur-md flex items-center gap-2 text-sm font-bold text-white whitespace-nowrap"
+            style={{
+              background: "rgba(88,28,135,0.88)",
+              border: "1px solid rgba(216,180,254,0.55)",
+              boxShadow: "0 8px 28px -6px rgba(147,51,234,0.7)",
+            }}
+          >
+            <span className="text-lg">⚔️</span> Stage {stageBanner} — stronger monsters incoming
+          </div>
+        </div>
+      )}
 
       {/* HUD */}
       <div className="absolute top-3 left-3 right-3 flex items-start justify-between pointer-events-none">

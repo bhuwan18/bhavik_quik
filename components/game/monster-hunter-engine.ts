@@ -111,7 +111,7 @@ export type World = {
   secondWindMs: number; // remaining duration of the post-hit speed/iframe burst
 };
 
-export type StepEvents = { leveledUp: boolean; died: boolean; wonMaze: boolean; killed: number };
+export type StepEvents = { leveledUp: boolean; stagedUp: boolean; died: boolean; wonMaze: boolean; killed: number };
 
 function tileCenter(cx: number, cy: number): Vec2 {
   return { x: cx * MH_TILE_PX + MH_TILE_PX / 2, y: cy * MH_TILE_PX + MH_TILE_PX / 2 };
@@ -364,7 +364,7 @@ function applyDamageToPlayer(world: World, abilities: AbilityState, amount: numb
 }
 
 export function stepWorld(world: World, dtSeconds: number, input: InputState, stats: RunStats, abilities: AbilityState): StepEvents {
-  const events: StepEvents = { leveledUp: false, died: false, wonMaze: false, killed: 0 };
+  const events: StepEvents = { leveledUp: false, stagedUp: false, died: false, wonMaze: false, killed: 0 };
   const dtMs = dtSeconds * 1000;
   world.timeMs += dtMs;
 
@@ -636,7 +636,9 @@ export function stepWorld(world: World, dtSeconds: number, input: InputState, st
     world.xp -= world.xpToNext;
     world.level += 1;
     world.xpToNext = Math.round(MH_XP_BASE * Math.pow(MH_XP_GROWTH, world.level - 1));
-    world.stage = getStage(world.level);
+    const newStage = getStage(world.level);
+    if (newStage > world.stage) events.stagedUp = true;
+    world.stage = newStage;
     events.leveledUp = true;
   }
 

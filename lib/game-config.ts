@@ -164,12 +164,19 @@ export const MH_EXIT_REACH_RADIUS_TILES = 1.5;  // how close (in tiles) the play
 // the maze (see MH_MAZE_LOGICAL_COLS/ROWS above) is large, so a slow/sparse spawn cadence reads
 // as an empty, easy maze even though the layout itself is hard — a bigger maze needs more
 // monsters in play, not just a longer walk.
-export const MH_SPAWN_INTERVAL_STAGE1_MS = 2_400; // spawn interval at stage 1, level 1
+// Stage 1 specifically is kept a notch gentler than the ramp below would otherwise suggest —
+// with spawns now landing in a close band around the player (MH_SPAWN_MIN/MAX_DIST_TILES),
+// a brand new run with zero perks and only base stats needs a real chance to survive to its
+// first level-up (where the perk loop actually begins) before the stage-over-stage ramp takes
+// over. Playtested: at the old 2_400ms/9-monster settings, an actively-moving-but-imperfect
+// run could die at Stage 1 without ever reaching level 2 — no perk was ever earned, which
+// breaks the "answer questions → earn perks → face stronger monsters" loop before it starts.
+export const MH_SPAWN_INTERVAL_STAGE1_MS = 2_800; // spawn interval at stage 1, level 1
 export const MH_SPAWN_INTERVAL_MIN_MS = 1_000;    // floor at any stage — never faster than this
 export const MH_SPAWN_RAMP_PER_STAGE = 0.85;      // interval multiplier compounding once per stage
 export const MH_SPAWN_RAMP_PER_LEVEL_IN_STAGE = 0.985; // small extra ramp per level within a stage
-export const MH_MAX_MONSTERS_BASE = 9;            // concurrent monster cap at stage 1
-export const MH_MAX_MONSTERS_PER_STAGE = 3;       // extra concurrent monsters allowed per additional stage
+export const MH_MAX_MONSTERS_BASE = 6;            // concurrent monster cap at stage 1
+export const MH_MAX_MONSTERS_PER_STAGE = 3;       // extra concurrent monsters allowed per additional stage — the ramp itself stays steep
 export const MH_MAX_MONSTERS_CAP = 26;            // absolute ceiling regardless of stage
 export const MH_SPAWN_MIN_DIST_TILES = 7;         // minimum spawn distance from the player, in tiles — no ambush spawns
 // Upper bound on spawn distance. Without one, a uniformly random floor tile "at least

@@ -6,7 +6,15 @@
 import { describe, it, expect } from "vitest";
 import { createWorld, stepWorld, type World, type InputState } from "@/components/game/monster-hunter-engine";
 import { aggregateAbilities, BASE_RUN_STATS } from "@/lib/perk-roll";
-import { MH_CORRIDOR_WIDTH_TILES, MH_TILE_PX, MH_SECOND_WIND_SPEED_MULT, MH_BARRIER_BASE_RECHARGE_MS, MH_MONSTER_HIT_COOLDOWN_MS } from "@/lib/game-config";
+import { getStage } from "@/lib/monster-stage";
+import {
+  MH_CORRIDOR_WIDTH_TILES,
+  MH_TILE_PX,
+  MH_SECOND_WIND_SPEED_MULT,
+  MH_BARRIER_BASE_RECHARGE_MS,
+  MH_MONSTER_HIT_COOLDOWN_MS,
+  MH_STAGE_LEVELS,
+} from "@/lib/game-config";
 
 const NO_INPUT: InputState = { moveX: 0, moveY: 0, aimAngle: null };
 const DT = 1 / 60;
@@ -182,5 +190,33 @@ describe("Second Wind ability", () => {
 
     tick(world, abilities, NO_INPUT, 1);
     expect(world.secondWindMs).toBe(0);
+  });
+});
+
+describe("Stage transitions", () => {
+  it("flags stagedUp as false when a level-up doesn't cross a stage boundary", () => {
+    const world = createWorld(BASE_RUN_STATS);
+    const abilities = aggregateAbilities([]);
+    world.xp = world.xpToNext; // force the very next tick to level up from 1 -> 2, still stage 1
+
+    const events = stepWorld(world, DT, NO_INPUT, BASE_RUN_STATS, abilities);
+
+    expect(events.leveledUp).toBe(true);
+    expect(events.stagedUp).toBe(false);
+    expect(world.stage).toBe(1);
+  });
+
+  it("flags stagedUp as true exactly when a level-up crosses into a new stage", () => {
+    const world = createWorld(BASE_RUN_STATS);
+    const abilities = aggregateAbilities([]);
+    world.level = MH_STAGE_LEVELS; // last level of stage 1
+    world.stage = getStage(world.level);
+    world.xp = world.xpToNext; // force the next tick to level up into MH_STAGE_LEVELS + 1 -> stage 2
+
+    const events = stepWorld(world, DT, NO_INPUT, BASE_RUN_STATS, abilities);
+
+    expect(events.leveledUp).toBe(true);
+    expect(events.stagedUp).toBe(true);
+    expect(world.stage).toBe(2);
   });
 });
