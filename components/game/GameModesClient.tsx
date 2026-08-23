@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import HackDevGame from "./HackDevGame";
 import DinoRexLobby from "./DinoRexLobby";
 import SpeedBlitzGame from "./SpeedBlitzGame";
@@ -63,27 +64,33 @@ const MODES = [
     name: "Monster Hunter",
     description: "A dark maze, chasing monsters, auto-firing lasers. Level up and earn rarity-tiered perks.",
     icon: "🐛",
-    tag: "Single Player",
+    tag: "🎮 Visual Game",
     color: "from-emerald-900/50 to-green-900/30 border-emerald-500/30",
-    tagColor: "bg-emerald-500/20 text-emerald-400",
+    tagColor: "bg-fuchsia-500/20 text-fuchsia-400",
+    isNew: true,
+    glowRgb: "16,185,129",
   },
   {
     id: "towerdefense",
     name: "Tower Defense",
-    description: "Answer questions for gold, build towers, and hold off 10 waves of enemies.",
+    description: "6 tower types, real monsters, 3 themed stages with boss waves. Answer questions to fund your defense.",
     icon: "🏰",
-    tag: "Single Player",
+    tag: "🎮 Visual Game",
     color: "from-blue-900/50 to-indigo-900/30 border-blue-500/30",
-    tagColor: "bg-blue-500/20 text-blue-400",
+    tagColor: "bg-fuchsia-500/20 text-fuchsia-400",
+    isNew: true,
+    glowRgb: "59,130,246",
   },
   {
     id: "goldquest",
     name: "Gold Quest",
     description: "Answer, then pick a chest — gold, a multiplier, a steal, or a trap. Race 3 rival bots.",
     icon: "💰",
-    tag: "Single Player",
+    tag: "🎮 Visual Game",
     color: "from-amber-900/50 to-yellow-900/30 border-amber-500/30",
-    tagColor: "bg-amber-500/20 text-amber-400",
+    tagColor: "bg-fuchsia-500/20 text-fuchsia-400",
+    isNew: true,
+    glowRgb: "245,158,11",
   },
   {
     id: "classic",
@@ -98,8 +105,16 @@ const MODES = [
   },
 ];
 
+const DEEP_LINKABLE_MODES = new Set<Mode>([
+  "hackdev", "dinorex", "speedblitz", "survival", "daily", "monsterhunter", "towerdefense", "goldquest",
+]);
+
 export default function GameModesClient() {
-  const [mode, setMode] = useState<Mode>("select");
+  const searchParams = useSearchParams();
+  const requestedMode = searchParams.get("mode");
+  const initialMode: Mode =
+    requestedMode && DEEP_LINKABLE_MODES.has(requestedMode as Mode) ? (requestedMode as Mode) : "select";
+  const [mode, setMode] = useState<Mode>(initialMode);
 
   if (mode === "hackdev") return <HackDevGame onBack={() => setMode("select")} />;
   if (mode === "dinorex") return <DinoRexLobby onBack={() => setMode("select")} />;
@@ -118,26 +133,37 @@ export default function GameModesClient() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {MODES.map((m) => (
-          <div
-            key={m.id}
-            onClick={() => {
-              if ("href" in m && m.href) {
-                window.location.href = m.href;
-              } else {
-                setMode(m.id as Mode);
-              }
-            }}
-            className={`bg-gradient-to-br ${m.color} border rounded-2xl p-6 cursor-pointer hover:scale-[1.02] transition-all duration-200 hover:shadow-xl group`}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <span className="text-4xl group-hover:scale-110 transition-transform">{m.icon}</span>
-              <span className={`text-xs font-medium px-2 py-1 rounded-full ${m.tagColor}`}>{m.tag}</span>
+        {MODES.map((m) => {
+          const isVisualGame = "isNew" in m && m.isNew;
+          return (
+            <div
+              key={m.id}
+              onClick={() => {
+                if ("href" in m && m.href) {
+                  window.location.href = m.href;
+                } else {
+                  setMode(m.id as Mode);
+                }
+              }}
+              className={`${isVisualGame ? "visual-mode-card" : ""} bg-gradient-to-br ${m.color} border rounded-2xl p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 group`}
+              style={isVisualGame ? { ["--glow-rgb" as string]: (m as { glowRgb: string }).glowRgb } : undefined}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span className={`${isVisualGame ? "float-anim" : ""} text-4xl group-hover:scale-110 transition-transform`}>{m.icon}</span>
+                <div className="flex items-center gap-1.5">
+                  {isVisualGame && (
+                    <span className="bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                      New
+                    </span>
+                  )}
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${m.tagColor}`}>{m.tag}</span>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">{m.name}</h3>
+              <p className="text-gray-400 text-sm">{m.description}</p>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">{m.name}</h3>
-            <p className="text-gray-400 text-sm">{m.description}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-8 p-4 bg-white/5 border border-white/10 rounded-xl text-gray-500 text-sm text-center">

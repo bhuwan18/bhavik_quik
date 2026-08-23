@@ -240,14 +240,91 @@ export const MH_STICK_RADIUS_PX = 55;      // max drag distance for the virtual 
 export const MH_MAX_DPR = 2;               // cap devicePixelRatio so high-density phones don't over-render
 
 // ─── Tower Defense ────────────────────────────────────────────────────────────
+// A run is TD_STAGE_COUNT stages of TD_WAVES_PER_STAGE waves. Every stage has its own
+// map, path, terrain theme, and creep roster (lib/td-data.ts) — the last wave of each
+// stage is that stage's boss. Towers cannot survive a map change, so a stage clear
+// refunds every gold piece invested (not the sell rate) plus a bonus, turning the
+// rebuild into a re-optimisation with a bigger budget rather than a punishment.
+// Content tuning lives in lib/td-data.ts as multipliers against the bases below; this
+// file owns global balance, pacing, and rendering budgets only.
 
-export const TD_STARTING_LIVES = 10;
-export const TD_TOTAL_WAVES = 10;
-export const TD_GOLD_PER_CORRECT = 50;     // gold earned per correct answer
-export const TD_TOWER_BASE_COST = 100;
-export const TD_TOWER_UPGRADE_COST = 75;
-export const TD_ENEMY_BASE_HP = 30;        // scales up per wave
-export const TD_ENEMY_SPEED = 40;          // px/s along the path
+export const TD_GRID_COLS = 20;              // board width in tiles — fixed logical grid; tile px is derived from the viewport
+export const TD_GRID_ROWS = 12;              // board height in tiles
+export const TD_MIN_TILE_PX = 22;            // floor for the derived tile size — below this towers stop being reliably tappable
+export const TD_MAX_TILE_PX = 64;            // ceiling — stops a desktop board looking like a toy
+export const TD_TOUCH_HIT_RADIUS_MULT = 1.4; // tap tolerance around a tower, in tile widths — fat-finger forgiveness
+export const TD_MAX_DPR = 2;                 // cap devicePixelRatio so high-density phones don't over-render
+export const TD_HUD_SYNC_MS = 100;           // throttle for pushing world state into React HUD state — the ONLY 60Hz→React bridge
+export const TD_HUD_RESERVE_PX = 92;         // vertical space reserved at the top of the surface for the HUD panel
+export const TD_PATH_SAMPLES_PER_TILE = 16;  // build-mask sampling density — scales with path length so long maps can't gap
+
+export const TD_STAGE_COUNT = 3;
+export const TD_WAVES_PER_STAGE = 6;         // the last wave of every stage is that stage's boss wave
+export const TD_TOTAL_WAVES = TD_STAGE_COUNT * TD_WAVES_PER_STAGE;
+export const TD_STARTING_LIVES = 15;
+export const TD_STAGE_CLEAR_LIVES = 3;       // lives restored on a stage clear, capped at TD_STARTING_LIVES
+export const TD_STAGE_CLEAR_BONUS = 250;     // gold granted on top of the full tower refund at a stage clear
+export const TD_BOSS_LEAK_LIVES = 5;         // a leaked boss costs this many lives, not one
+
+export const TD_STARTING_GOLD = 180;         // enough for one Arrow plus one Frost before the first wave lands
+export const TD_GOLD_PER_CORRECT = 60;       // gold per correct answer — still ~65% of total income; kill bounties are the rest
+export const TD_EARLY_SEND_GOLD_PER_S = 4;   // bonus gold per second of build time skipped via "Send Wave"
+export const TD_SELL_REFUND_PCT = 0.6;       // fraction of invested gold returned when selling mid-stage
+export const TD_UPGRADE_COST_MULT = 0.7;     // the first upgrade costs this fraction of the tower's base cost
+export const TD_UPGRADE_COST_GROWTH = 1.55;  // upgrade cost multiplier, compounds per level
+export const TD_TOWER_MAX_LEVEL = 5;         // linear levels, no branching
+export const TD_TOWER_DAMAGE_GROWTH = 1.45;  // damage multiplier per tower level
+export const TD_TOWER_COOLDOWN_GROWTH = 0.88;// fire-cooldown multiplier per tower level (lower = faster)
+export const TD_TOWER_RANGE_GROWTH = 0.1;    // +10% range per tower level, linear not compounding
+export const TD_TOWER_AIM_LERP = 12;         // rad/s the barrel turns toward its target — cosmetic tracking only
+
+export const TD_BUILD_TIME_MS = 12_000;      // build breather between waves — skippable via "Send Wave"
+export const TD_FIRST_BUILD_TIME_MS = 20_000;// the very first breather is longer: nothing is built and no gold is banked yet
+export const TD_STAGE_INTRO_MS = 2_200;      // "Stage N — <name>" card duration before a stage's first build phase
+export const TD_WAVE_BANNER_MS = 1_600;      // transient "Wave N" / "BOSS INCOMING" pill duration
+export const TD_ANSWER_REVEAL_MS = 450;      // correct/wrong reveal before the next question — shorter than HACKDEV_ANSWER_REVEAL_MS because the field stays live behind the sheet
+
+export const TD_CREEP_BASE_HP = 30;          // HP of an hpMult=1 creep on stage 1, wave 1
+export const TD_CREEP_BASE_SPEED_TILES = 1.15; // tiles/second for a speedMult=1 creep — tiles, not px, so pacing is resolution-independent
+export const TD_CREEP_BASE_BOUNTY = 6;       // gold for killing a bountyMult=1 creep on stage 1
+export const TD_STAGE_HP_GROWTH = 2.4;       // creep max-HP multiplier, compounds per stage
+export const TD_STAGE_BOUNTY_GROWTH = 1.6;   // kill-bounty multiplier, compounds per stage
+export const TD_WAVE_HP_GROWTH = 0.22;       // +22% creep HP per wave within a stage, linear
+export const TD_CREEP_REGEN_PCT_PER_S = 0.04;// "regen" creeps heal this fraction of max HP per second
+export const TD_FLYER_WEAVE_TILES = 0.6;     // max lateral drift of a flying creep off the lane centreline
+export const TD_FLYER_LIFT_MULT = 0.5;       // screen-Y lift of a flyer above its ground shadow, in tile widths
+export const TD_SPAWN_SPACING_MS = 700;      // default gap between creeps inside a wave group
+export const TD_MAX_CREEPS = 60;             // concurrent creep cap — spawns stall rather than exceed it
+export const TD_MIN_DAMAGE_AFTER_ARMOR = 1;  // armor can never fully negate a hit — an unkillable creep is an unwinnable run
+
+export const TD_FROST_SLOW_PCT = 0.4;        // Frost Spire: movement reduction at level 1
+export const TD_FROST_SLOW_PER_LEVEL = 0.05; // +5pp per level, so a level-5 spire more than halves speed
+export const TD_FROST_SLOW_MS = 1_600;       // how long the slow lingers after the last frost hit
+export const TD_CANNON_SPLASH_TILES = 1;     // Cannon: splash radius at level 1, in tiles
+export const TD_CANNON_SPLASH_PER_LEVEL = 0.08; // +8% splash radius per level
+export const TD_CANNON_SPLASH_FALLOFF = 0.6; // fraction of full damage dealt at the edge of the splash
+export const TD_TESLA_CHAIN_TARGETS = 3;     // Tesla Coil: targets per shot at level 1 (+1 at levels 3 and 5)
+export const TD_TESLA_CHAIN_FALLOFF = 0.65;  // damage multiplier applied per additional chain jump
+export const TD_TESLA_CHAIN_RANGE_TILES = 2; // max distance a chain may jump between creeps
+export const TD_BEACON_DAMAGE_BUFF = 0.25;   // War Beacon: damage bonus to towers in its aura at level 1
+export const TD_BEACON_RATE_BUFF = 0.12;     // War Beacon: fire-rate bonus to towers in its aura at level 1
+export const TD_BEACON_BUFF_PER_LEVEL = 0.06;// added to both beacon buffs per level; beacons never stack with each other — best aura wins
+
+// Projectile speeds are in tiles/second, not px/s — the whole simulation runs in tile-space
+// (creep position, tower range, everything) since tilePx is derived per-device from the
+// viewport (TD_MIN/MAX_TILE_PX above); only drawWorld converts tiles → screen pixels.
+export const TD_ARROW_SPEED_TILES = 12;      // Arrow Tower: homing projectile speed
+export const TD_CANNON_SPEED_TILES = 7;      // Cannon: slow mortar-arc projectile speed
+export const TD_FROST_SPEED_TILES = 8.5;     // Frost Spire: projectile speed
+
+export const TD_HIT_FLASH_MS = 130;          // white hit-flash duration on a creep taking damage
+export const TD_DEATH_ANIM_MS = 480;         // tip-over/flatten/desaturate duration before a dead creep is removed
+export const TD_SPAWN_ANIM_MS = 320;         // scale-in overshoot duration when a creep enters the board
+export const TD_TRACER_MS = 140;             // Sniper Nest hitscan tracer fade duration
+export const TD_CHAIN_ARC_MS = 110;          // Tesla Coil chain-arc VFX lifetime
+export const TD_FLOATER_MS = 750;            // floating "+N gold" / damage number lifetime
+export const TD_SHAKE_MS = 220;              // screen-shake duration on a Cannon impact
+export const TD_MAX_PARTICLES = 220;         // shared VFX particle pool cap
 
 // ─── Gold Quest ───────────────────────────────────────────────────────────────
 

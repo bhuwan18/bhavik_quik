@@ -115,27 +115,59 @@ export default async function DashboardPage() {
       {/* ── Hero: Play-first CTA ── */}
       <div className="relative overflow-hidden rounded-3xl mb-8 border border-white/10"
         style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent) 0%, color-mix(in srgb, var(--accent2) 15%, transparent) 100%)" }}>
-        <div className="relative z-10 p-7 md:p-10">
-          <p className="text-sm text-gray-400 font-medium mb-1">👋 Welcome back</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{firstName}!</h1>
-          <p className="text-gray-300 mb-7 max-w-md text-sm md:text-base">
-            You have{" "}
-            <span className="text-yellow-400 font-bold">{user?.coins?.toLocaleString() ?? 0} coins</span>{" "}
-            and {ownedQuizlets}/{totalQuizlets} Quizlets. Keep playing to collect them all!
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/discover"
-              className="inline-flex items-center gap-2 px-7 py-3.5 bg-[var(--accent)] hover:brightness-110 text-black font-bold rounded-2xl transition-all hover:scale-105 shadow-lg text-base"
-            >
-              🚀 Play Now
-            </Link>
-            <Link
-              href="/game"
-              className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/10 text-white font-semibold rounded-2xl hover:bg-white/18 transition-all border border-white/20 text-base"
-            >
-              🎮 Game Modes
-            </Link>
+        <div className="relative z-10 p-7 md:p-10 flex items-center justify-between gap-6">
+          <div>
+            <p className="text-sm text-gray-400 font-medium mb-1">👋 Welcome back</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{firstName}!</h1>
+            <p className="text-gray-300 mb-7 max-w-md text-sm md:text-base">
+              You have{" "}
+              <span className="text-yellow-400 font-bold">{user?.coins?.toLocaleString() ?? 0} coins</span>{" "}
+              and {ownedQuizlets}/{totalQuizlets} Quizlets. Keep playing to collect them all!
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/discover"
+                className="inline-flex items-center gap-2 px-7 py-3.5 bg-[var(--accent)] hover:brightness-110 text-black font-bold rounded-2xl transition-all hover:scale-105 shadow-lg text-base"
+              >
+                🚀 Play Now
+              </Link>
+              <Link
+                href="/game"
+                className="relative inline-flex items-center gap-2 px-6 py-3.5 bg-white/10 text-white font-semibold rounded-2xl hover:bg-white/18 transition-all border border-white/20 text-base"
+              >
+                🎮 Game Modes
+                <span className="absolute -top-2 -right-2 bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                  New
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          {/* New visual game modes — fills the hero's empty right-hand space on wider screens */}
+          <div className="hidden lg:flex flex-col gap-3 shrink-0">
+            <div className="flex items-center gap-1.5 justify-end">
+              <span className="text-xs font-semibold text-gray-300">New: Visual Games</span>
+              <span className="bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                New
+              </span>
+            </div>
+            <div className="flex gap-3">
+              {[
+                { mode: "monsterhunter", icon: "🐛", name: "Monster Hunter", color: "from-emerald-900/60 to-green-900/40 border-emerald-500/30", glowRgb: "16,185,129" },
+                { mode: "towerdefense", icon: "🏰", name: "Tower Defense", color: "from-blue-900/60 to-indigo-900/40 border-blue-500/30", glowRgb: "59,130,246" },
+                { mode: "goldquest", icon: "💰", name: "Gold Quest", color: "from-amber-900/60 to-yellow-900/40 border-amber-500/30", glowRgb: "245,158,11" },
+              ].map((g, i) => (
+                <Link
+                  key={g.mode}
+                  href={`/game?mode=${g.mode}`}
+                  className={`visual-mode-card flex flex-col items-center gap-1.5 w-24 p-3 bg-gradient-to-br ${g.color} border rounded-2xl text-center hover:scale-110 transition-transform`}
+                  style={{ ["--glow-rgb" as string]: g.glowRgb, animationDelay: `${i * 0.3}s` }}
+                >
+                  <span className="float-anim text-2xl" style={{ animationDelay: `${i * 0.3}s` }}>{g.icon}</span>
+                  <span className="text-[11px] font-semibold text-white leading-tight">{g.name}</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>
